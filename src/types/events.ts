@@ -24,6 +24,7 @@ export type GameEventType =
   | 'weaponChanged'
   | 'waveComplete'
   | 'waveStarted'
+  | 'waveProgressed'
   | 'bossSpawned'
   | 'bossPhaseChanged'
   | 'bossDefeated'
@@ -201,6 +202,24 @@ export interface WaveStartedEvent extends GameEvent<'waveStarted'> {
   data: WaveStartedEventData
 }
 
+/**
+ * Wave progressed event data - emitted when advancing to a new wave.
+ */
+export interface WaveProgressedEventData {
+  previousWave: number
+  newWave: number
+  asteroidCount: number
+  speedMultiplier: number
+  isBossWave: boolean
+}
+
+/**
+ * Wave progressed event type.
+ */
+export interface WaveProgressedEvent extends GameEvent<'waveProgressed'> {
+  data: WaveProgressedEventData
+}
+
 // ============================================
 // Boss Events
 // ============================================
@@ -363,6 +382,7 @@ export type AnyGameEvent =
   | PowerUpCollectedEvent
   | WaveCompleteEvent
   | WaveStartedEvent
+  | WaveProgressedEvent
   | BossSpawnedEvent
   | BossPhaseChangedEvent
   | BossDefeatedEvent

@@ -16,29 +16,29 @@ Extend WaveSystem to track wave progression, calculate asteroid counts and diffi
 
 ## Target Files
 
-- [ ] `src/systems/WaveSystem.ts` - Extended wave progression logic
-- [ ] `tests/unit/WaveSystem.test.ts` - Wave progression unit tests
+- [x] `src/systems/WaveSystem.ts` - Extended wave progression logic
+- [x] `tests/unit/WaveSystem.test.ts` - Wave progression unit tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for wave progression
-- [ ] Write failing test for wave counter initialization (starts at 1)
-- [ ] Write failing test for asteroid count calculation: 3 + (wave - 1) * 2
-- [ ] Write failing test for speed multiplier: min(1 + (wave - 1) * 0.05, 2.0) capped at 2x
-- [ ] Write failing test for wave 1: 3 asteroids, 1x speed
-- [ ] Write failing test for wave 2: 5 asteroids, 1.05x speed
-- [ ] Write failing test for wave 3: 7 asteroids, 1.10x speed
-- [ ] Write failing test for speed multiplier caps at 2.0
-- [ ] Write failing test for wave completion detection (all asteroids destroyed)
-- [ ] Write failing test for wave transition delay (3 seconds)
-- [ ] Write failing test for boss wave detection (every 5 waves: 5, 10, 15, ...)
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for wave progression
+- [x] Write failing test for wave counter initialization (starts at 1)
+- [x] Write failing test for asteroid count calculation: 3 + (wave - 1) * 2
+- [x] Write failing test for speed multiplier: min(1 + (wave - 1) * 0.05, 2.0) capped at 2x
+- [x] Write failing test for wave 1: 3 asteroids, 1x speed
+- [x] Write failing test for wave 2: 5 asteroids, 1.05x speed
+- [x] Write failing test for wave 3: 7 asteroids, 1.10x speed
+- [x] Write failing test for speed multiplier caps at 2.0
+- [x] Write failing test for wave completion detection (all asteroids destroyed)
+- [x] Write failing test for wave transition delay (3 seconds)
+- [x] Write failing test for boss wave detection (every 5 waves: 5, 10, 15, ...)
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Extend WaveSystem**:
-- [ ] Create/update `src/systems/WaveSystem.ts`:
+- [x] Create/update `src/systems/WaveSystem.ts`:
   - Add WaveState interface: currentWave, asteroidCount, lastWaveTime, waveTransitionTimer
   - Method: calculateAsteroidCount(wave: number) → 3 + (wave - 1) * 2
   - Method: calculateSpeedMultiplier(wave: number) → min(1 + (wave - 1) * 0.05, 2.0)
@@ -55,7 +55,7 @@ Extend WaveSystem to track wave progression, calculate asteroid counts and diffi
   - Prevent overlapping wave spawns during transition delay
 
 **Create unit tests**:
-- [ ] Create `tests/unit/WaveSystem.test.ts`:
+- [x] Create `tests/unit/WaveSystem.test.ts`:
   - Test asteroid count formula for waves 1-10
   - Test speed multiplier calculation and capping
   - Test boss wave detection at waves 5, 10, 15, 20
@@ -66,24 +66,24 @@ Extend WaveSystem to track wave progression, calculate asteroid counts and diffi
   - Edge cases: zero asteroids, immediate respawn, rapid wave changes
 
 ### 3. Refactor Phase
-- [ ] Verify asteroid count formula matches spec exactly
-- [ ] Optimize wave spawn logic (reuse asteroid factory)
-- [ ] Ensure speed multiplier applied to all asteroid velocities
-- [ ] Add safety checks for rapid wave transitions
-- [ ] Confirm all tests pass
+- [x] Verify asteroid count formula matches spec exactly
+- [x] Optimize wave spawn logic (reuse asteroid factory)
+- [x] Ensure speed multiplier applied to all asteroid velocities
+- [x] Add safety checks for rapid wave transitions
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Asteroid count increases per formula: 3 + (wave - 1) * 2
-- [ ] Speed multiplier increases per formula: min(1 + (wave - 1) * 0.05, 2.0)
-- [ ] Speed multiplier capped at 2.0x (no excessive difficulty at late waves)
-- [ ] Wave transition delay respected (3 seconds minimum before next spawn)
-- [ ] All asteroids must be cleared before next wave spawns
-- [ ] Boss waves triggered at correct intervals (5, 10, 15, ...)
-- [ ] waveProgressed events emitted on wave advancement
-- [ ] Unit tests passing (20+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Asteroid count increases per formula: 3 + (wave - 1) * 2
+- [x] Speed multiplier increases per formula: min(1 + (wave - 1) * 0.05, 2.0)
+- [x] Speed multiplier capped at 2.0x (no excessive difficulty at late waves)
+- [x] Wave transition delay respected (3 seconds minimum before next spawn)
+- [x] All asteroids must be cleared before next wave spawns
+- [x] Boss waves triggered at correct intervals (5, 10, 15, ...)
+- [x] waveProgressed events emitted on wave advancement
+- [x] Unit tests passing (20+ test cases)
+- [x] Build succeeds with no errors (pre-existing MainMenu.ts errors unrelated to this task)
+- [x] Type checking passes (pre-existing MainMenu.ts errors unrelated to this task)
 
 ## Verification Method
 

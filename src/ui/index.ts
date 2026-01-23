@@ -6,3 +6,7 @@
  */
 
 export { HUD } from './HUD'
+export { GameOverScreen } from './GameOverScreen'
+export type { LeaderboardStorage, GameStateMachineInterface } from './GameOverScreen'
+export { MainMenu } from './MainMenu'
+export { SettingsPanel } from './SettingsPanel'

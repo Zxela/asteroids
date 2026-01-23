@@ -124,6 +124,8 @@ export type {
   WaveCompleteEvent,
   WaveStartedEventData,
   WaveStartedEvent,
+  WaveProgressedEventData,
+  WaveProgressedEvent,
   // Boss events
   BossSpawnedEventData,
   BossSpawnedEvent,

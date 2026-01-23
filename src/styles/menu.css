@@ -1,0 +1,191 @@
+/**
+ * Menu Styling
+ *
+ * Styles for main menu, settings panel, and overlay components.
+ * Implements neon/cyberpunk aesthetic matching game theme.
+ */
+
+/* Main Menu Container */
+#main-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  font-family: monospace;
+  color: white;
+}
+
+/* Menu Title */
+#main-menu h1[data-menu="title"] {
+  font-size: 64px;
+  margin-bottom: 60px;
+  color: #00ffff;
+  text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+  letter-spacing: 10px;
+  animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+  from {
+    text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+  }
+  to {
+    text-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 80px #00ffff;
+  }
+}
+
+/* Menu Buttons */
+.menu-button {
+  padding: 15px 60px;
+  font-size: 20px;
+  cursor: pointer;
+  background-color: transparent;
+  border: 2px solid #00ffff;
+  color: #00ffff;
+  font-family: monospace;
+  margin: 10px;
+  min-width: 250px;
+  transition: all 0.2s ease;
+}
+
+.menu-button:hover,
+.menu-button.focused {
+  background-color: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 20px #00ffff;
+}
+
+.menu-button:active {
+  transform: scale(0.98);
+}
+
+/* Settings Panel */
+#settings-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+  font-family: monospace;
+  color: white;
+}
+
+#settings-panel h2[data-settings="title"] {
+  margin-bottom: 30px;
+  font-size: 28px;
+  color: #00ffff;
+  text-shadow: 0 0 10px #00ffff;
+}
+
+/* Volume Sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 200px;
+  height: 8px;
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #00ffff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00ffff;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #00ffff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00ffff;
+  border: none;
+}
+
+/* Overlay Panels (Leaderboard, Instructions) */
+#leaderboard-overlay,
+#instructions-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1500;
+  font-family: monospace;
+  color: white;
+}
+
+/* Panel Content Box */
+.panel-content {
+  background-color: rgba(0, 20, 40, 0.95);
+  padding: 40px;
+  border-radius: 10px;
+  border: 2px solid #00ffff;
+  text-align: center;
+  min-width: 400px;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+/* Back Button */
+[data-settings="back-button"],
+.back-button {
+  padding: 10px 30px;
+  font-size: 18px;
+  cursor: pointer;
+  background-color: transparent;
+  border: 2px solid #00ffff;
+  color: #00ffff;
+  font-family: monospace;
+  margin-top: 30px;
+  transition: all 0.2s ease;
+}
+
+[data-settings="back-button"]:hover,
+.back-button:hover {
+  background-color: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 10px #00ffff;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  #main-menu h1[data-menu="title"] {
+    font-size: 36px;
+    letter-spacing: 5px;
+  }
+
+  .menu-button {
+    min-width: 200px;
+    padding: 12px 40px;
+    font-size: 16px;
+  }
+
+  .panel-content {
+    min-width: 90%;
+    padding: 20px;
+  }
+
+  input[type="range"] {
+    width: 150px;
+  }
+}

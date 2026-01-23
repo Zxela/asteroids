@@ -6,6 +6,7 @@
  *
  * Wave formula: 3 + (wave - 1) * 2 asteroids per wave
  * Speed multiplier: min(1 + (wave - 1) * 0.05, 2.0)
+ * Boss waves: Every 5 waves (5, 10, 15, ...)
  */
 
 import { Vector3 } from 'three'
@@ -13,6 +14,7 @@ import { Asteroid } from '../components/Asteroid'
 import { gameConfig } from '../config'
 import type { ComponentClass, System, World } from '../ecs/types'
 import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
+import type { WaveProgressedEvent } from '../types'
 import { randomInt, randomRange } from '../utils/random'
 
 // Type assertion for component class to work with ECS type system
@@ -49,6 +51,7 @@ export class WaveSystem implements System {
   private transitionDelay = 0
   private transitioning = false
   private hasSpawnedThisWave = false
+  private events: WaveProgressedEvent[] = []
 
   constructor() {
     this.targetAsteroids = this.calculateAsteroidCount(1)
@@ -211,10 +214,26 @@ export class WaveSystem implements System {
    * @param world - The ECS world
    */
   private startNextWave(_world: World): void {
+    const previousWave = this.currentWave
     this.currentWave++
     this.asteroidsDestroyedThisWave = 0
     this.targetAsteroids = this.calculateAsteroidCount(this.currentWave)
     this.hasSpawnedThisWave = false
+
+    // Emit waveProgressed event
+    const event: WaveProgressedEvent = {
+      type: 'waveProgressed',
+      timestamp: Date.now(),
+      data: {
+        previousWave,
+        newWave: this.currentWave,
+        asteroidCount: this.targetAsteroids,
+        speedMultiplier: this.calculateSpeedMultiplier(this.currentWave),
+        isBossWave: this.isBossWave(this.currentWave)
+      }
+    }
+    this.events.push(event)
+
     // Spawning will happen on next update
   }
 
@@ -251,5 +270,37 @@ export class WaveSystem implements System {
    */
   isWaveTransitioning(): boolean {
     return this.transitioning
+  }
+
+  /**
+   * Checks if a given wave is a boss wave.
+   * Boss waves occur at intervals defined in config (every 5 waves by default).
+   *
+   * @param wave - Wave number to check
+   * @returns True if the wave is a boss wave
+   */
+  isBossWave(wave: number): boolean {
+    return wave % gameConfig.wave.bossWaveInterval === 0
+  }
+
+  /**
+   * Gets the speed multiplier for the current wave.
+   *
+   * @returns Current speed multiplier
+   */
+  getSpeedMultiplier(): number {
+    return this.calculateSpeedMultiplier(this.currentWave)
+  }
+
+  /**
+   * Gets and clears all pending events.
+   * Events are cleared after being retrieved to prevent double-processing.
+   *
+   * @returns Array of wave progression events
+   */
+  getEvents(): WaveProgressedEvent[] {
+    const pendingEvents = [...this.events]
+    this.events = []
+    return pendingEvents
   }
 }

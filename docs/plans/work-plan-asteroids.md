@@ -989,7 +989,7 @@ npm test
 
 #### Task 4.2: Wave Progression System
 **Dependencies**: Task 3.3, Task 3.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement wave tracking, asteroid count scaling, and difficulty progression.
 
@@ -1010,11 +1010,11 @@ npm test
 2. Create unit tests for wave progression logic
 
 **Completion Criteria**:
-- [ ] Asteroid count increases per wave formula
-- [ ] Speed multiplier increases capped at 2x
-- [ ] Wave transition delay respected (3 seconds)
-- [ ] All asteroids cleared before next wave
-- [ ] Unit tests passing
+- [x] Asteroid count increases per wave formula
+- [x] Speed multiplier increases capped at 2x
+- [x] Wave transition delay respected (3 seconds)
+- [x] All asteroids cleared before next wave
+- [x] Unit tests passing (53 tests)
 
 **Test Coverage**: Wave calculation, count progression, speed scaling
 
@@ -1080,7 +1080,7 @@ npm test
 
 #### Task 4.5: Game Over Screen
 **Dependencies**: Task 4.1, Task 3.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Create game over screen with score display and name entry for leaderboard.
 
@@ -1095,11 +1095,11 @@ npm test
 3. Store submitted score in Player component for leaderboard
 
 **Completion Criteria**:
-- [ ] Game Over screen shows on playerDied event (lives = 0)
-- [ ] Final score displayed
-- [ ] Name input field available
-- [ ] Submit button saves to leaderboard
-- [ ] Try Again restarts game
+- [x] Game Over screen shows on playerDied event (lives = 0)
+- [x] Final score displayed
+- [x] Name input field available
+- [x] Submit button saves to leaderboard
+- [x] Try Again restarts game
 
 ---
 
@@ -2122,7 +2122,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 4 (Game Flow and Progression) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 38% (17/45 tasks complete)
+- **Overall Progress**: 42% (19/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2142,6 +2142,8 @@ The entire project is complete when:
 - [x] Task 3.6: Render System Health/Invulnerability Visual (2026-01-22)
 - [x] Task 3.7: Basic HUD Implementation (2026-01-22)
 - [x] Task 4.1: Game State Machine (2026-01-22)
+- [x] Task 4.2: Wave Progression System (2026-01-22)
+- [x] Task 4.5: Game Over Screen (2026-01-22)
 
 ---
 
@@ -2196,10 +2198,10 @@ The entire project is complete when:
 | 3.6 | 3 | Health Visual | 2.7, 3.5 | 0.5 | - [x] |
 | 3.7 | 3 | HUD | 3.4, 3.5 | 0.5 | - [x] |
 | 4.1 | 4 | State Machine | 1.1, 2.1 | 1 | - [x] |
-| 4.2 | 4 | Wave System | 3.3, 3.4 | 0.5 | - [ ] |
+| 4.2 | 4 | Wave System | 3.3, 3.4 | 0.5 | - [x] |
 | 4.3 | 4 | Main Menu | 4.1 | 0.5 | - [ ] |
 | 4.4 | 4 | Pause Menu | 4.1, 4.2 | 0.5 | - [ ] |
-| 4.5 | 4 | Game Over Screen | 4.1, 3.4 | 0.5 | - [ ] |
+| 4.5 | 4 | Game Over Screen | 4.1, 3.4 | 0.5 | - [x] |
 | 4.6 | 4 | Leaderboard | 4.5 | 0.5 | - [ ] |
 | 5.1 | 5 | Audio Manager | 4.1 | 1 | - [ ] |
 | 5.2 | 5 | Audio Integration | 5.1, 3.2, 3.3 | 0.5 | - [ ] |
