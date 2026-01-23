@@ -1580,7 +1580,7 @@ npm test
 
 #### Task 7.1: Particle System - Explosions and Effects
 **Dependencies**: Task 2.7, Task 3.3
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Implement particle system for explosions on asteroid/entity destruction.
 
@@ -1607,17 +1607,17 @@ npm test
    - Pooled mesh instances for performance
 
 **Completion Criteria**:
-- [ ] Particles emit on asteroid destruction
-- [ ] Particle count and duration match asteroid size
-- [ ] Thrust particles emit while thrusting
-- [ ] Particles fade over time
-- [ ] Object pooling reduces allocations
+- [x] Particles emit on asteroid destruction
+- [x] Particle count and duration match asteroid size
+- [x] Thrust particles emit while thrusting
+- [x] Particles fade over time
+- [x] Object pooling reduces allocations
 
 ---
 
 #### Task 7.2: Screen Shake Camera Effect
 **Dependencies**: Task 2.1, Task 2.9
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Implement screen shake feedback on collisions.
 
@@ -1633,10 +1633,10 @@ npm test
 2. Integrate with RenderSystem camera control
 
 **Completion Criteria**:
-- [ ] Camera shakes on ship-asteroid collision
-- [ ] Shake magnitude appropriate (noticeable but not disruptive)
-- [ ] Shake duration 100ms
-- [ ] Multiple collisions stack effects
+- [x] Camera shakes on ship-asteroid collision
+- [x] Shake magnitude appropriate (noticeable but not disruptive)
+- [x] Shake duration 100ms
+- [x] Multiple collisions stack effects
 
 ---
 
@@ -1693,9 +1693,9 @@ npm test
 ### Phase 7 Verification: Visual Complete
 
 **Integration Point 6: Visual Complete**
-- [ ] Particle explosions visible on destruction
-- [ ] Thrust particles emit while moving
-- [ ] Screen shakes on collision
+- [x] Particle explosions visible on destruction
+- [x] Thrust particles emit while moving
+- [x] Screen shakes on collision
 - [ ] Projectile trails visible
 - [ ] All visual effects performant (60 FPS maintained)
 
@@ -2121,9 +2121,9 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 6 (Boss System) - COMPLETE
+- **Active Phase**: Phase 7 (Visual Polish) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 65% (29/45 tasks complete)
+- **Overall Progress**: 69% (31/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2156,6 +2156,8 @@ The entire project is complete when:
 - [x] Task 6.2: Boss AI System (2026-01-23)
 - [x] Task 6.3: Boss Projectile System (2026-01-23)
 - [x] Task 6.4: Boss Defeat and Rewards (2026-01-23)
+- [x] Task 7.1: Particle System - Explosions and Effects (2026-01-23)
+- [x] Task 7.2: Screen Shake Camera Effect (2026-01-23)
 
 ---
 
@@ -2227,7 +2229,7 @@ The entire project is complete when:
 | 6.3 | 6 | Boss Projectiles | 6.2, 2.9 | 0.5 | - [x] |
 | 6.4 | 6 | Boss Rewards | 6.1, 3.4, 5.3 | 0.5 | - [ ] |
 | 7.1 | 7 | Particles | 2.7, 3.3 | 1 | - [ ] |
-| 7.2 | 7 | Screen Shake | 2.1, 2.9 | 0.5 | - [ ] |
+| 7.2 | 7 | Screen Shake | 2.1, 2.9 | 0.5 | - [x] |
 | 7.3 | 7 | Trails | 3.1, 7.1 | 0.5 | - [ ] |
 | 7.4 | 7 | Polish Pass | 7.1, 7.2, 7.3 | 1 | - [ ] |
 | 8.1 | 8 | Performance Opt | All | 1.5 | - [ ] |
