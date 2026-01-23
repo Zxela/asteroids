@@ -14,7 +14,7 @@ import * as THREE from 'three'
 import { Vector3 } from 'three'
 import { World } from '../../src/ecs/World'
 import { RenderSystem } from '../../src/systems/RenderSystem'
-import { Transform, Renderable, Health } from '../../src/components'
+import { Transform, Renderable, Health, Boss, PowerUp } from '../../src/components'
 
 describe('RenderSystem', () => {
   let world: World
@@ -529,6 +529,288 @@ describe('RenderSystem', () => {
       const mesh = new THREE.Mesh()
       renderSystem.attachToScene(mesh)
       expect(scene.children).toContain(mesh)
+    })
+  })
+
+  describe('Visual Polish - Ship Invulnerability Pulse', () => {
+    it('should pulse ship emissive intensity during invulnerability', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('ship', 'standard'))
+      const health = new Health()
+      health.setInvulnerable(3000)
+      world.addComponent(entityId, health)
+
+      // First update creates mesh
+      renderSystem.update(world, 0)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+
+      // Collect emissive intensities over time
+      const intensities: number[] = []
+      for (let i = 0; i < 10; i++) {
+        renderSystem.update(world, 50)
+        const material = mesh.material as THREE.MeshStandardMaterial
+        if (material.emissiveIntensity !== undefined) {
+          intensities.push(material.emissiveIntensity)
+        }
+      }
+
+      // Should have collected intensity values and they should oscillate
+      expect(intensities.length).toBeGreaterThan(0)
+
+      // Check for variation in intensities (pulse effect)
+      const minIntensity = Math.min(...intensities)
+      const maxIntensity = Math.max(...intensities)
+      expect(maxIntensity - minIntensity).toBeGreaterThan(0.1) // Should oscillate at least 0.1
+    })
+
+    it('should oscillate emissive intensity between 0.5 and 1.0 at 5Hz', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('ship', 'standard'))
+      const health = new Health()
+      health.setInvulnerable(3000)
+      world.addComponent(entityId, health)
+
+      renderSystem.update(world, 0)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+
+      // Sample at 10ms intervals for 200ms (one full cycle at 5Hz)
+      const intensities: number[] = []
+      for (let i = 0; i < 20; i++) {
+        renderSystem.update(world, 10)
+        const material = mesh.material as THREE.MeshStandardMaterial
+        if (material.emissiveIntensity !== undefined) {
+          intensities.push(material.emissiveIntensity)
+        }
+      }
+
+      // Intensity should be within valid range 0.5-1.0
+      for (const intensity of intensities) {
+        expect(intensity).toBeGreaterThanOrEqual(0.5)
+        expect(intensity).toBeLessThanOrEqual(1.0)
+      }
+    })
+
+    it('should reset emissive intensity when invulnerability ends', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('ship', 'standard'))
+      const health = new Health()
+      health.setInvulnerable(200)
+      world.addComponent(entityId, health)
+
+      renderSystem.update(world, 0)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+
+      // During invulnerability
+      renderSystem.update(world, 100)
+
+      // End invulnerability
+      health.invulnerabilityTimer = 0
+      health.invulnerable = false
+
+      renderSystem.update(world, 16)
+
+      const material = mesh.material as THREE.MeshStandardMaterial
+      // Should reset to default intensity (0.5)
+      expect(material.emissiveIntensity).toBe(0.5)
+    })
+  })
+
+  describe('Visual Polish - Boss Phase Colors', () => {
+    it('should set boss color to blue in phase 1', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('boss_destroyer', 'emissive'))
+      const boss = new Boss('destroyer', 1, 0, 'idle')
+      world.addComponent(entityId, boss)
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Phase 1: Blue (#0088FF)
+      expect(material.color.getHex()).toBe(0x0088ff)
+      expect(material.emissive.getHex()).toBe(0x0088ff)
+    })
+
+    it('should set boss color to orange in phase 2', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('boss_destroyer', 'emissive'))
+      const boss = new Boss('destroyer', 2, 0, 'charge')
+      world.addComponent(entityId, boss)
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Phase 2: Orange (#FF8800)
+      expect(material.color.getHex()).toBe(0xff8800)
+      expect(material.emissive.getHex()).toBe(0xff8800)
+    })
+
+    it('should set boss color to red in phase 3', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('boss_destroyer', 'emissive'))
+      const boss = new Boss('destroyer', 3, 0, 'spray')
+      world.addComponent(entityId, boss)
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Phase 3: Red (#FF0000)
+      expect(material.color.getHex()).toBe(0xff0000)
+      expect(material.emissive.getHex()).toBe(0xff0000)
+    })
+
+    it('should update boss color when phase changes', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('boss_destroyer', 'emissive'))
+      const boss = new Boss('destroyer', 1, 0, 'idle')
+      world.addComponent(entityId, boss)
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Initial phase 1: Blue
+      expect(material.color.getHex()).toBe(0x0088ff)
+
+      // Change to phase 2
+      boss.phase = 2
+      renderSystem.update(world, 16)
+
+      // Now should be orange
+      expect(material.color.getHex()).toBe(0xff8800)
+    })
+  })
+
+  describe('Visual Polish - Power-up Rotation', () => {
+    it('should rotate power-up mesh continuously', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('powerup_shield', 'emissive'))
+      const powerUp = new PowerUp('shield')
+      world.addComponent(entityId, powerUp)
+
+      renderSystem.update(world, 0)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const initialRotationY = mesh.rotation.y
+
+      // Update for 1 second
+      renderSystem.update(world, 1000)
+
+      // Rotation should have changed
+      expect(mesh.rotation.y).not.toBe(initialRotationY)
+    })
+
+    it('should rotate power-up at pi/2 radians per second', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('powerup_shield', 'emissive'))
+      const powerUp = new PowerUp('shield')
+      world.addComponent(entityId, powerUp)
+
+      renderSystem.update(world, 0)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const initialRotationY = mesh.rotation.y
+
+      // Update for exactly 1 second
+      renderSystem.update(world, 1000)
+
+      // Expected rotation: initial + (PI/2 * 1.0s) = initial + PI/2
+      const expectedRotation = initialRotationY + Math.PI / 2
+      expect(mesh.rotation.y).toBeCloseTo(expectedRotation, 2)
+    })
+
+    it('should rotate all power-up types', () => {
+      const powerUpTypes: Array<'powerup_shield' | 'powerup_rapidfire' | 'powerup_multishot' | 'powerup_extralife'> = [
+        'powerup_shield',
+        'powerup_rapidfire',
+        'powerup_multishot',
+        'powerup_extralife'
+      ]
+
+      for (const meshType of powerUpTypes) {
+        const entityId = world.createEntity()
+        world.addComponent(entityId, new Transform())
+        world.addComponent(entityId, new Renderable(meshType, 'emissive'))
+        const powerUpType = meshType.replace('powerup_', '') as 'shield' | 'rapidFire' | 'multiShot' | 'extraLife'
+        const powerUp = new PowerUp(powerUpType === 'rapidFire' ? 'rapidFire' : powerUpType === 'multiShot' ? 'multiShot' : powerUpType === 'extraLife' ? 'extraLife' : 'shield')
+        world.addComponent(entityId, powerUp)
+      }
+
+      renderSystem.update(world, 0)
+
+      // Get all meshes initial rotations
+      const initialRotations: number[] = []
+      for (let i = 0; i < 4; i++) {
+        const entityId = i + 1 // Entity IDs start at 1
+        const mesh = renderSystem.getMeshForEntity(entityId as ReturnType<typeof world.createEntity>)
+        if (mesh) {
+          initialRotations.push(mesh.rotation.y)
+        }
+      }
+
+      // Update for 500ms
+      renderSystem.update(world, 500)
+
+      // Verify all rotations changed
+      let meshIndex = 0
+      for (let i = 0; i < 4; i++) {
+        const entityId = i + 1
+        const mesh = renderSystem.getMeshForEntity(entityId as ReturnType<typeof world.createEntity>)
+        if (mesh && meshIndex < initialRotations.length) {
+          expect(mesh.rotation.y).not.toBe(initialRotations[meshIndex])
+          meshIndex++
+        }
+      }
+    })
+  })
+
+  describe('Visual Polish - Asteroid Emissive', () => {
+    it('should apply correct emissive intensity to asteroids (0.3)', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('asteroid_large', 'standard'))
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Asteroids should have emissive intensity of 0.3
+      expect(material.emissiveIntensity).toBe(0.3)
+    })
+
+    it('should apply cyan emissive color to asteroids', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('asteroid_medium', 'standard'))
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Asteroids should have cyan (#00FFFF) emissive
+      expect(material.emissive.getHex()).toBe(0x00ffff)
+    })
+
+    it('should apply gray base color to asteroids', () => {
+      const entityId = world.createEntity()
+      world.addComponent(entityId, new Transform())
+      world.addComponent(entityId, new Renderable('asteroid_small', 'standard'))
+
+      renderSystem.update(world, 16)
+      const mesh = renderSystem.getMeshForEntity(entityId) as THREE.Mesh
+      const material = mesh.material as THREE.MeshStandardMaterial
+
+      // Asteroids should have gray (#808080) base color
+      expect(material.color.getHex()).toBe(0x808080)
     })
   })
 })

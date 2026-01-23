@@ -2,16 +2,18 @@
  * MeshFactory - Three.js mesh creation for game entities
  *
  * Creates procedural Three.js meshes for each entity type:
- * - Ship: Cone geometry pointing forward
- * - Asteroids: Icosahedron geometry with size variants
- * - Projectiles: Small sphere geometry
- * - Boss: Box/Octahedron geometry for boss variants
- * - Power-ups: Dodecahedron geometry
+ * - Ship: Cone geometry pointing forward with blue emissive
+ * - Asteroids: Icosahedron geometry with cyan emissive glow
+ * - Projectiles: Small sphere geometry with weapon-type colored emissive
+ * - Boss: Box/Octahedron geometry with phase-based color
+ * - Power-ups: Dodecahedron geometry with type-based color
  *
- * Materials are created based on type: standard, transparent, emissive.
+ * Materials are created with emissive properties for cyberpunk/neon aesthetic.
+ * Per Task 7.4: Visual Polish Pass
  */
 
 import * as THREE from 'three'
+import { gameConfig } from '../config/gameConfig'
 import type { MaterialType, MeshType } from '../types/components'
 
 // Asteroid radius constants for different sizes
@@ -33,7 +35,8 @@ const ASTEROID_SMALL_RADIUS = 10
  * ```
  */
 function createMesh(meshType: MeshType, materialType: MaterialType): THREE.Object3D {
-  const material = createMaterial(materialType)
+  // Create mesh-type-specific material for enhanced visuals
+  const material = createMeshTypeMaterial(meshType, materialType)
   const mesh = createGeometry(meshType, material)
   mesh.uuid = THREE.MathUtils.generateUUID()
   return mesh
@@ -168,7 +171,136 @@ function createDefault(material: THREE.Material): THREE.Mesh {
 }
 
 /**
- * Create material based on material type.
+ * Create mesh-type-specific material with enhanced visual properties.
+ * Per Task 7.4: Visual Polish Pass requirements.
+ */
+function createMeshTypeMaterial(meshType: MeshType, materialType: MaterialType): THREE.Material {
+  const { palette, emissiveIntensity } = gameConfig.visualTheme
+
+  // Asteroid materials: Gray with cyan emissive glow
+  if (meshType.startsWith('asteroid_')) {
+    return new THREE.MeshStandardMaterial({
+      color: palette.neutral,
+      emissive: palette.secondary, // Cyan
+      emissiveIntensity: emissiveIntensity.low, // 0.3
+      roughness: 0.8,
+      metalness: 0.2
+    })
+  }
+
+  // Ship material: White with blue emissive
+  if (meshType === 'ship') {
+    return new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: palette.primary, // Blue
+      emissiveIntensity: emissiveIntensity.medium, // 0.5
+      roughness: 0.5,
+      metalness: 0.5
+    })
+  }
+
+  // Projectile materials: Colored emissive based on weapon type
+  if (meshType.startsWith('projectile_')) {
+    return createProjectileMaterial(meshType, palette, emissiveIntensity)
+  }
+
+  // Power-up materials: Type-specific colored emissive
+  if (meshType.startsWith('powerup_')) {
+    return createPowerUpMaterial(meshType, palette, emissiveIntensity)
+  }
+
+  // Boss materials: Phase-based color (initial phase 1 = blue)
+  if (meshType.startsWith('boss_')) {
+    return new THREE.MeshStandardMaterial({
+      color: palette.primary, // Blue (Phase 1)
+      emissive: palette.primary,
+      emissiveIntensity: 0.8,
+      roughness: 0.3,
+      metalness: 0.7
+    })
+  }
+
+  // Fallback to legacy material creation
+  return createMaterial(materialType)
+}
+
+/**
+ * Create projectile material based on weapon type.
+ */
+function createProjectileMaterial(
+  meshType: MeshType,
+  palette: typeof gameConfig.visualTheme.palette,
+  emissiveIntensity: typeof gameConfig.visualTheme.emissiveIntensity
+): THREE.Material {
+  let color: number
+
+  switch (meshType) {
+    case 'projectile_default':
+      color = 0xff0000 // Red
+      break
+    case 'projectile_spread':
+      color = palette.primary // Blue
+      break
+    case 'projectile_laser':
+      color = palette.secondary // Cyan
+      break
+    case 'projectile_missile':
+      color = palette.success // Green
+      break
+    case 'projectile_boss':
+      color = palette.warning // Orange
+      break
+    default:
+      color = 0xffffff
+  }
+
+  return new THREE.MeshStandardMaterial({
+    color: color,
+    emissive: color,
+    emissiveIntensity: emissiveIntensity.high, // 1.0
+    transparent: true,
+    opacity: 0.8
+  })
+}
+
+/**
+ * Create power-up material based on type.
+ */
+function createPowerUpMaterial(
+  meshType: MeshType,
+  palette: typeof gameConfig.visualTheme.palette,
+  emissiveIntensity: typeof gameConfig.visualTheme.emissiveIntensity
+): THREE.Material {
+  let color: number
+
+  switch (meshType) {
+    case 'powerup_shield':
+      color = palette.secondary // Cyan
+      break
+    case 'powerup_rapidfire':
+      color = 0xffff00 // Yellow
+      break
+    case 'powerup_multishot':
+      color = palette.accent // Magenta
+      break
+    case 'powerup_extralife':
+      color = palette.success // Green
+      break
+    default:
+      color = 0xffffff
+  }
+
+  return new THREE.MeshStandardMaterial({
+    color: color,
+    emissive: color,
+    emissiveIntensity: emissiveIntensity.high, // 1.0
+    metalness: 0.8,
+    roughness: 0.2
+  })
+}
+
+/**
+ * Create material based on material type (legacy fallback).
  */
 function createMaterial(materialType: MaterialType): THREE.Material {
   switch (materialType) {

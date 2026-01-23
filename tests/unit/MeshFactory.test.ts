@@ -144,29 +144,35 @@ describe('MeshFactory', () => {
   })
 
   describe('Material Types', () => {
-    it('should create mesh with standard material', () => {
+    it('should create mesh with MeshStandardMaterial for ship (per Task 7.4)', () => {
       const mesh = MeshFactory.createMesh('ship', 'standard') as THREE.Mesh
 
       expect(mesh.material).toBeDefined()
-      expect(mesh.material).toBeInstanceOf(THREE.MeshPhongMaterial)
+      // Per Task 7.4: Ship uses MeshStandardMaterial with emissive
+      expect(mesh.material).toBeInstanceOf(THREE.MeshStandardMaterial)
+      const material = mesh.material as THREE.MeshStandardMaterial
+      expect(material.emissiveIntensity).toBe(0.5) // Medium intensity
     })
 
-    it('should create mesh with transparent material', () => {
+    it('should create mesh with MeshStandardMaterial for projectile (per Task 7.4)', () => {
       const mesh = MeshFactory.createMesh('projectile_default', 'transparent') as THREE.Mesh
 
       expect(mesh.material).toBeDefined()
-      expect(mesh.material).toBeInstanceOf(THREE.MeshPhongMaterial)
-      const material = mesh.material as THREE.MeshPhongMaterial
+      // Per Task 7.4: Projectiles use MeshStandardMaterial with emissive
+      expect(mesh.material).toBeInstanceOf(THREE.MeshStandardMaterial)
+      const material = mesh.material as THREE.MeshStandardMaterial
       expect(material.transparent).toBe(true)
+      expect(material.emissiveIntensity).toBe(1.0) // High intensity
     })
 
-    it('should create mesh with emissive material', () => {
+    it('should create mesh with MeshStandardMaterial for boss (per Task 7.4)', () => {
       const mesh = MeshFactory.createMesh('boss_destroyer', 'emissive') as THREE.Mesh
 
       expect(mesh.material).toBeDefined()
-      expect(mesh.material).toBeInstanceOf(THREE.MeshPhongMaterial)
-      const material = mesh.material as THREE.MeshPhongMaterial
-      expect(material.emissiveIntensity).toBeGreaterThan(0)
+      // Per Task 7.4: Boss uses MeshStandardMaterial with emissive
+      expect(mesh.material).toBeInstanceOf(THREE.MeshStandardMaterial)
+      const material = mesh.material as THREE.MeshStandardMaterial
+      expect(material.emissiveIntensity).toBe(0.8) // Boss intensity
     })
   })
 

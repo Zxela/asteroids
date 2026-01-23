@@ -137,18 +137,18 @@ describe('SceneManager', () => {
   })
 
   describe('lighting setup', () => {
-    it('should add directional light with intensity 0.8', async () => {
+    it('should add directional light with intensity 1.0 (per Task 7.4)', async () => {
       sceneManager = new SceneManager()
       await sceneManager.init()
 
-      expect(THREE.DirectionalLight).toHaveBeenCalledWith(0xffffff, 0.8)
+      expect(THREE.DirectionalLight).toHaveBeenCalledWith(0xffffff, 1.0)
     })
 
-    it('should add ambient light with intensity 0.2', async () => {
+    it('should add ambient light with dark blue color and intensity 0.4 (per Task 7.4)', async () => {
       sceneManager = new SceneManager()
       await sceneManager.init()
 
-      expect(THREE.AmbientLight).toHaveBeenCalledWith(0xffffff, 0.2)
+      expect(THREE.AmbientLight).toHaveBeenCalledWith(0x222244, 0.4)
     })
   })
 

@@ -5,14 +5,18 @@
  * - Creates meshes for entities with Renderable component
  * - Updates mesh position/rotation/scale from Transform component
  * - Manages mesh visibility based on Renderable.visible
- * - Handles invulnerability flashing from Health component
+ * - Handles invulnerability flashing and emissive pulse from Health component
+ * - Updates boss material colors based on phase
+ * - Rotates power-up meshes continuously
  * - Cleans up meshes when entities are destroyed
  *
+ * Per Task 7.4: Visual Polish Pass
  * Following ADR-0003: Rendering Strategy with Three.js.
  */
 
 import * as THREE from 'three'
-import { Health, Renderable, Transform } from '../components'
+import { Boss, Health, PowerUp, Renderable, Transform } from '../components'
+import { gameConfig } from '../config/gameConfig'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
 import { MeshFactory } from '../rendering/MeshFactory'
 
@@ -21,6 +25,8 @@ import { MeshFactory } from '../rendering/MeshFactory'
 const TransformClass = Transform as unknown as ComponentClass<Transform>
 const RenderableClass = Renderable as unknown as ComponentClass<Renderable>
 const HealthClass = Health as unknown as ComponentClass<Health>
+const BossClass = Boss as unknown as ComponentClass<Boss>
+const PowerUpClass = PowerUp as unknown as ComponentClass<PowerUp>
 
 /**
  * RenderSystem syncs ECS entities with Three.js scene objects.
@@ -39,9 +45,18 @@ export class RenderSystem implements System {
   private scene: THREE.Scene
   private meshMap: Map<EntityId, THREE.Object3D> = new Map()
   private lastFlashTime: Map<EntityId, number> = new Map()
+  private pulseElapsedTime: Map<EntityId, number> = new Map()
+  private powerUpRotation: Map<EntityId, number> = new Map()
 
   // Flash interval for invulnerability effect (100ms per Design Doc)
   private static readonly FLASH_INTERVAL = 100
+
+  // Boss phase colors per Task 7.4
+  private static readonly BOSS_PHASE_COLORS = {
+    1: 0x0088ff, // Blue
+    2: 0xff8800, // Orange
+    3: 0xff0000 // Red
+  }
 
   /**
    * Create a RenderSystem.
@@ -87,14 +102,35 @@ export class RenderSystem implements System {
       mesh.rotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z)
       mesh.scale.copy(transform.scale)
 
-      // Handle visibility with invulnerability flashing
+      // Handle visibility with invulnerability flashing and emissive pulse
       // Check invulnerabilityTimer > 0 as specified in Task 3.6
       const health = world.getComponent(entityId, HealthClass)
       if (health && health.invulnerabilityTimer > 0) {
         this.updateFlashingVisibility(mesh, entityId, deltaTime)
+        // Only pulse ship entities (meshType === 'ship')
+        if (renderable.meshType === 'ship') {
+          this.updateShipInvulnerabilityPulse(mesh, entityId, deltaTime)
+        }
       } else {
         mesh.visible = renderable.visible
         this.lastFlashTime.delete(entityId)
+        this.pulseElapsedTime.delete(entityId)
+        // Reset emissive intensity to default when not invulnerable (only for ship)
+        if (renderable.meshType === 'ship') {
+          this.resetShipEmissiveIntensity(mesh)
+        }
+      }
+
+      // Update boss visual effects (phase-based color)
+      const boss = world.getComponent(entityId, BossClass)
+      if (boss) {
+        this.updateBossVisuals(mesh, boss)
+      }
+
+      // Update power-up visual effects (rotation)
+      const powerUp = world.getComponent(entityId, PowerUpClass)
+      if (powerUp) {
+        this.updatePowerUpVisuals(mesh, entityId, deltaTime)
       }
     }
 
@@ -119,6 +155,86 @@ export class RenderSystem implements System {
     // Flash every FLASH_INTERVAL ms (toggle visibility)
     const flashCycle = currentTime % (RenderSystem.FLASH_INTERVAL * 2)
     mesh.visible = flashCycle < RenderSystem.FLASH_INTERVAL
+  }
+
+  /**
+   * Update ship emissive intensity pulse during invulnerability.
+   * Per Task 7.4: 5Hz frequency, intensity oscillates between 0.5 and 1.0
+   * Formula: 0.75 + 0.25 * sin(elapsedTime * 2 * PI * frequency)
+   * This gives range [0.5, 1.0] since sin ranges [-1, 1]
+   */
+  private updateShipInvulnerabilityPulse(
+    mesh: THREE.Object3D,
+    entityId: EntityId,
+    deltaTime: number
+  ): void {
+    if (!(mesh instanceof THREE.Mesh)) return
+
+    const material = mesh.material as THREE.MeshStandardMaterial
+    if (material.emissiveIntensity === undefined) return
+
+    // Track elapsed time for pulse calculation
+    const elapsedTime = (this.pulseElapsedTime.get(entityId) ?? 0) + deltaTime / 1000 // Convert to seconds
+    this.pulseElapsedTime.set(entityId, elapsedTime)
+
+    // Calculate pulsing intensity: 0.75 + 0.25 * sin(time * 2 * PI * frequency)
+    // This oscillates between 0.5 (when sin=-1) and 1.0 (when sin=1)
+    const frequency = gameConfig.visualTheme.animationSpeeds.invulnerabilityPulse
+    const pulseIntensity = 0.75 + 0.25 * Math.sin(elapsedTime * 2 * Math.PI * frequency)
+
+    material.emissiveIntensity = pulseIntensity
+  }
+
+  /**
+   * Reset ship emissive intensity to default value.
+   */
+  private resetShipEmissiveIntensity(mesh: THREE.Object3D): void {
+    if (!(mesh instanceof THREE.Mesh)) return
+
+    const material = mesh.material as THREE.MeshStandardMaterial
+    if (material.emissiveIntensity === undefined) return
+
+    // Reset to default medium intensity
+    material.emissiveIntensity = gameConfig.visualTheme.emissiveIntensity.medium
+  }
+
+  /**
+   * Update boss material color based on current phase.
+   * Per Task 7.4:
+   * - Phase 1: Blue (#0088FF)
+   * - Phase 2: Orange (#FF8800)
+   * - Phase 3: Red (#FF0000)
+   */
+  private updateBossVisuals(mesh: THREE.Object3D, boss: Boss): void {
+    if (!(mesh instanceof THREE.Mesh)) return
+
+    const material = mesh.material as THREE.MeshStandardMaterial
+    if (!material.color) return
+
+    // Get color for current phase (default to phase 1 if invalid)
+    const phaseKey = Math.min(Math.max(boss.phase, 1), 3) as 1 | 2 | 3
+    const color = RenderSystem.BOSS_PHASE_COLORS[phaseKey]
+
+    // Update both color and emissive to match phase
+    material.color.setHex(color)
+    material.emissive.setHex(color)
+  }
+
+  /**
+   * Update power-up mesh rotation.
+   * Per Task 7.4: Rotate at PI/2 radians per second (90 degrees/second)
+   */
+  private updatePowerUpVisuals(mesh: THREE.Object3D, entityId: EntityId, deltaTime: number): void {
+    // Get current rotation or initialize
+    const currentRotation = this.powerUpRotation.get(entityId) ?? mesh.rotation.y
+
+    // Calculate new rotation: add (PI/2 * deltaTime/1000) radians
+    const rotationSpeed = gameConfig.visualTheme.animationSpeeds.powerUpRotation
+    const newRotation = currentRotation + rotationSpeed * (deltaTime / 1000)
+
+    // Apply rotation to mesh
+    mesh.rotation.y = newRotation
+    this.powerUpRotation.set(entityId, newRotation)
   }
 
   /**
@@ -152,10 +268,12 @@ export class RenderSystem implements System {
       }
     }
 
-    // Remove from mesh map
+    // Remove from mesh map and associated tracking maps
     for (const id of toRemove) {
       this.meshMap.delete(id)
       this.lastFlashTime.delete(id)
+      this.pulseElapsedTime.delete(id)
+      this.powerUpRotation.delete(id)
     }
   }
 

@@ -89,17 +89,19 @@ export class SceneManager {
 
   /**
    * Setup scene lighting.
-   * Uses DirectionalLight (0.8 intensity) + AmbientLight (0.2 intensity)
-   * for proper 3D object visibility.
+   * Per Task 7.4: Visual Polish Pass
+   * - DirectionalLight: white, intensity 1.0, position (5, 10, 5)
+   * - AmbientLight: dark blue (#222244), intensity 0.4
+   * Creates cyberpunk/neon atmosphere while ensuring mesh visibility.
    */
   private setupLighting(): void {
-    // Main directional light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
-    directionalLight.position.set(1, 1, 1)
+    // Main directional light - white, positioned for good coverage
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
+    directionalLight.position.set(5, 10, 5)
     this.scene.add(directionalLight)
 
-    // Ambient light for fill
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2)
+    // Ambient light - dark blue for cyberpunk atmosphere
+    const ambientLight = new THREE.AmbientLight(0x222244, 0.4)
     this.scene.add(ambientLight)
   }
 

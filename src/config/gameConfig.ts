@@ -143,6 +143,60 @@ export interface PerformanceConfig {
 }
 
 /**
+ * Visual theme color palette configuration.
+ */
+export interface VisualPaletteConfig {
+  /** Primary color (Blue #0088FF) */
+  readonly primary: number
+  /** Secondary color (Cyan #00FFFF) */
+  readonly secondary: number
+  /** Accent color (Magenta #FF00FF) */
+  readonly accent: number
+  /** Warning color (Orange #FF8800) */
+  readonly warning: number
+  /** Danger color (Red #FF0000) */
+  readonly danger: number
+  /** Success color (Green #00FF00) */
+  readonly success: number
+  /** Neutral color (Gray #808080) */
+  readonly neutral: number
+}
+
+/**
+ * Emissive intensity levels configuration.
+ */
+export interface EmissiveIntensityConfig {
+  /** Low intensity (0.3) - for ambient glow like asteroids */
+  readonly low: number
+  /** Medium intensity (0.5) - for noticeable glow like ship */
+  readonly medium: number
+  /** High intensity (1.0) - for bright glow like projectiles, power-ups */
+  readonly high: number
+}
+
+/**
+ * Animation speed configuration.
+ */
+export interface AnimationSpeedsConfig {
+  /** Ship invulnerability pulse frequency (Hz) */
+  readonly invulnerabilityPulse: number
+  /** Power-up rotation speed (radians per second) */
+  readonly powerUpRotation: number
+}
+
+/**
+ * Visual theme configuration for cyberpunk/neon aesthetic.
+ */
+export interface VisualThemeConfig {
+  /** Color palette */
+  readonly palette: VisualPaletteConfig
+  /** Emissive intensity levels */
+  readonly emissiveIntensity: EmissiveIntensityConfig
+  /** Animation speeds */
+  readonly animationSpeeds: AnimationSpeedsConfig
+}
+
+/**
  * Weapon type configuration.
  */
 export interface WeaponTypeConfig {
@@ -188,6 +242,8 @@ export interface GameConfig {
   readonly performance: PerformanceConfig
   /** Weapons configuration */
   readonly weapons: WeaponsConfig
+  /** Visual theme configuration (colors, emissive, animations) */
+  readonly visualTheme: VisualThemeConfig
 }
 
 // ============================================
@@ -303,6 +359,26 @@ export const gameConfig: GameConfig = {
       projectileSpeed: 350,
       damage: 15,
       cooldown: 500
+    }
+  },
+  visualTheme: {
+    palette: {
+      primary: 0x0088ff, // Blue
+      secondary: 0x00ffff, // Cyan
+      accent: 0xff00ff, // Magenta
+      warning: 0xff8800, // Orange
+      danger: 0xff0000, // Red
+      success: 0x00ff00, // Green
+      neutral: 0x808080 // Gray
+    },
+    emissiveIntensity: {
+      low: 0.3, // Asteroids (ambient glow)
+      medium: 0.5, // Ship (noticeable)
+      high: 1.0 // Projectiles, power-ups (bright)
+    },
+    animationSpeeds: {
+      invulnerabilityPulse: 5, // Hz (5 pulses per second)
+      powerUpRotation: Math.PI / 2 // rad/s (90 degrees per second)
     }
   }
 }
