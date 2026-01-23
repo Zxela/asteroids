@@ -8,7 +8,9 @@
  * Component setup:
  * - Transform: Position, rotation toward direction
  * - Velocity: Speed based on weapon type
- * - Collider: Small sphere, "projectile" layer, collides with "asteroid" and "boss"
+ * - Collider: Small sphere, configurable layer and mask
+ *   - Player projectiles: "projectile" layer, collides with "asteroid" and "boss"
+ *   - Boss projectiles: "bossProjectile" layer, collides with "player"
  * - Renderable: Mesh type based on weapon type, emissive material
  * - Projectile: Damage, owner, lifetime, type, optional homing target
  */
@@ -18,7 +20,7 @@ import { Collider, Renderable, Transform, Velocity } from '../components'
 import { Projectile } from '../components/Projectile'
 import { gameConfig } from '../config'
 import type { EntityId, World } from '../ecs/types'
-import type { MeshType, WeaponType } from '../types/components'
+import type { CollisionLayer, MeshType, WeaponType } from '../types/components'
 
 /**
  * Projectile type for factory (same as weapon types).
@@ -60,7 +62,8 @@ const MESH_TYPE_MAP: Record<ProjectileType, MeshType> = {
   single: 'projectile_default',
   spread: 'projectile_spread',
   laser: 'projectile_laser',
-  homing: 'projectile_missile'
+  homing: 'projectile_missile',
+  boss: 'projectile_boss'
 }
 
 /**
@@ -109,10 +112,16 @@ export function createProjectile(world: World, config: ProjectileConfig): Entity
   const linearVelocity = normalizedDirection.multiplyScalar(speed)
   world.addComponent(projectileId, new Velocity(linearVelocity, new Vector3(0, 0, 0)))
 
-  // Collider: Small sphere on "projectile" layer, collides with "asteroid" and "boss"
+  // Collider: Configure based on projectile type
+  // Boss projectiles use "bossProjectile" layer and only collide with "player"
+  // Player projectiles use "projectile" layer and collide with "asteroid" and "boss"
+  const isBossProjectile = config.type === 'boss'
+  const collisionLayer: CollisionLayer = isBossProjectile ? 'bossProjectile' : 'projectile'
+  const collisionMask: CollisionLayer[] = isBossProjectile ? ['player'] : ['asteroid', 'boss']
+
   world.addComponent(
     projectileId,
-    new Collider('sphere', PROJECTILE_RADIUS, 'projectile', ['asteroid', 'boss'])
+    new Collider('sphere', PROJECTILE_RADIUS, collisionLayer, collisionMask)
   )
 
   // Renderable: Mesh type based on weapon type, emissive material

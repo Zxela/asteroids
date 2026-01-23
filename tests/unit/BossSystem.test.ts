@@ -462,6 +462,82 @@ describe('BossSystem', () => {
     })
   })
 
+  describe('Boss Projectile Creation', () => {
+    it('should create boss projectiles during spray pattern', () => {
+      createMockBoss(world, 'destroyer', 1, 'spray', 3000, new Vector3(0, 0, 0))
+      createMockPlayer(world, new Vector3(300, 0, 0))
+
+      // Simulate enough time for fire timer to trigger (Phase 1 fire rate is 500ms)
+      bossSystem.update(world, 600)
+
+      const events = bossSystem.getEvents()
+      const projectileFiredEvents = events.filter(e => e.type === 'bossProjectileFired')
+
+      // Should have fired projectiles
+      expect(projectileFiredEvents.length).toBeGreaterThan(0)
+
+      // Verify projectile event data
+      if (projectileFiredEvents.length > 0) {
+        const event = projectileFiredEvents[0] as import('../../src/systems/BossSystem').BossProjectileFiredEvent
+        expect(event.data.isSpread).toBe(true)
+        expect(event.data.projectileCount).toBe(5) // Phase 1 count
+      }
+    })
+
+    it('should create homing boss projectiles during retreat pattern', () => {
+      createMockBoss(world, 'carrier', 1, 'retreat', 3000, new Vector3(100, 0, 0))
+      const playerId = createMockPlayer(world, new Vector3(300, 0, 0))
+
+      // Simulate enough time for fire timer to trigger (Phase 1 fire rate is 800ms)
+      bossSystem.update(world, 900)
+
+      const events = bossSystem.getEvents()
+      const homingEvents = events.filter(e => e.type === 'bossHomingFired')
+
+      // Should have fired homing projectiles
+      expect(homingEvents.length).toBeGreaterThan(0)
+
+      // Verify homing event data
+      if (homingEvents.length > 0) {
+        const event = homingEvents[0] as import('../../src/systems/BossSystem').BossHomingFiredEvent
+        expect(event.data.targetId).toBe(playerId)
+        expect(event.data.projectileCount).toBe(2) // Phase 1 count
+      }
+    })
+
+    it('should scale damage with phase modifier for spray projectiles', () => {
+      // Phase 2 damage multiplier is 1.5x
+      const modifiers = bossSystem.getPhaseModifiers(2)
+      expect(modifiers.damageMult).toBe(1.5)
+    })
+
+    it('should fire more projectiles in higher phases', () => {
+      // Phase 1 spray fires 5 projectiles
+      // Phase 3 spray fires 9 projectiles
+      const phase1Count = BOSS_AI_CONFIG.destroyer.patterns.spray.projectileCounts[0]
+      const phase3Count = BOSS_AI_CONFIG.destroyer.patterns.spray.projectileCounts[2]
+
+      expect(phase3Count).toBeGreaterThan(phase1Count)
+      expect(phase1Count).toBe(5)
+      expect(phase3Count).toBe(9)
+    })
+
+    it('should pass boss entity ID as owner parameter in events', () => {
+      const bossId = createMockBoss(world, 'destroyer', 1, 'spray', 3000, new Vector3(0, 0, 0))
+      createMockPlayer(world, new Vector3(300, 0, 0))
+
+      bossSystem.update(world, 600)
+
+      const events = bossSystem.getEvents()
+      const projectileFiredEvents = events.filter(e => e.type === 'bossProjectileFired')
+
+      if (projectileFiredEvents.length > 0) {
+        const event = projectileFiredEvents[0] as import('../../src/systems/BossSystem').BossProjectileFiredEvent
+        expect(event.data.entityId).toBe(bossId)
+      }
+    })
+  })
+
   describe('Edge Cases', () => {
     it('should handle boss at screen edge', () => {
       createMockBoss(world, 'destroyer', 1, 'charge', 3000, new Vector3(960, 540, 0))

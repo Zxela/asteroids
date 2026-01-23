@@ -83,6 +83,13 @@ export const WEAPON_CONFIGS: Record<WeaponType, WeaponTypeConfig> = {
     ammo: 10,
     homingAcceleration: 200,
     homingRange: 500
+  },
+  boss: {
+    type: 'boss',
+    cooldown: 500,
+    projectileSpeed: 350,
+    damage: 15,
+    ammo: 'infinite'
   }
 }
 

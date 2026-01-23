@@ -212,7 +212,8 @@ export class HUD {
       single: 'SINGLE SHOT',
       spread: 'SPREAD SHOT',
       laser: 'LASER',
-      homing: 'HOMING MISSILES'
+      homing: 'HOMING MISSILES',
+      boss: 'BOSS'
     }
     this.weaponElement.textContent = weaponNames[weapon]
 

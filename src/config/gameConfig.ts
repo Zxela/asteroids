@@ -166,6 +166,8 @@ export interface WeaponsConfig {
   readonly laser: WeaponTypeConfig
   /** Homing missile weapon */
   readonly homing: WeaponTypeConfig
+  /** Boss projectile weapon */
+  readonly boss: WeaponTypeConfig
 }
 
 /**
@@ -296,6 +298,11 @@ export const gameConfig: GameConfig = {
       projectileSpeed: 300,
       damage: 20,
       cooldown: 300
+    },
+    boss: {
+      projectileSpeed: 350,
+      damage: 15,
+      cooldown: 500
     }
   }
 }

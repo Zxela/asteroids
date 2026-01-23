@@ -434,6 +434,122 @@ describe('CollisionSystem', () => {
     })
   })
 
+  describe('Boss Projectile Collisions', () => {
+    it('should detect boss projectile collision with player', () => {
+      const playerEntity = world.createEntity()
+      world.addComponent(playerEntity, new Transform(new Vector3(0, 0, 0)))
+      world.addComponent(
+        playerEntity,
+        new Collider('sphere', 20, 'player', ['asteroid', 'powerup', 'bossProjectile'])
+      )
+
+      const bossProjectile = world.createEntity()
+      // Player radius 20 + projectile radius 5 = 25 collision range
+      // Position at 20 < 25, so they will collide
+      world.addComponent(bossProjectile, new Transform(new Vector3(20, 0, 0)))
+      world.addComponent(
+        bossProjectile,
+        new Collider('sphere', 5, 'bossProjectile', ['player'])
+      )
+
+      collisionSystem.update(world, 16)
+
+      expect(collisionSystem.getCollisionCount()).toBe(1)
+      const collisions = collisionSystem.getCollisions()
+      expect(collisions[0].layer1).toBe('player')
+      expect(collisions[0].layer2).toBe('bossProjectile')
+    })
+
+    it('should not detect boss projectile collision with asteroid', () => {
+      const asteroidEntity = world.createEntity()
+      world.addComponent(asteroidEntity, new Transform(new Vector3(0, 0, 0)))
+      world.addComponent(
+        asteroidEntity,
+        new Collider('sphere', 30, 'asteroid', ['player', 'projectile'])
+      )
+
+      const bossProjectile = world.createEntity()
+      world.addComponent(bossProjectile, new Transform(new Vector3(25, 0, 0)))
+      world.addComponent(
+        bossProjectile,
+        new Collider('sphere', 5, 'bossProjectile', ['player'])
+      )
+
+      collisionSystem.update(world, 16)
+
+      expect(collisionSystem.getCollisionCount()).toBe(0)
+    })
+
+    it('should not detect boss projectile collision with boss', () => {
+      const bossEntity = world.createEntity()
+      world.addComponent(bossEntity, new Transform(new Vector3(0, 0, 0)))
+      world.addComponent(
+        bossEntity,
+        new Collider('sphere', 50, 'boss', ['player', 'projectile'])
+      )
+
+      const bossProjectile = world.createEntity()
+      world.addComponent(bossProjectile, new Transform(new Vector3(30, 0, 0)))
+      world.addComponent(
+        bossProjectile,
+        new Collider('sphere', 5, 'bossProjectile', ['player'])
+      )
+
+      collisionSystem.update(world, 16)
+
+      expect(collisionSystem.getCollisionCount()).toBe(0)
+    })
+
+    it('should not detect boss projectile collision with player projectile', () => {
+      const playerProjectile = world.createEntity()
+      world.addComponent(playerProjectile, new Transform(new Vector3(0, 0, 0)))
+      world.addComponent(
+        playerProjectile,
+        new Collider('sphere', 5, 'projectile', ['asteroid', 'boss'])
+      )
+
+      const bossProjectile = world.createEntity()
+      world.addComponent(bossProjectile, new Transform(new Vector3(5, 0, 0)))
+      world.addComponent(
+        bossProjectile,
+        new Collider('sphere', 5, 'bossProjectile', ['player'])
+      )
+
+      collisionSystem.update(world, 16)
+
+      expect(collisionSystem.getCollisionCount()).toBe(0)
+    })
+
+    it('should detect multiple boss projectiles colliding with player', () => {
+      const playerEntity = world.createEntity()
+      world.addComponent(playerEntity, new Transform(new Vector3(0, 0, 0)))
+      world.addComponent(
+        playerEntity,
+        new Collider('sphere', 30, 'player', ['asteroid', 'powerup', 'bossProjectile'])
+      )
+
+      // Create 3 boss projectiles near the player
+      const positions = [
+        new Vector3(20, 0, 0),
+        new Vector3(0, 20, 0),
+        new Vector3(-20, 0, 0)
+      ]
+
+      for (const pos of positions) {
+        const projectile = world.createEntity()
+        world.addComponent(projectile, new Transform(pos))
+        world.addComponent(
+          projectile,
+          new Collider('sphere', 5, 'bossProjectile', ['player'])
+        )
+      }
+
+      collisionSystem.update(world, 16)
+
+      expect(collisionSystem.getCollisionCount()).toBe(3)
+    })
+  })
+
   describe('Z-Axis Collision (2.5D)', () => {
     it('should ignore Z-axis for collision detection', () => {
       const entity1 = world.createEntity()

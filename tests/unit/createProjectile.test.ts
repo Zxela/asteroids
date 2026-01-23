@@ -470,6 +470,123 @@ describe('createProjectile', () => {
     })
   })
 
+  describe('Boss Projectile', () => {
+    it('should create boss projectile with correct type', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const projectile = world.getComponent(projectileId, Projectile)
+      expect(projectile?.projectileType).toBe('boss')
+    })
+
+    it('should have bossProjectile collision layer', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const collider = world.getComponent(projectileId, Collider)
+      expect(collider?.layer).toBe('bossProjectile')
+    })
+
+    it('should collide with player only', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const collider = world.getComponent(projectileId, Collider)
+      expect(collider?.mask).toContain('player')
+      expect(collider?.mask).not.toContain('asteroid')
+      expect(collider?.mask).not.toContain('boss')
+    })
+
+    it('should have boss projectile speed of 350', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(1, 0, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const velocity = world.getComponent(projectileId, Velocity)
+      expect(velocity?.linear.length()).toBeCloseTo(350, 0)
+    })
+
+    it('should have correct mesh type for boss projectile', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const renderable = world.getComponent(projectileId, Renderable)
+      expect(renderable?.meshType).toBe('projectile_boss')
+    })
+
+    it('should have emissive material for boss projectile', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const renderable = world.getComponent(projectileId, Renderable)
+      expect(renderable?.material).toBe('emissive')
+    })
+
+    it('should accept custom damage for boss projectile (phase scaling)', () => {
+      const phaseDamage = 30
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any,
+        damage: phaseDamage
+      })
+
+      const projectile = world.getComponent(projectileId, Projectile)
+      expect(projectile?.damage).toBe(phaseDamage)
+    })
+
+    it('should apply default boss projectile damage when not specified', () => {
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any
+      })
+
+      const projectile = world.getComponent(projectileId, Projectile)
+      // Boss projectile default damage is 15
+      expect(projectile?.damage).toBe(15)
+    })
+
+    it('should support homing target for boss projectile', () => {
+      const targetId = 42 as any
+      const projectileId = createProjectile(world, {
+        position: new Vector3(0, 0, 0),
+        direction: new Vector3(0, 1, 0),
+        type: 'boss',
+        owner: 1 as any,
+        homingTarget: targetId
+      })
+
+      const projectile = world.getComponent(projectileId, Projectile)
+      expect(projectile?.homingTarget).toBe(targetId)
+    })
+  })
+
   describe('Projectile Component Methods', () => {
     it('should track elapsed time correctly', () => {
       const projectileId = createProjectile(world, {

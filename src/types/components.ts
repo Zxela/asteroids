@@ -106,6 +106,7 @@ export type MeshType =
   | 'projectile_spread'
   | 'projectile_laser'
   | 'projectile_missile'
+  | 'projectile_boss'
   | 'powerup_shield'
   | 'powerup_rapidfire'
   | 'powerup_multishot'
@@ -136,7 +137,7 @@ export interface RenderableComponent extends Component {
 /**
  * Weapon type identifiers.
  */
-export type WeaponType = 'single' | 'spread' | 'laser' | 'homing'
+export type WeaponType = 'single' | 'spread' | 'laser' | 'homing' | 'boss'
 
 /**
  * Weapon component - weapon state and capabilities.
