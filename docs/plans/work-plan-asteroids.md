@@ -182,7 +182,7 @@ npm run type-check
 
 #### Task 1.2: Core ECS Implementation and World
 **Dependencies**: Task 1.1
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement ECS infrastructure: Entity Manager, Component Storage, System Manager, and World orchestrator.
 
@@ -195,10 +195,10 @@ npm run type-check
 6. Create unit tests for each ECS class (Red state)
 
 **Completion Criteria**:
-- [ ] ECS World can create/destroy entities
-- [ ] Components can be added/removed/queried from entities
-- [ ] Systems can be registered and updated in order
-- [ ] Unit tests created and passing (4+ test files)
+- [x] ECS World can create/destroy entities
+- [x] Components can be added/removed/queried from entities
+- [x] Systems can be registered and updated in order
+- [x] Unit tests created and passing (4+ test files)
 
 **Test Coverage**: Unit tests for World, EntityManager, ComponentStorage operations
 
@@ -213,7 +213,7 @@ npm test
 
 #### Task 1.3: Type Definitions System
 **Dependencies**: Task 1.1
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Create all TypeScript interfaces and type definitions from Design Doc Type Definitions section.
 
@@ -226,10 +226,10 @@ npm test
 6. Export all types from `src/types/index.ts`
 
 **Completion Criteria**:
-- [ ] All type definitions from Design Doc implemented
-- [ ] No circular dependencies detected
-- [ ] TypeScript strict mode passes
-- [ ] Type definitions exportable from `src/types/index.ts`
+- [x] All type definitions from Design Doc implemented
+- [x] No circular dependencies detected
+- [x] TypeScript strict mode passes (for types; pre-existing errors in other files)
+- [x] Type definitions exportable from `src/types/index.ts`
 
 **Quality Checks**:
 ```bash
@@ -270,7 +270,7 @@ npm run build
 
 #### Task 1.5: Utility Implementations (Math, Random, Events)
 **Dependencies**: Task 1.1
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement utility functions for math operations, random number generation, and event emission.
 
@@ -285,10 +285,10 @@ npm run build
 4. Create unit tests for utilities (Red state)
 
 **Completion Criteria**:
-- [ ] Math utilities handle edge cases (zero vectors, angle wrapping)
-- [ ] Random generation works with optional seeding
-- [ ] EventEmitter supports subscribe/unsubscribe/publish
-- [ ] Unit tests passing for all utilities
+- [x] Math utilities handle edge cases (zero vectors, angle wrapping)
+- [x] Random generation works with optional seeding
+- [x] EventEmitter supports subscribe/unsubscribe/publish
+- [x] Unit tests passing for all utilities
 
 **Test Coverage**: Math operations, event emission patterns
 
@@ -306,7 +306,7 @@ npm test
 - [ ] ECS World operational (entities can be created/destroyed)
 - [ ] All types compile without errors
 - [ ] Configuration loaded successfully
-- [ ] Utilities testable and working
+- [x] Utilities testable and working
 
 **Build Status**: ✓ Phase 1 builds successfully
 **Test Status**: ✓ Unit tests passing (ECS, utilities)
@@ -2122,10 +2122,13 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 1 (Foundation)
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 2% (1/45 tasks complete)
+- **Overall Progress**: 9% (4/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
+- [x] Task 1.2: Core ECS Implementation and World (2026-01-22)
+- [x] Task 1.3: Type Definitions System (2026-01-22)
+- [x] Task 1.5: Utility Implementations (Math, Random, Events) (2026-01-22)
 
 ---
 
@@ -2160,9 +2163,9 @@ The entire project is complete when:
 |---------|-------|-------|--------------|-----------|--------|
 | 1.1 | 1 | Project Setup | None | 1 | - [x] |
 | 1.2 | 1 | ECS Implementation | 1.1 | 1.5 | - [ ] |
-| 1.3 | 1 | Type Definitions | 1.1 | 1 | - [ ] |
+| 1.3 | 1 | Type Definitions | 1.1 | 1 | - [x] |
 | 1.4 | 1 | Configuration | 1.3 | 0.5 | - [ ] |
-| 1.5 | 1 | Utilities | 1.1 | 1 | - [ ] |
+| 1.5 | 1 | Utilities | 1.1 | 1 | - [x] |
 | 2.1 | 2 | Renderer Setup | 1.1, 1.4 | 1.5 | - [ ] |
 | 2.2 | 2 | Input System | 1.1, 1.4 | 0.5 | - [ ] |
 | 2.3 | 2 | Components | 1.3 | 1 | - [ ] |

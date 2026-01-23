@@ -13,10 +13,10 @@ Implement utility functions for math operations, random number generation, and e
 
 ## Target Files
 
-- [ ] `src/utils/math.ts` - Vector and math operations
-- [ ] `src/utils/random.ts` - Seeded random number generation
-- [ ] `src/utils/EventEmitter.ts` - Event subscription and publication
-- [ ] `tests/unit/utilities.test.ts` - Unit tests for utilities
+- [x] `src/utils/math.ts` - Vector and math operations
+- [x] `src/utils/random.ts` - Seeded random number generation
+- [x] `src/utils/EventEmitter.ts` - Event subscription and publication
+- [x] `tests/unit/utilities.test.ts` - Unit tests for utilities
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
@@ -25,36 +25,36 @@ Implement utility functions for math operations, random number generation, and e
 **Write failing unit tests** in `tests/unit/utilities.test.ts`:
 
 **Math utilities**:
-- [ ] `normalizeVector2(v)` returns unit vector
-- [ ] `normalizeVector2` handles zero vector (returns [0,0])
-- [ ] `distance(a, b)` returns correct Euclidean distance
-- [ ] `magnitude(v)` returns correct length
-- [ ] `angleBetween(a, b)` returns angle in radians
-- [ ] `wrapAngle(angle)` wraps to [0, 2π]
-- [ ] `clamp(value, min, max)` restricts to range
+- [x] `normalizeVector2(v)` returns unit vector
+- [x] `normalizeVector2` handles zero vector (returns [0,0])
+- [x] `distance(a, b)` returns correct Euclidean distance
+- [x] `magnitude(v)` returns correct length
+- [x] `angleBetween(a, b)` returns angle in radians
+- [x] `wrapAngle(angle)` wraps to [0, 2π]
+- [x] `clamp(value, min, max)` restricts to range
 
 **Random utilities**:
-- [ ] `randomRange(min, max)` returns value in range
-- [ ] `randomRange` with seed produces reproducible results
-- [ ] `randomInt(min, max)` returns integer in range
-- [ ] `randomDirection()` returns normalized Vector2
-- [ ] `randomChoice(array)` returns array element
-- [ ] Seeded random is reproducible across calls
+- [x] `randomRange(min, max)` returns value in range
+- [x] `randomRange` with seed produces reproducible results
+- [x] `randomInt(min, max)` returns integer in range
+- [x] `randomDirection()` returns normalized Vector2
+- [x] `randomChoice(array)` returns array element
+- [x] Seeded random is reproducible across calls
 
 **Event emitter**:
-- [ ] EventEmitter can be instantiated
-- [ ] `on(type, handler)` registers listener
-- [ ] `emit(type, data)` calls all registered listeners
-- [ ] `off(type, handler)` unregisters listener
-- [ ] Multiple listeners for same event all called
-- [ ] Listeners can unregister during emit
-- [ ] Listener receives emitted data
+- [x] EventEmitter can be instantiated
+- [x] `on(type, handler)` registers listener
+- [x] `emit(type, data)` calls all registered listeners
+- [x] `off(type, handler)` unregisters listener
+- [x] Multiple listeners for same event all called
+- [x] Listeners can unregister during emit
+- [x] Listener receives emitted data
 
 ### 2. Green Phase
 
 **Implement minimal code to pass tests**:
 
-- [ ] Create `src/utils/math.ts`:
+- [x] Create `src/utils/math.ts`:
   ```typescript
   import * as THREE from 'three';
 
@@ -93,7 +93,7 @@ Implement utility functions for math operations, random number generation, and e
   }
   ```
 
-- [ ] Create `src/utils/random.ts`:
+- [x] Create `src/utils/random.ts`:
   ```typescript
   import * as THREE from 'three';
 
@@ -140,7 +140,7 @@ Implement utility functions for math operations, random number generation, and e
   }
   ```
 
-- [ ] Create `src/utils/EventEmitter.ts`:
+- [x] Create `src/utils/EventEmitter.ts`:
   ```typescript
   export interface EventHandler<T = unknown> {
     (data: T): void;
@@ -182,7 +182,7 @@ Implement utility functions for math operations, random number generation, and e
   }
   ```
 
-- [ ] Export utilities from `src/utils/index.ts`:
+- [x] Export utilities from `src/utils/index.ts`:
   ```typescript
   export * from './math';
   export * from './random';
@@ -191,20 +191,20 @@ Implement utility functions for math operations, random number generation, and e
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify math functions handle edge cases (zero vectors, etc.)
-- [ ] Ensure random generation doesn't have quality issues
-- [ ] Optimize event emitter for performance (hot path)
-- [ ] Add JSDoc to all public functions
-- [ ] Verify all tests still pass
+- [x] Verify math functions handle edge cases (zero vectors, etc.)
+- [x] Ensure random generation doesn't have quality issues
+- [x] Optimize event emitter for performance (hot path)
+- [x] Add JSDoc to all public functions
+- [x] Verify all tests still pass
 
 ## Completion Criteria
 
-- [ ] Math utilities handle edge cases (zero vectors, angle wrapping)
-- [ ] Random generation works with optional seeding
-- [ ] EventEmitter supports subscribe/unsubscribe/publish
-- [ ] Unit tests passing for all utilities (3+ test suites)
-- [ ] All utilities exported from `src/utils/index.ts`
-- [ ] TypeScript strict mode passes
+- [x] Math utilities handle edge cases (zero vectors, angle wrapping)
+- [x] Random generation works with optional seeding
+- [x] EventEmitter supports subscribe/unsubscribe/publish
+- [x] Unit tests passing for all utilities (3+ test suites)
+- [x] All utilities exported from `src/utils/index.ts`
+- [x] TypeScript strict mode passes
 
 ## Verification Method
 

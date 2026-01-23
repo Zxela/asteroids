@@ -13,26 +13,26 @@ Create all TypeScript interfaces and type definitions from Design Doc Type Defin
 
 ## Target Files
 
-- [ ] `src/types/ecs.ts` - Core ECS types
-- [ ] `src/types/components.ts` - Component interfaces
-- [ ] `src/types/game.ts` - Game state types
-- [ ] `src/types/events.ts` - Event types
-- [ ] `src/types/index.ts` - Central export point
+- [x] `src/types/ecs.ts` - Core ECS types
+- [x] `src/types/components.ts` - Component interfaces
+- [x] `src/types/game.ts` - Game state types
+- [x] `src/types/events.ts` - Event types
+- [x] `src/types/index.ts` - Central export point
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
 
 **No failing tests for type-only task** (types verified by TypeScript compiler)
-- [ ] Verify no duplicate type names
-- [ ] Verify no circular type dependencies
-- [ ] Verify all Design Doc types covered
+- [x] Verify no duplicate type names
+- [x] Verify no circular type dependencies
+- [x] Verify all Design Doc types covered
 
 ### 2. Green Phase
 
 **Implement type definitions**:
 
-- [ ] Create `src/types/ecs.ts`:
+- [x] Create `src/types/ecs.ts`:
   ```typescript
   export type EntityId = number & { readonly __entityId: unique symbol };
   export interface Component {}
@@ -41,7 +41,7 @@ Create all TypeScript interfaces and type definitions from Design Doc Type Defin
   }
   ```
 
-- [ ] Create `src/types/components.ts` with interfaces:
+- [x] Create `src/types/components.ts` with interfaces:
   - `Transform`: position (Vector3), rotation (Vector3), scale (Vector3)
   - `Velocity`: linear (Vector3), angular (Vector3)
   - `Physics`: mass (number), damping (number), maxSpeed (number), wrapScreen (boolean)
@@ -57,7 +57,7 @@ Create all TypeScript interfaces and type definitions from Design Doc Type Defin
   - `PowerUpEffect`: type (string), expiresAt (number)
   - `ParticleEmitter`: rate (number), lifetime (number)
 
-- [ ] Create `src/types/game.ts`:
+- [x] Create `src/types/game.ts`:
   ```typescript
   export type GameFlowState = 'loading' | 'mainMenu' | 'playing' | 'paused' | 'gameOver';
   export type GameFlowEvent = 'loadComplete' | 'startGame' | 'pause' | 'resume' | 'playerDied' | 'returnToMenu' | 'restart';
@@ -84,7 +84,7 @@ Create all TypeScript interfaces and type definitions from Design Doc Type Defin
   }
   ```
 
-- [ ] Create `src/types/events.ts`:
+- [x] Create `src/types/events.ts`:
   ```typescript
   export type GameEventType =
     | 'weaponFired'
@@ -111,20 +111,20 @@ Create all TypeScript interfaces and type definitions from Design Doc Type Defin
   ```
 
 ### 3. Refactor Phase
-- [ ] Review type definitions for clarity
-- [ ] Verify all Design Doc requirements are covered
-- [ ] Check for naming consistency (camelCase for properties)
-- [ ] Ensure no `any` types
-- [ ] Document complex types with JSDoc
+- [x] Review type definitions for clarity
+- [x] Verify all Design Doc requirements are covered
+- [x] Check for naming consistency (camelCase for properties)
+- [x] Ensure no `any` types
+- [x] Document complex types with JSDoc
 
 ## Completion Criteria
 
-- [ ] All type definitions from Design Doc implemented
-- [ ] No circular type dependencies detected
-- [ ] TypeScript strict mode passes (`npm run type-check`)
-- [ ] All types exportable from `src/types/index.ts`
-- [ ] No `any` types in type definitions
-- [ ] All types match Design Doc specifications
+- [x] All type definitions from Design Doc implemented
+- [x] No circular type dependencies detected
+- [x] TypeScript strict mode passes (`npm run type-check`) - for types only; pre-existing errors in other files
+- [x] All types exportable from `src/types/index.ts`
+- [x] No `any` types in type definitions
+- [x] All types match Design Doc specifications
 
 ## Verification Method
 

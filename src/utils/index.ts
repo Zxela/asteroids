@@ -1,8 +1,32 @@
 /**
  * Utilities Module
  *
- * Utility functions will be implemented in Task 1.5.
- * Includes math operations, random generation, and event handling.
+ * Utility functions for math operations, random generation, and event handling.
+ * These are foundational utilities used by all subsequent game systems.
+ *
+ * @module utils
  */
 
-export {}
+// Math utilities - vector operations, angle calculations
+export {
+  normalizeVector2,
+  distance,
+  magnitude,
+  angleBetween,
+  wrapAngle,
+  clamp,
+  lerp
+} from './math'
+
+// Random utilities - seeded random number generation
+export {
+  setSeed,
+  randomRange,
+  randomInt,
+  randomDirection,
+  randomChoice
+} from './random'
+
+// Event system - subscription and publication
+export { EventEmitter } from './EventEmitter'
+export type { EventHandler } from './EventEmitter'
