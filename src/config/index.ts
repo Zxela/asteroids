@@ -39,3 +39,24 @@ export type {
 // ============================================
 export { POWER_UP_CONFIGS, getPowerUpConfig } from './powerUpConfig'
 export type { PowerUpEffectConfig } from './powerUpConfig'
+
+// ============================================
+// Boss AI Configuration Exports
+// ============================================
+export {
+  BOSS_AI_CONFIG,
+  getFirstPattern,
+  getNextPattern,
+  getPhaseModifier
+} from './bossConfig'
+export type {
+  BossAIConfig,
+  PhaseModifier,
+  DestroyerConfig,
+  CarrierConfig,
+  PatternConfig,
+  ChargePatternConfig,
+  SprayPatternConfig,
+  SummonPatternConfig,
+  RetreatPatternConfig
+} from './bossConfig'

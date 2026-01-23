@@ -153,13 +153,14 @@ export class BossHealthBar {
     // Green (>66%) -> Yellow (33-66%) -> Orange (15-33%) -> Red (<15%)
     if (percentage > 66) {
       return '#00ff00' // Green
-    } else if (percentage > 33) {
-      return '#ffff00' // Yellow
-    } else if (percentage > 15) {
-      return '#ff8800' // Orange
-    } else {
-      return '#ff0000' // Red
     }
+    if (percentage > 33) {
+      return '#ffff00' // Yellow
+    }
+    if (percentage > 15) {
+      return '#ff8800' // Orange
+    }
+    return '#ff0000' // Red
   }
 
   /**

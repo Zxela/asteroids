@@ -15,12 +15,12 @@
  * - Phase 3: 25% - 0% health
  */
 
-import { Health } from '../components/Health'
 import { Boss } from '../components/Boss'
+import { Health } from '../components/Health'
+import { gameConfig } from '../config'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
 import type { BossType } from '../types/components'
 import type { BossHealthBar } from '../ui/BossHealthBar'
-import { gameConfig } from '../config'
 
 // Type assertions for component classes
 const BossClass = Boss as unknown as ComponentClass<Boss>
@@ -232,11 +232,11 @@ export class BossHealthSystem implements System {
 
     if (percentage > 50) {
       return 1
-    } else if (percentage > 25) {
-      return 2
-    } else {
-      return 3
     }
+    if (percentage > 25) {
+      return 2
+    }
+    return 3
   }
 
   /**

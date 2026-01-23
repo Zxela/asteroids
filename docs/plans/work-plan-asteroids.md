@@ -2121,9 +2121,9 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 5 (Enhanced Features) - IN PROGRESS
+- **Active Phase**: Phase 6 (Boss System) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 56% (25/45 tasks complete)
+- **Overall Progress**: 60% (27/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2152,6 +2152,8 @@ The entire project is complete when:
 - [x] Task 5.3: Power-up Entities and Spawning (2026-01-23)
 - [x] Task 5.4: Power-up Effects System (2026-01-23)
 - [x] Task 5.5: Enhanced HUD with Power-up Display (2026-01-23)
+- [x] Task 6.1: Boss Entity and Health System (2026-01-23)
+- [x] Task 6.2: Boss AI System (2026-01-23)
 
 ---
 
@@ -2218,8 +2220,8 @@ The entire project is complete when:
 | 5.5 | 5 | Power-up HUD | 3.7, 5.4 | 0.5 | - [x] |
 | 5.6 | 5 | Weapons (Spread/Laser) | 3.2, 2.2 | 1 | - [ ] |
 | 5.7 | 5 | Homing Missiles | 5.6 | 0.5 | - [x] |
-| 6.1 | 6 | Boss Entity | 4.2, 3.5 | 1 | - [ ] |
-| 6.2 | 6 | Boss AI | 6.1, 2.9 | 1 | - [ ] |
+| 6.1 | 6 | Boss Entity | 4.2, 3.5 | 1 | - [x] |
+| 6.2 | 6 | Boss AI | 6.1, 2.9 | 1 | - [x] |
 | 6.3 | 6 | Boss Projectiles | 6.2, 2.9 | 0.5 | - [ ] |
 | 6.4 | 6 | Boss Rewards | 6.1, 3.4, 5.3 | 0.5 | - [ ] |
 | 7.1 | 7 | Particles | 2.7, 3.3 | 1 | - [ ] |
