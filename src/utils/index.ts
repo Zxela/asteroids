@@ -30,3 +30,6 @@ export {
 // Event system - subscription and publication
 export { EventEmitter } from './EventEmitter'
 export type { EventHandler } from './EventEmitter'
+
+// Object pooling for performance optimization
+export { ObjectPool } from './ObjectPool'

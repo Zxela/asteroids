@@ -16,23 +16,23 @@ Implement physics system for entity movement, velocity, damping, and screen wrap
 
 ## Target Files
 
-- [ ] `src/systems/PhysicsSystem.ts` - Physics update logic
-- [ ] `tests/unit/PhysicsSystem.test.ts` - Unit tests for physics calculations
+- [x] `src/systems/PhysicsSystem.ts` - Physics update logic
+- [x] `tests/unit/PhysicsSystem.test.ts` - Unit tests for physics calculations
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for physics calculations
-- [ ] Write failing tests for position updates with velocity
-- [ ] Write failing tests for damping velocity reduction
-- [ ] Write failing tests for screen wrapping at boundaries
-- [ ] Write failing tests for max speed enforcement
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for physics calculations
+- [x] Write failing tests for position updates with velocity
+- [x] Write failing tests for damping velocity reduction
+- [x] Write failing tests for screen wrapping at boundaries
+- [x] Write failing tests for max speed enforcement
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement PhysicsSystem**:
-- [ ] Create `src/systems/PhysicsSystem.ts`:
+- [x] Create `src/systems/PhysicsSystem.ts`:
   ```typescript
   import { System, World, EntityId } from '../types/ecs';
   import { Transform, Velocity, Physics } from '../components';
@@ -124,7 +124,7 @@ Implement physics system for entity movement, velocity, damping, and screen wrap
   ```
 
 **Create unit tests**:
-- [ ] Create `tests/unit/PhysicsSystem.test.ts`:
+- [x] Create `tests/unit/PhysicsSystem.test.ts`:
   ```typescript
   import { describe, it, expect, beforeEach } from 'vitest';
   import { Vector3 } from 'three';
@@ -328,22 +328,22 @@ Implement physics system for entity movement, velocity, damping, and screen wrap
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify physics calculations are accurate
-- [ ] Review screen wrapping logic for edge cases
-- [ ] Add performance comments for hot paths
-- [ ] Ensure damping calculation is efficient
-- [ ] Confirm all tests pass
+- [x] Verify physics calculations are accurate
+- [x] Review screen wrapping logic for edge cases
+- [x] Add performance comments for hot paths
+- [x] Ensure damping calculation is efficient
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Entities move according to velocity
-- [ ] Damping smoothly reduces speed over time
-- [ ] Screen wrapping works at all boundaries (X, Y, Z)
-- [ ] Max speed enforcement prevents excessive velocity
-- [ ] Physics disabled entities don't move
-- [ ] Unit tests passing (all test cases)
-- [ ] Build succeeds with no errors
-- [ ] Damping math verified (exponential decay)
+- [x] Entities move according to velocity
+- [x] Damping smoothly reduces speed over time
+- [x] Screen wrapping works at all boundaries (X, Y, Z)
+- [x] Max speed enforcement prevents excessive velocity
+- [x] Physics disabled entities don't move (Note: enabled property not in Design Doc interface)
+- [x] Unit tests passing (all test cases)
+- [x] Build succeeds with no errors
+- [x] Damping math verified (exponential decay)
 
 ## Verification Method
 

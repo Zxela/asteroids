@@ -1,8 +1,9 @@
 /**
  * Entities Module
  *
- * Entity factory functions will be implemented starting in Task 2.5.
- * Factories create entities with predefined component configurations.
+ * Entity factory functions for creating game entities with predefined
+ * component configurations. Each factory creates an entity and adds
+ * all required components with proper initial values.
  */
 
-export {}
+export { createShip } from './createShip'

@@ -6,3 +6,6 @@
  */
 
 export { InputSystem, type GameAction } from './InputSystem'
+export { PhysicsSystem } from './PhysicsSystem'
+export { ShipControlSystem } from './ShipControlSystem'
+export { RenderSystem } from './RenderSystem'

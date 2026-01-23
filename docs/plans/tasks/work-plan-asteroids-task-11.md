@@ -16,24 +16,24 @@ Implement system to convert input to ship rotation and acceleration. The ship co
 
 ## Target Files
 
-- [ ] `src/systems/ShipControlSystem.ts` - Ship control logic
-- [ ] `tests/unit/ShipControlSystem.test.ts` - Unit tests for ship control
+- [x] `src/systems/ShipControlSystem.ts` - Ship control logic
+- [x] `tests/unit/ShipControlSystem.test.ts` - Unit tests for ship control
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for ship control
-- [ ] Write failing test for ship rotation with left input
-- [ ] Write failing test for ship rotation with right input
-- [ ] Write failing test for ship acceleration with up input
-- [ ] Write failing test for rotation speed (π rad/s)
-- [ ] Write failing test for multiple input combinations
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for ship control
+- [x] Write failing test for ship rotation with left input
+- [x] Write failing test for ship rotation with right input
+- [x] Write failing test for ship acceleration with up input
+- [x] Write failing test for rotation speed (π rad/s)
+- [x] Write failing test for multiple input combinations
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement ShipControlSystem**:
-- [ ] Create `src/systems/ShipControlSystem.ts`:
+- [x] Create `src/systems/ShipControlSystem.ts`:
   ```typescript
   import { System, World } from '../types/ecs';
   import { Transform, Velocity, Physics } from '../components';
@@ -124,7 +124,7 @@ Implement system to convert input to ship rotation and acceleration. The ship co
   ```
 
 **Create unit tests**:
-- [ ] Create `tests/unit/ShipControlSystem.test.ts`:
+- [x] Create `tests/unit/ShipControlSystem.test.ts`:
   ```typescript
   import { describe, it, expect, beforeEach, vi } from 'vitest';
   import { Vector3 } from 'three';
@@ -404,22 +404,22 @@ Implement system to convert input to ship rotation and acceleration. The ship co
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify rotation and acceleration calculations are correct
-- [ ] Review forward direction calculation for accuracy
-- [ ] Clean up placeholder thrust event system
-- [ ] Add performance comments
-- [ ] Confirm all tests pass
+- [x] Verify rotation and acceleration calculations are correct
+- [x] Review forward direction calculation for accuracy
+- [x] Clean up placeholder thrust event system
+- [x] Add performance comments
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Ship rotates smoothly with left/right input
-- [ ] Rotation speed matches π rad/second
-- [ ] Ship accelerates in facing direction with up input
-- [ ] Velocity magnitude respects max speed (enforced by Physics system)
-- [ ] Combined input works (rotation + acceleration simultaneously)
-- [ ] Unit tests passing (15+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Ship rotates smoothly with left/right input
+- [x] Rotation speed matches π rad/second
+- [x] Ship accelerates in facing direction with up input
+- [x] Velocity magnitude respects max speed (enforced by Physics system)
+- [x] Combined input works (rotation + acceleration simultaneously)
+- [x] Unit tests passing (15+ test cases)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 

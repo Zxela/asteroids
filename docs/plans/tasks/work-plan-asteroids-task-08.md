@@ -14,27 +14,27 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
 
 ## Target Files
 
-- [ ] `src/components/Transform.ts` - Position, rotation, scale using Three.js Vector3
-- [ ] `src/components/Velocity.ts` - Linear and angular velocity vectors
-- [ ] `src/components/Physics.ts` - Mass, damping, maxSpeed, wrapScreen flags
-- [ ] `src/components/Collider.ts` - Shape, radius/size, collision layer and mask
-- [ ] `src/components/Renderable.ts` - Mesh type, material, visibility, Three.js sync ID
-- [ ] `src/components/Health.ts` - Current/max health, invulnerability timer
-- [ ] `src/components/Player.ts` - Lives and score tracking
-- [ ] `src/components/index.ts` - Component exports
+- [x] `src/components/Transform.ts` - Position, rotation, scale using Three.js Vector3
+- [x] `src/components/Velocity.ts` - Linear and angular velocity vectors
+- [x] `src/components/Physics.ts` - Mass, damping, maxSpeed, wrapScreen flags
+- [x] `src/components/Collider.ts` - Shape, radius/size, collision layer and mask
+- [x] `src/components/Renderable.ts` - Mesh type, material, visibility, Three.js sync ID
+- [x] `src/components/Health.ts` - Current/max health, invulnerability timer
+- [x] `src/components/Player.ts` - Lives and score tracking
+- [x] `src/components/index.ts` - Component exports
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for component structure validation
-- [ ] Verify each component implements Component interface from types
-- [ ] Test component instantiation and property access
-- [ ] Verify no circular dependencies between components
+- [x] Create test file for component structure validation
+- [x] Verify each component implements Component interface from types
+- [x] Test component instantiation and property access
+- [x] Verify no circular dependencies between components
 
 ### 2. Green Phase
 
 **Implement Transform component**:
-- [ ] Create `src/components/Transform.ts`:
+- [x] Create `src/components/Transform.ts`:
   ```typescript
   import { Vector3 } from 'three';
   import { Component } from '../types/ecs';
@@ -58,7 +58,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Implement Velocity component**:
-- [ ] Create `src/components/Velocity.ts`:
+- [x] Create `src/components/Velocity.ts`:
   ```typescript
   import { Vector3 } from 'three';
   import { Component } from '../types/ecs';
@@ -79,7 +79,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Implement Physics component**:
-- [ ] Create `src/components/Physics.ts`:
+- [x] Create `src/components/Physics.ts`:
   ```typescript
   import { Component } from '../types/ecs';
 
@@ -107,7 +107,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Implement Collider component**:
-- [ ] Create `src/components/Collider.ts`:
+- [x] Create `src/components/Collider.ts`:
   ```typescript
   import { Component } from '../types/ecs';
 
@@ -138,7 +138,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Implement Renderable component**:
-- [ ] Create `src/components/Renderable.ts`:
+- [x] Create `src/components/Renderable.ts`:
   ```typescript
   import { Component } from '../types/ecs';
 
@@ -177,7 +177,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Implement Health component**:
-- [ ] Create `src/components/Health.ts`:
+- [x] Create `src/components/Health.ts`:
   ```typescript
   import { Component } from '../types/ecs';
 
@@ -209,7 +209,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Implement Player component**:
-- [ ] Create `src/components/Player.ts`:
+- [x] Create `src/components/Player.ts`:
   ```typescript
   import { Component } from '../types/ecs';
 
@@ -236,7 +236,7 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 **Export components**:
-- [ ] Create `src/components/index.ts`:
+- [x] Create `src/components/index.ts`:
   ```typescript
   export { Transform } from './Transform';
   export { Velocity } from './Velocity';
@@ -248,22 +248,22 @@ Implement component classes for Transform, Velocity, Physics, Collider, Renderab
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify all components are pure data (no logic except helpers)
-- [ ] Ensure consistent naming and structure across all components
-- [ ] Add JSDoc comments for complex properties
-- [ ] Verify no hardcoded values (use config where applicable)
-- [ ] Confirm all components implement Component interface
+- [x] Verify all components are pure data (no logic except helpers)
+- [x] Ensure consistent naming and structure across all components
+- [x] Add JSDoc comments for complex properties
+- [x] Verify no hardcoded values (use config where applicable)
+- [x] Confirm all components implement Component interface
 
 ## Completion Criteria
 
-- [ ] All component classes implement Component interface
-- [ ] Components are pure data (no logic except trivial getters/setters)
-- [ ] Type safety enforced (strict TypeScript)
-- [ ] Components exportable from src/components/index.ts
-- [ ] All properties initialized in constructors
-- [ ] No circular dependencies between components
-- [ ] Unit tests passing for component instantiation
-- [ ] Build succeeds with no TypeScript errors
+- [x] All component classes implement Component interface
+- [x] Components are pure data (no logic except trivial getters/setters)
+- [x] Type safety enforced (strict TypeScript)
+- [x] Components exportable from src/components/index.ts
+- [x] All properties initialized in constructors
+- [x] No circular dependencies between components
+- [x] Unit tests passing for component instantiation
+- [x] Build succeeds with no TypeScript errors
 
 ## Verification Method
 

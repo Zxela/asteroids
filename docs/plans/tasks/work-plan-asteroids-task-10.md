@@ -16,24 +16,24 @@ Create ship entity with factory function and core components. The ship is the pl
 
 ## Target Files
 
-- [ ] `src/entities/createShip.ts` - Ship factory function
-- [ ] `tests/unit/createShip.test.ts` - Unit tests for ship creation
+- [x] `src/entities/createShip.ts` - Ship factory function
+- [x] `tests/unit/createShip.test.ts` - Unit tests for ship creation
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for ship creation
-- [ ] Write failing test for ship entity creation
-- [ ] Write failing test that ship has all required components
-- [ ] Write failing test for ship initial position (screen center)
-- [ ] Write failing test for ship initial state (3 lives, 0 score)
-- [ ] Write failing test for collider configuration
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for ship creation
+- [x] Write failing test for ship entity creation
+- [x] Write failing test that ship has all required components
+- [x] Write failing test for ship initial position (screen center)
+- [x] Write failing test for ship initial state (3 lives, 0 score)
+- [x] Write failing test for collider configuration
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement Ship Factory**:
-- [ ] Create `src/entities/createShip.ts`:
+- [x] Create `src/entities/createShip.ts`:
   ```typescript
   import { Vector3 } from 'three';
   import { World, EntityId } from '../types/ecs';
@@ -113,7 +113,7 @@ Create ship entity with factory function and core components. The ship is the pl
   ```
 
 **Create unit tests**:
-- [ ] Create `tests/unit/createShip.test.ts`:
+- [x] Create `tests/unit/createShip.test.ts`:
   ```typescript
   import { describe, it, expect, beforeEach } from 'vitest';
   import { Vector3 } from 'three';
@@ -367,22 +367,22 @@ Create ship entity with factory function and core components. The ship is the pl
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify all components properly initialized
-- [ ] Ensure configuration values match Design Doc
-- [ ] Add JSDoc comments explaining ship setup
-- [ ] Verify no hardcoded values (all from config or calculated)
-- [ ] Confirm all tests pass
+- [x] Verify all components properly initialized
+- [x] Ensure configuration values match Design Doc
+- [x] Add JSDoc comments explaining ship setup
+- [x] Verify no hardcoded values (all from config or calculated)
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Ship entity created with all required components
-- [ ] Ship positioned at center of screen (0, 0, 0)
-- [ ] Collider configured correctly (sphere, radius 20, player layer)
-- [ ] Initial state matches spec (3 lives, 0 score)
-- [ ] Physics properties use config values
-- [ ] Unit tests passing (all test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Ship entity created with all required components
+- [x] Ship positioned at center of screen (0, 0, 0)
+- [x] Collider configured correctly (sphere, radius 20, player layer)
+- [x] Initial state matches spec (3 lives, 0 score)
+- [x] Physics properties use config values
+- [x] Unit tests passing (all test cases)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 

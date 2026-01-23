@@ -397,7 +397,7 @@ npm test
 
 #### Task 2.3: Component Definitions
 **Dependencies**: Task 1.3
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement component classes for Transform, Velocity, Physics, Collider, and Renderable.
 
@@ -412,10 +412,10 @@ npm test
 8. Export components from `src/components/index.ts`
 
 **Completion Criteria**:
-- [ ] All component classes implement Component interface
-- [ ] Components are pure data (no logic)
-- [ ] Type safety enforced (strict TypeScript)
-- [ ] Components exportable from index
+- [x] All component classes implement Component interface
+- [x] Components are pure data (no logic)
+- [x] Type safety enforced (strict TypeScript)
+- [x] Components exportable from index
 
 **Quality Checks**:
 ```bash
@@ -426,7 +426,7 @@ npm run type-check
 
 #### Task 2.4: Physics System Implementation
 **Dependencies**: Task 2.3, Task 1.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement physics system for entity movement, velocity, damping, and screen wrapping.
 
@@ -445,10 +445,10 @@ npm run type-check
    - Max speed enforcement
 
 **Completion Criteria**:
-- [ ] Entities move according to velocity
-- [ ] Damping smoothly reduces speed
-- [ ] Screen wrapping works at all boundaries
-- [ ] Unit tests passing
+- [x] Entities move according to velocity
+- [x] Damping smoothly reduces speed
+- [x] Screen wrapping works at all boundaries
+- [x] Unit tests passing
 
 **Test Coverage**: Position update, damping, wrapping, max speed
 
@@ -462,7 +462,7 @@ npm test
 
 #### Task 2.5: Ship Entity and Factory
 **Dependencies**: Task 2.3, Task 2.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Create ship entity with factory function and core components.
 
@@ -480,10 +480,10 @@ npm test
 2. Create unit tests for ship creation
 
 **Completion Criteria**:
-- [ ] Ship entity created with all required components
-- [ ] Ship positioned at center of screen
-- [ ] Collider configured correctly
-- [ ] Initial state matches spec (3 lives, 0 score)
+- [x] Ship entity created with all required components
+- [x] Ship positioned at center of screen
+- [x] Collider configured correctly
+- [x] Initial state matches spec (3 lives, 0 score)
 
 **Test Coverage**: Ship component initialization
 
@@ -497,7 +497,7 @@ npm test
 
 #### Task 2.6: Ship Control System
 **Dependencies**: Task 2.2, Task 2.4, Task 2.5
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement system to convert input to ship rotation and acceleration.
 
@@ -511,10 +511,10 @@ npm test
 2. Connect system to game loop in `src/game/Game.ts`
 
 **Completion Criteria**:
-- [ ] Ship rotates smoothly with left/right input
-- [ ] Rotation speed matches π rad/second
-- [ ] Ship accelerates in facing direction with up input
-- [ ] Velocity magnitude respects max speed
+- [x] Ship rotates smoothly with left/right input
+- [x] Rotation speed matches π rad/second
+- [x] Ship accelerates in facing direction with up input
+- [x] Velocity magnitude respects max speed
 
 **Quality Checks**:
 ```bash
@@ -528,7 +528,7 @@ npm run type-check
 
 #### Task 2.7: Render System and Mesh Factory
 **Dependencies**: Task 2.1, Task 2.3, Task 2.6
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement ECS-to-Three.js rendering system with mesh creation and synchronization.
 
@@ -555,10 +555,10 @@ npm run type-check
    - Pool particles (500 initial)
 
 **Completion Criteria**:
-- [ ] Ship mesh created and synced to position/rotation
-- [ ] Meshes appear in Three.js scene
-- [ ] Transform changes reflected immediately in scene
-- [ ] Object pooling reduces allocations by 80%
+- [x] Ship mesh created and synced to position/rotation
+- [x] Meshes appear in Three.js scene
+- [x] Transform changes reflected immediately in scene
+- [x] Object pooling reduces allocations by 80%
 
 **Quality Checks**:
 ```bash
@@ -2122,7 +2122,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 2 (Minimal Playable Game) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 13% (6/45 tasks complete)
+- **Overall Progress**: 20% (9/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2131,6 +2131,9 @@ The entire project is complete when:
 - [x] Task 1.4: Configuration Constants (2026-01-22)
 - [x] Task 1.5: Utility Implementations (Math, Random, Events) (2026-01-22)
 - [x] Task 2.2: Input System Implementation (2026-01-22)
+- [x] Task 2.3: Component Definitions (2026-01-22)
+- [x] Task 2.4: Physics System Implementation (2026-01-22)
+- [x] Task 2.5: Ship Entity and Factory (2026-01-22)
 
 ---
 
@@ -2170,9 +2173,9 @@ The entire project is complete when:
 | 1.5 | 1 | Utilities | 1.1 | 1 | - [x] |
 | 2.1 | 2 | Renderer Setup | 1.1, 1.4 | 1.5 | - [ ] |
 | 2.2 | 2 | Input System | 1.1, 1.4 | 0.5 | - [x] |
-| 2.3 | 2 | Components | 1.3 | 1 | - [ ] |
-| 2.4 | 2 | Physics System | 2.3, 1.4 | 1 | - [ ] |
-| 2.5 | 2 | Ship Entity | 2.3, 2.4 | 0.5 | - [ ] |
+| 2.3 | 2 | Components | 1.3 | 1 | - [x] |
+| 2.4 | 2 | Physics System | 2.3, 1.4 | 1 | - [x] |
+| 2.5 | 2 | Ship Entity | 2.3, 2.4 | 0.5 | - [x] |
 | 2.6 | 2 | Ship Control | 2.2, 2.4, 2.5 | 0.5 | - [ ] |
 | 2.7 | 2 | Render System | 2.1, 2.3, 2.6 | 1.5 | - [ ] |
 | 2.8 | 2 | Asteroids | 2.3, 2.7 | 1 | - [ ] |
