@@ -1201,7 +1201,7 @@ npm test
 
 #### Task 5.2: Audio System Integration
 **Dependencies**: Task 5.1, Task 3.2, Task 3.3
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Connect audio playback to game events.
 
@@ -1217,10 +1217,11 @@ npm test
 2. Integrate into game loop
 
 **Completion Criteria**:
-- [ ] Audio plays on weapon fire
-- [ ] Audio plays on asteroid destruction
-- [ ] Sound selection appropriate for event
-- [ ] Volume levels reasonable
+- [x] Audio plays on weapon fire
+- [x] Audio plays on asteroid destruction
+- [x] Sound selection appropriate for event
+- [x] Volume levels reasonable
+- [x] Unit tests passing (36 tests)
 
 ---
 
@@ -1260,7 +1261,7 @@ npm test
 
 #### Task 5.4: Power-up Effects System
 **Dependencies**: Task 5.3, Task 2.9
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Implement power-up collection and effect application.
 
@@ -1286,14 +1287,14 @@ npm test
 3. Create unit tests for effect logic
 
 **Completion Criteria**:
-- [ ] Power-ups collectable
-- [ ] Effects applied immediately
-- [ ] Timers count down correctly
-- [ ] Shield prevents damage for duration
-- [ ] RapidFire halves cooldown
-- [ ] MultiShot changes projectile count
-- [ ] ExtraLife increments lives
-- [ ] Unit tests passing
+- [x] Power-ups collectable
+- [x] Effects applied immediately
+- [x] Timers count down correctly
+- [x] Shield prevents damage for duration
+- [x] RapidFire halves cooldown
+- [x] MultiShot changes projectile count
+- [x] ExtraLife increments lives
+- [x] Unit tests passing (46 tests)
 
 **Test Coverage**: Effect application, timer countdown, effect removal
 
@@ -1360,7 +1361,7 @@ npm test
 
 #### Task 5.7: Weapon System - Homing Missiles
 **Dependencies**: Task 5.6
-**Status**: - [ ]
+**Status**: - [x] COMPLETED
 
 **Description**: Implement homing missile weapon type.
 
@@ -1381,11 +1382,11 @@ npm test
 3. Create unit tests for homing logic
 
 **Completion Criteria**:
-- [ ] Homing missiles created with ammo limit
-- [ ] Projectiles track nearest asteroid
-- [ ] Ammo counter shown in HUD
-- [ ] Projectiles lose track when target destroyed
-- [ ] Unit tests passing
+- [x] Homing missiles created with ammo limit
+- [x] Projectiles track nearest asteroid
+- [x] Ammo counter shown in HUD
+- [x] Projectiles lose track when target destroyed
+- [x] Unit tests passing (87 tests, 26+ homing-related)
 
 **Test Coverage**: Target tracking, ammo counting
 
@@ -2122,7 +2123,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 5 (Enhanced Features) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 49% (22/45 tasks complete)
+- **Overall Progress**: 53% (24/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2147,7 +2148,9 @@ The entire project is complete when:
 - [x] Task 4.5: Game Over Screen (2026-01-22)
 - [x] Task 4.6: Leaderboard System (2026-01-23)
 - [x] Task 5.1: Audio Manager and Sound Effects (2026-01-23)
+- [x] Task 5.2: Audio System Integration (2026-01-23)
 - [x] Task 5.3: Power-up Entities and Spawning (2026-01-23)
+- [x] Task 5.4: Power-up Effects System (2026-01-23)
 
 ---
 
@@ -2210,10 +2213,10 @@ The entire project is complete when:
 | 5.1 | 5 | Audio Manager | 4.1 | 1 | - [x] |
 | 5.2 | 5 | Audio Integration | 5.1, 3.2, 3.3 | 0.5 | - [ ] |
 | 5.3 | 5 | Power-up Entities | 2.7, 3.3 | 0.5 | - [x] |
-| 5.4 | 5 | Power-up Effects | 5.3, 2.9 | 1 | - [ ] |
+| 5.4 | 5 | Power-up Effects | 5.3, 2.9 | 1 | - [x] |
 | 5.5 | 5 | Power-up HUD | 3.7, 5.4 | 0.5 | - [ ] |
 | 5.6 | 5 | Weapons (Spread/Laser) | 3.2, 2.2 | 1 | - [ ] |
-| 5.7 | 5 | Homing Missiles | 5.6 | 0.5 | - [ ] |
+| 5.7 | 5 | Homing Missiles | 5.6 | 0.5 | - [x] |
 | 6.1 | 6 | Boss Entity | 4.2, 3.5 | 1 | - [ ] |
 | 6.2 | 6 | Boss AI | 6.1, 2.9 | 1 | - [ ] |
 | 6.3 | 6 | Boss Projectiles | 6.2, 2.9 | 0.5 | - [ ] |
