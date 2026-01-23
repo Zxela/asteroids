@@ -1,8 +1,8 @@
 /**
  * UI Module
  *
- * User interface components will be implemented in Phase 3-4.
+ * User interface components for the game.
  * Includes HUD, menus, and leaderboard display.
  */
 
-export {}
+export { HUD } from './HUD'

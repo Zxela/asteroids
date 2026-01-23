@@ -19,3 +19,4 @@ export {
 } from './RespawnSystem'
 export { WeaponSystem, type WeaponFiredEvent } from './WeaponSystem'
 export { ScoreSystem } from './ScoreSystem'
+export { UISystem } from './UISystem'

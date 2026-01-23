@@ -88,8 +88,9 @@ export class RenderSystem implements System {
       mesh.scale.copy(transform.scale)
 
       // Handle visibility with invulnerability flashing
+      // Check invulnerabilityTimer > 0 as specified in Task 3.6
       const health = world.getComponent(entityId, HealthClass)
-      if (health?.invulnerable) {
+      if (health && health.invulnerabilityTimer > 0) {
         this.updateFlashingVisibility(mesh, entityId, deltaTime)
       } else {
         mesh.visible = renderable.visible

@@ -848,7 +848,7 @@ npm test
 - [x] Ship loses 1 life on collision
 - [x] Ship respawns at center with invulnerability
 - [x] Invulnerability duration 3 seconds (3000ms)
-- [ ] Visual flashing during invulnerability (Task 3.6)
+- [x] Visual flashing during invulnerability (Task 3.6)
 - [x] Game over when lives reach 0
 - [x] Unit tests passing (29 tests)
 
@@ -858,7 +858,7 @@ npm test
 
 #### Task 3.6: Render System Health/Invulnerability Visual
 **Dependencies**: Task 2.7, Task 3.5
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Add visual feedback for health and invulnerability status.
 
@@ -871,15 +871,15 @@ npm test
    - Remove flashing when timer expires
 
 **Completion Criteria**:
-- [ ] Ship flashes during invulnerability
-- [ ] Flashing frequency appropriate (visible but not distracting)
-- [ ] Visual stops after 3 seconds
+- [x] Ship flashes during invulnerability
+- [x] Flashing frequency appropriate (visible but not distracting)
+- [x] Visual stops after 3 seconds
 
 ---
 
 #### Task 3.7: Basic HUD Implementation
 **Dependencies**: Task 3.4, Task 3.5
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Create HTML HUD displaying score, lives, wave, and active weapon.
 
@@ -902,11 +902,11 @@ npm test
 4. Create unit tests for HUD update logic
 
 **Completion Criteria**:
-- [ ] HUD displays score correctly
-- [ ] HUD displays lives correctly
-- [ ] HUD displays wave correctly
-- [ ] HUD updates in real-time
-- [ ] HUD visible during gameplay, hidden in menus
+- [x] HUD displays score correctly
+- [x] HUD displays lives correctly
+- [x] HUD displays wave correctly
+- [x] HUD updates in real-time
+- [x] HUD visible during gameplay, hidden in menus
 
 **Test Coverage**: HUD update logic, DOM manipulation
 
@@ -2122,7 +2122,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 3 (Core Gameplay Loop) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 31% (14/45 tasks complete)
+- **Overall Progress**: 36% (16/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2139,6 +2139,8 @@ The entire project is complete when:
 - [x] Task 3.1: Projectile Entity and Factory (2026-01-22)
 - [x] Task 3.3: Projectile-Asteroid Collision and Destruction (2026-01-22)
 - [x] Task 3.5: Lives System with Respawn (2026-01-22)
+- [x] Task 3.6: Render System Health/Invulnerability Visual (2026-01-22)
+- [x] Task 3.7: Basic HUD Implementation (2026-01-22)
 
 ---
 
@@ -2190,8 +2192,8 @@ The entire project is complete when:
 | 3.3 | 3 | Destruction | 3.2, 2.9 | 1 | - [x] |
 | 3.4 | 3 | Scoring | 3.3, 2.5 | 0.5 | - [ ] |
 | 3.5 | 3 | Lives System | 2.5, 2.9 | 1 | - [x] |
-| 3.6 | 3 | Health Visual | 2.7, 3.5 | 0.5 | - [ ] |
-| 3.7 | 3 | HUD | 3.4, 3.5 | 0.5 | - [ ] |
+| 3.6 | 3 | Health Visual | 2.7, 3.5 | 0.5 | - [x] |
+| 3.7 | 3 | HUD | 3.4, 3.5 | 0.5 | - [x] |
 | 4.1 | 4 | State Machine | 1.1, 2.1 | 1 | - [ ] |
 | 4.2 | 4 | Wave System | 3.3, 3.4 | 0.5 | - [ ] |
 | 4.3 | 4 | Main Menu | 4.1 | 0.5 | - [ ] |
