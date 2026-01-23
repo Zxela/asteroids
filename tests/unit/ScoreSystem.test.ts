@@ -347,6 +347,212 @@ describe('ScoreSystem', () => {
     })
   })
 
+  describe('Boss Score', () => {
+    it('should award boss score on bossDefeated event', () => {
+      const player = world.getComponent(playerId, Player)
+
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      expect(player!.score).toBe(5000)
+    })
+
+    it('should calculate boss score for wave 5 (5000 points)', () => {
+      const player = world.getComponent(playerId, Player)
+
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      expect(player!.score).toBe(5000)
+    })
+
+    it('should calculate boss score for wave 10 (10000 points)', () => {
+      const player = world.getComponent(playerId, Player)
+
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'carrier',
+          wave: 10,
+          bonusScore: 10000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      expect(player!.score).toBe(10000)
+    })
+
+    it('should calculate boss score for wave 20 (20000 points)', () => {
+      const player = world.getComponent(playerId, Player)
+
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'carrier',
+          wave: 20,
+          bonusScore: 20000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      expect(player!.score).toBe(20000)
+    })
+
+    it('should emit scoreChanged event with boss reason', () => {
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      const events = scoreSystem.getEvents()
+      expect(events.length).toBe(1)
+      expect(events[0].type).toBe('scoreChanged')
+      expect(events[0].data.reason).toBe('boss')
+    })
+
+    it('should include correct data in boss scoreChanged event', () => {
+      const player = world.getComponent(playerId, Player)
+      player!.addScore(1000) // Start with some score
+
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      const events = scoreSystem.getEvents()
+      expect(events[0].data.previousScore).toBe(1000)
+      expect(events[0].data.newScore).toBe(6000)
+      expect(events[0].data.delta).toBe(5000)
+    })
+
+    it('should persist score across multiple boss defeats', () => {
+      const player = world.getComponent(playerId, Player)
+
+      // First boss (wave 5)
+      const bossEvent1 = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 998 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent1])
+      scoreSystem.update(world, 16)
+      expect(player!.score).toBe(5000)
+
+      // Second boss (wave 10)
+      const bossEvent2 = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'carrier',
+          wave: 10,
+          bonusScore: 10000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent2])
+      scoreSystem.update(world, 16)
+      expect(player!.score).toBe(15000)
+    })
+
+    it('should handle boss defeat with 0 existing score', () => {
+      const player = world.getComponent(playerId, Player)
+      expect(player!.score).toBe(0)
+
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      expect(player!.score).toBe(5000)
+    })
+
+    it('should handle combined asteroid and boss score in same frame', () => {
+      const player = world.getComponent(playerId, Player)
+
+      const asteroidEvent = createAsteroidDestroyedEvent(1, 'small', 100)
+      const bossEvent = {
+        type: 'bossDefeated' as const,
+        timestamp: Date.now(),
+        data: {
+          entityId: 999 as unknown as import('../../src/types').EntityId,
+          bossType: 'destroyer',
+          wave: 5,
+          bonusScore: 5000
+        }
+      }
+
+      scoreSystem.setAsteroidDestroyedEvents([asteroidEvent])
+      scoreSystem.setBossDefeatedEvents([bossEvent])
+      scoreSystem.update(world, 16)
+
+      expect(player!.score).toBe(5100) // 100 + 5000
+    })
+  })
+
   describe('Multiple Updates', () => {
     it('should not double-process events from previous frame', () => {
       const player = world.getComponent(playerId, Player)

@@ -12,7 +12,12 @@
 
 import { Player } from '../components/Player'
 import type { ComponentClass, System, World } from '../ecs/types'
-import type { AsteroidDestroyedEvent, AsteroidSize, ScoreChangedEvent } from '../types'
+import type {
+  AsteroidDestroyedEvent,
+  AsteroidSize,
+  BossDefeatedEvent,
+  ScoreChangedEvent
+} from '../types'
 
 // Type assertion for component class to work with ECS type system
 const PlayerClass = Player as unknown as ComponentClass<Player>
@@ -46,6 +51,9 @@ export class ScoreSystem implements System {
   /** Asteroid destroyed events to process this frame */
   private asteroidDestroyedEvents: AsteroidDestroyedEvent[] = []
 
+  /** Boss defeated events to process this frame */
+  private bossDefeatedEvents: BossDefeatedEvent[] = []
+
   /**
    * Set asteroid destroyed events from AsteroidDestructionSystem.
    * Called each frame with events from the destruction system.
@@ -54,6 +62,16 @@ export class ScoreSystem implements System {
    */
   setAsteroidDestroyedEvents(events: AsteroidDestroyedEvent[]): void {
     this.asteroidDestroyedEvents = events
+  }
+
+  /**
+   * Set boss defeated events from BossHealthSystem.
+   * Called each frame with events from the boss health system.
+   *
+   * @param events - Array of boss defeated events to process
+   */
+  setBossDefeatedEvents(events: BossDefeatedEvent[]): void {
+    this.bossDefeatedEvents = events
   }
 
   /**
@@ -75,6 +93,7 @@ export class ScoreSystem implements System {
     if (playerEntities.length === 0) {
       // Clear processed events and return
       this.asteroidDestroyedEvents = []
+      this.bossDefeatedEvents = []
       return
     }
 
@@ -83,6 +102,7 @@ export class ScoreSystem implements System {
     if (playerId === undefined) {
       // Clear processed events and return
       this.asteroidDestroyedEvents = []
+      this.bossDefeatedEvents = []
       return
     }
     const player = world.getComponent(playerId, PlayerClass)
@@ -90,6 +110,7 @@ export class ScoreSystem implements System {
     if (!player) {
       // Clear processed events and return
       this.asteroidDestroyedEvents = []
+      this.bossDefeatedEvents = []
       return
     }
 
@@ -115,8 +136,31 @@ export class ScoreSystem implements System {
       this.events.push(scoreEvent)
     }
 
+    // Process each boss defeated event
+    for (const event of this.bossDefeatedEvents) {
+      const bonusScore = event.data.bonusScore
+      const previousScore = player.score
+
+      // Update player score
+      player.addScore(bonusScore)
+
+      // Emit scoreChanged event with 'boss' reason
+      const scoreEvent: ScoreChangedEvent = {
+        type: 'scoreChanged',
+        timestamp: Date.now(),
+        data: {
+          previousScore,
+          newScore: player.score,
+          delta: bonusScore,
+          reason: 'boss'
+        }
+      }
+      this.events.push(scoreEvent)
+    }
+
     // Clear processed events
     this.asteroidDestroyedEvents = []
+    this.bossDefeatedEvents = []
   }
 
   /**

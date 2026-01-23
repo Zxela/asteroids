@@ -14,7 +14,7 @@ import { Asteroid } from '../components/Asteroid'
 import { gameConfig } from '../config'
 import type { ComponentClass, System, World } from '../ecs/types'
 import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
-import type { WaveProgressedEvent } from '../types'
+import type { BossDefeatedEvent, WaveProgressedEvent } from '../types'
 import { randomInt, randomRange } from '../utils/random'
 
 // Type assertion for component class to work with ECS type system
@@ -52,9 +52,31 @@ export class WaveSystem implements System {
   private transitioning = false
   private hasSpawnedThisWave = false
   private events: WaveProgressedEvent[] = []
+  private bossDefeatedEvents: BossDefeatedEvent[] = []
+  private isBossWaveActive = false
 
   constructor() {
     this.targetAsteroids = this.calculateAsteroidCount(1)
+  }
+
+  /**
+   * Set boss defeated events from BossHealthSystem.
+   * Called each frame with events from the boss health system.
+   *
+   * @param events - Array of boss defeated events to process
+   */
+  setBossDefeatedEvents(events: BossDefeatedEvent[]): void {
+    this.bossDefeatedEvents = events
+  }
+
+  /**
+   * Sets whether the current wave is a boss wave.
+   * Used to skip asteroid checks during boss encounters.
+   *
+   * @param active - True if boss wave is active
+   */
+  setBossWaveActive(active: boolean): void {
+    this.isBossWaveActive = active
   }
 
   /**
@@ -64,18 +86,31 @@ export class WaveSystem implements System {
    * - Wave transition delay countdown
    * - Initial asteroid spawning
    * - Detecting when all asteroids are destroyed
+   * - Boss defeat wave continuation
    *
    * @param world - The ECS world
    * @param deltaTime - Time elapsed since last frame in milliseconds
    */
   update(world: World, deltaTime: number): void {
+    // Process boss defeated events - triggers wave transition
+    if (this.bossDefeatedEvents.length > 0) {
+      this.handleBossDefeated()
+      this.bossDefeatedEvents = []
+    }
+
     // Handle wave transition delay
     if (this.transitioning) {
       this.transitionDelay -= deltaTime
       if (this.transitionDelay <= 0) {
         this.startNextWave(world)
         this.transitioning = false
+        this.isBossWaveActive = false
       }
+      return
+    }
+
+    // Skip asteroid spawning/checking during boss wave
+    if (this.isBossWaveActive) {
       return
     }
 
@@ -93,6 +128,16 @@ export class WaveSystem implements System {
     if (asteroids.length === 0 && this.asteroidsDestroyedThisWave > 0) {
       this.beginWaveTransition()
     }
+  }
+
+  /**
+   * Handles boss defeat by starting wave transition.
+   * Called when a bossDefeated event is received.
+   */
+  private handleBossDefeated(): void {
+    // Start the 3-second wave transition delay
+    this.beginWaveTransition()
+    // Mark boss wave as no longer active (will be cleared after transition)
   }
 
   /**

@@ -15,16 +15,23 @@
  * - Phase 3: 25% - 0% health
  */
 
+import { Vector3 } from 'three'
 import { Boss } from '../components/Boss'
 import { Health } from '../components/Health'
+import { Transform } from '../components/Transform'
 import { gameConfig } from '../config'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
-import type { BossType } from '../types/components'
+import { createPowerUp, getRandomPowerUpType } from '../entities/createPowerUp'
+import type { BossType, PowerUpType } from '../types/components'
 import type { BossHealthBar } from '../ui/BossHealthBar'
 
 // Type assertions for component classes
 const BossClass = Boss as unknown as ComponentClass<Boss>
 const HealthClass = Health as unknown as ComponentClass<Health>
+const TransformClass = Transform as unknown as ComponentClass<Transform>
+
+/** Extended power-up lifetime for boss rewards (30 seconds) */
+const BOSS_POWER_UP_LIFETIME = 30000
 
 /**
  * Boss phase changed event - emitted when boss enters a new phase.
@@ -110,6 +117,7 @@ export class BossHealthSystem implements System {
   private bossStates: Map<EntityId, BossState> = new Map()
   private currentWave = 5
   private healthBarShown = false
+  private world: World | null = null
 
   /**
    * Create a BossHealthSystem.
@@ -143,6 +151,9 @@ export class BossHealthSystem implements System {
    * @param deltaTime - Time elapsed since last frame in milliseconds
    */
   update(world: World, _deltaTime: number): void {
+    // Store world reference for spawning power-ups
+    this.world = world
+
     // Query for entities with Boss and Health components
     const bosses = world.query(BossClass, HealthClass)
 
@@ -160,6 +171,7 @@ export class BossHealthSystem implements System {
     for (const bossId of bosses) {
       const health = world.getComponent<Health>(bossId, HealthClass)
       const boss = world.getComponent<Boss>(bossId, BossClass)
+      const transform = world.getComponent<Transform>(bossId, TransformClass)
 
       if (!health || !boss) continue
 
@@ -182,10 +194,22 @@ export class BossHealthSystem implements System {
 
       // Check if boss was defeated
       if (health.current <= 0) {
+        // Get boss position for power-up spawning
+        const bossPosition = transform ? transform.position.clone() : new Vector3(0, 0, 0)
+
+        // Spawn guaranteed power-up at boss location
+        this.spawnBossReward(bossPosition, this.currentWave)
+
+        // Emit defeated event
         this.emitBossDefeatedEvent(bossId, boss.bossType)
+
+        // Hide health bar
         this.healthBar.hide()
         this.healthBarShown = false
         this.bossStates.delete(bossId)
+
+        // Mark boss entity for removal
+        world.destroyEntity(bossId)
         continue
       }
 
@@ -335,5 +359,53 @@ export class BossHealthSystem implements System {
    */
   hasBoss(): boolean {
     return this.healthBarShown
+  }
+
+  /**
+   * Calculates the boss score based on wave number.
+   * Formula: 1000 * wave (matches gameConfig.gameplay.scoring.bossMultiplier)
+   *
+   * @param wave - Current wave number
+   * @returns Calculated boss score
+   *
+   * @example
+   * ```typescript
+   * calculateBossScore(5) // Returns 5000
+   * calculateBossScore(10) // Returns 10000
+   * ```
+   */
+  calculateBossScore(wave: number): number {
+    return wave * gameConfig.gameplay.scoring.bossMultiplier
+  }
+
+  /**
+   * Selects a random power-up type from all available types.
+   * Each type has equal probability (25%).
+   *
+   * @returns A random PowerUpType
+   */
+  getRandomPowerUpType(): PowerUpType {
+    return getRandomPowerUpType()
+  }
+
+  /**
+   * Spawns a guaranteed power-up reward at the boss position.
+   * Power-up has extended lifetime of 30 seconds.
+   *
+   * @param position - World position to spawn the power-up
+   * @param _wave - Current wave number (unused, for future enhancements)
+   */
+  spawnBossReward(position: Vector3, _wave: number): void {
+    if (!this.world) {
+      return
+    }
+
+    const powerUpType = this.getRandomPowerUpType()
+
+    createPowerUp(this.world, {
+      position,
+      powerUpType,
+      lifetime: BOSS_POWER_UP_LIFETIME
+    })
   }
 }
