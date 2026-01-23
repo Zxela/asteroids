@@ -36,3 +36,6 @@ export { ObjectPool } from './ObjectPool'
 
 // Spatial partitioning for collision detection
 export { SpatialGrid, type SpatialGridConfig } from './SpatialGrid'
+
+// Leaderboard persistence
+export { LeaderboardStorage, type RankedLeaderboardEntry } from './LeaderboardStorage'

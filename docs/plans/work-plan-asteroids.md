@@ -1105,7 +1105,7 @@ npm test
 
 #### Task 4.6: Leaderboard System
 **Dependencies**: Task 4.5
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Implement leaderboard with localStorage persistence.
 
@@ -1126,13 +1126,13 @@ npm test
 3. Connect Game Over screen to leaderboard save
 
 **Completion Criteria**:
-- [ ] Scores persist to localStorage
-- [ ] Top 10 displayed in correct order
-- [ ] Leaderboard visible from main menu
-- [ ] New scores appear after refresh
-- [ ] Graceful fallback if localStorage unavailable
+- [x] Scores persist to localStorage
+- [x] Top 10 displayed in correct order
+- [x] Leaderboard visible from main menu
+- [x] New scores appear after refresh
+- [x] Graceful fallback if localStorage unavailable
 
-**Test Coverage**: Leaderboard storage, top 10 sorting
+**Test Coverage**: Leaderboard storage, top 10 sorting (60 tests passing)
 
 ---
 
@@ -2122,7 +2122,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 4 (Game Flow and Progression) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 44% (20/45 tasks complete)
+- **Overall Progress**: 47% (21/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2145,6 +2145,7 @@ The entire project is complete when:
 - [x] Task 4.2: Wave Progression System (2026-01-22)
 - [x] Task 4.4: Pause Menu (2026-01-23)
 - [x] Task 4.5: Game Over Screen (2026-01-22)
+- [x] Task 4.6: Leaderboard System (2026-01-23)
 
 ---
 
@@ -2203,7 +2204,7 @@ The entire project is complete when:
 | 4.3 | 4 | Main Menu | 4.1 | 0.5 | - [ ] |
 | 4.4 | 4 | Pause Menu | 4.1, 4.2 | 0.5 | - [x] |
 | 4.5 | 4 | Game Over Screen | 4.1, 3.4 | 0.5 | - [x] |
-| 4.6 | 4 | Leaderboard | 4.5 | 0.5 | - [ ] |
+| 4.6 | 4 | Leaderboard | 4.5 | 0.5 | - [x] |
 | 5.1 | 5 | Audio Manager | 4.1 | 1 | - [ ] |
 | 5.2 | 5 | Audio Integration | 5.1, 3.2, 3.3 | 0.5 | - [ ] |
 | 5.3 | 5 | Power-up Entities | 2.7, 3.3 | 0.5 | - [ ] |

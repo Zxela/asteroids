@@ -16,43 +16,43 @@ Implement leaderboard system with localStorage persistence for player scores. St
 
 ## Target Files
 
-- [ ] `src/utils/LeaderboardStorage.ts` - Leaderboard persistence logic
-- [ ] `src/ui/Leaderboard.ts` - Leaderboard display UI
-- [ ] `tests/unit/LeaderboardStorage.test.ts` - Storage tests
-- [ ] `tests/unit/Leaderboard.test.ts` - UI tests
+- [x] `src/utils/LeaderboardStorage.ts` - Leaderboard persistence logic
+- [x] `src/ui/Leaderboard.ts` - Leaderboard display UI
+- [x] `tests/unit/LeaderboardStorage.test.ts` - Storage tests
+- [x] `tests/unit/Leaderboard.test.ts` - UI tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
 
 **LeaderboardStorage Tests**:
-- [ ] Write failing test for save score with name, score, wave
-- [ ] Write failing test for load all scores from localStorage
-- [ ] Write failing test for scores sorted descending by score
-- [ ] Write failing test for top 10 entries returned (if more than 10 saved)
-- [ ] Write failing test for localStorage unavailability handling
-- [ ] Write failing test for score validity checks (non-negative, integer)
-- [ ] Write failing test for duplicate names allowed
-- [ ] Write failing test for timestamp added to entry
-- [ ] Write failing test for clear all scores
-- [ ] Write failing test for export scores as JSON
+- [x] Write failing test for save score with name, score, wave
+- [x] Write failing test for load all scores from localStorage
+- [x] Write failing test for scores sorted descending by score
+- [x] Write failing test for top 10 entries returned (if more than 10 saved)
+- [x] Write failing test for localStorage unavailability handling
+- [x] Write failing test for score validity checks (non-negative, integer)
+- [x] Write failing test for duplicate names allowed
+- [x] Write failing test for timestamp added to entry
+- [x] Write failing test for clear all scores
+- [x] Write failing test for export scores as JSON
 
 **Leaderboard UI Tests**:
-- [ ] Write failing test for leaderboard creation
-- [ ] Write failing test for leaderboard hidden initially
-- [ ] Write failing test for leaderboard shows on request
-- [ ] Write failing test for top 10 entries displayed
-- [ ] Write failing test for correct columns: Rank, Name, Score, Wave
-- [ ] Write failing test for entries sorted by score descending
-- [ ] Write failing test for back button hides leaderboard
-- [ ] Write failing test for scrolling if more than 10 entries (UI feature)
-- [ ] Write failing test for highlights player's entry if just submitted
-- [ ] Verify all tests fail (Red state)
+- [x] Write failing test for leaderboard creation
+- [x] Write failing test for leaderboard hidden initially
+- [x] Write failing test for leaderboard shows on request
+- [x] Write failing test for top 10 entries displayed
+- [x] Write failing test for correct columns: Rank, Name, Score, Wave
+- [x] Write failing test for entries sorted by score descending
+- [x] Write failing test for back button hides leaderboard
+- [x] Write failing test for scrolling if more than 10 entries (UI feature)
+- [x] Write failing test for highlights player's entry if just submitted
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement LeaderboardStorage**:
-- [ ] Create `src/utils/LeaderboardStorage.ts`:
+- [x] Create `src/utils/LeaderboardStorage.ts`:
   - Interface LeaderboardEntry:
     - name: string (1-20 characters)
     - score: number (non-negative integer)
@@ -88,7 +88,7 @@ Implement leaderboard system with localStorage persistence for player scores. St
       - Check if score would be in top 10
 
 **Implement Leaderboard UI**:
-- [ ] Create `src/ui/Leaderboard.ts`:
+- [x] Create `src/ui/Leaderboard.ts`:
   - Class Leaderboard with methods:
     - constructor(leaderboardStorage: LeaderboardStorage)
     - show(highlightPlayerName?: string): Display leaderboard overlay
@@ -117,7 +117,7 @@ Implement leaderboard system with localStorage persistence for player scores. St
     - Arrow keys: Scroll if needed (optional)
 
 **Create unit tests**:
-- [ ] Create `tests/unit/LeaderboardStorage.test.ts`:
+- [x] Create `tests/unit/LeaderboardStorage.test.ts`:
   - Test score save and load
   - Test top 10 retrieval (various quantities)
   - Test sorting accuracy (multiple scores)
@@ -130,7 +130,7 @@ Implement leaderboard system with localStorage persistence for player scores. St
   - Test score in top 10 detection
   - Edge cases: empty storage, single entry, tied scores
 
-- [ ] Create `tests/unit/Leaderboard.test.ts`:
+- [x] Create `tests/unit/Leaderboard.test.ts`:
   - Test leaderboard creation
   - Test show/hide functionality
   - Test top 10 display
@@ -143,30 +143,30 @@ Implement leaderboard system with localStorage persistence for player scores. St
   - Test rank numbering (1-10)
 
 ### 3. Refactor Phase
-- [ ] Verify localStorage error handling
-- [ ] Test score sorting with ties
-- [ ] Optimize table rendering performance
-- [ ] Add number formatting (commas in scores)
-- [ ] Test rank highlighting on just-submitted scores
-- [ ] Confirm all tests pass
+- [x] Verify localStorage error handling
+- [x] Test score sorting with ties
+- [x] Optimize table rendering performance
+- [x] Add number formatting (commas in scores)
+- [x] Test rank highlighting on just-submitted scores
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Scores persist to localStorage
-- [ ] Scores load from localStorage on startup
-- [ ] Top 10 entries displayed in correct order (descending by score)
-- [ ] Entries show: Rank (1-10), Name, Score, Wave
-- [ ] Leaderboard visible from main menu
-- [ ] Leaderboard shown after score submission
-- [ ] New player name entry highlighted after submission
-- [ ] Graceful fallback if localStorage unavailable
-- [ ] Score validation (non-negative, integer)
-- [ ] Name validation (1-20 characters)
-- [ ] Clear/reset functionality (for testing)
-- [ ] Scores persist across page reloads
-- [ ] Unit tests passing (20+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Scores persist to localStorage
+- [x] Scores load from localStorage on startup
+- [x] Top 10 entries displayed in correct order (descending by score)
+- [x] Entries show: Rank (1-10), Name, Score, Wave
+- [x] Leaderboard visible from main menu
+- [x] Leaderboard shown after score submission
+- [x] New player name entry highlighted after submission
+- [x] Graceful fallback if localStorage unavailable
+- [x] Score validation (non-negative, integer)
+- [x] Name validation (1-20 characters)
+- [x] Clear/reset functionality (for testing)
+- [x] Scores persist across page reloads
+- [x] Unit tests passing (20+ test cases)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 
