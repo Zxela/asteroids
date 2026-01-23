@@ -1,8 +1,13 @@
 /**
  * Audio Module
  *
- * Audio management will be implemented in Task 5.1.
- * Wraps Howler.js for game-specific audio API.
+ * Provides centralized audio management using Howler.js.
+ * Exports AudioManager singleton for game-wide audio control.
  */
 
-export {}
+export {
+  AudioManager,
+  type VolumeType,
+  type PlaySoundOptions,
+  type PlayMusicOptions
+} from './AudioManager'

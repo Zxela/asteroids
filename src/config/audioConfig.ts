@@ -46,6 +46,14 @@ export interface SfxConfig {
 }
 
 /**
+ * Lazy-load sound effects configuration - non-critical gameplay audio.
+ */
+export interface LazyLoadSfxConfig {
+  /** Game over sound effect */
+  readonly gameOver: AudioDefinition
+}
+
+/**
  * Music configuration - background and boss music.
  */
 export interface MusicConfig {
@@ -53,15 +61,19 @@ export interface MusicConfig {
   readonly background: AudioDefinition
   /** Boss battle music */
   readonly boss: AudioDefinition
+  /** Main menu music */
+  readonly menu: AudioDefinition
 }
 
 /**
  * Complete audio configuration combining SFX and music.
  */
 export interface AudioConfig {
-  /** Sound effects */
+  /** Sound effects (critical - preloaded) */
   readonly sfx: SfxConfig
-  /** Music tracks */
+  /** Lazy-loaded sound effects */
+  readonly lazyLoadSfx: LazyLoadSfxConfig
+  /** Music tracks (lazy-loaded) */
   readonly music: MusicConfig
 }
 
@@ -110,6 +122,14 @@ export const audioConfig: AudioConfig = {
       preload: true
     }
   },
+  lazyLoadSfx: {
+    gameOver: {
+      id: 'gameOver',
+      path: '/assets/audio/gameOver.mp3',
+      volume: 0.7,
+      preload: false
+    }
+  },
   music: {
     background: {
       id: 'music_background',
@@ -121,6 +141,12 @@ export const audioConfig: AudioConfig = {
       id: 'music_boss',
       path: '/assets/audio/boss.mp3',
       volume: 0.5,
+      preload: false
+    },
+    menu: {
+      id: 'music_menu',
+      path: '/assets/audio/menu.mp3',
+      volume: 0.4,
       preload: false
     }
   }
