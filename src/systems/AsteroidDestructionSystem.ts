@@ -5,6 +5,7 @@
  * - Large asteroids splitting into 2-3 medium asteroids
  * - Medium asteroids splitting into 2-3 small asteroids
  * - Small asteroids being removed (no children)
+ * - Power-up spawning with 10% probability on destruction
  * - Event emission for scoring and particle effects
  *
  * Following ADR-0001: ECS architecture for game entity management.
@@ -19,6 +20,7 @@ import { Transform } from '../components/Transform'
 import { Velocity } from '../components/Velocity'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
 import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
+import { createPowerUp, getRandomPowerUpType, shouldSpawnPowerUp } from '../entities/createPowerUp'
 
 // Type assertions for component classes to work with ECS type system
 const TransformClass = Transform as unknown as ComponentClass<Transform>
@@ -125,7 +127,8 @@ export class AsteroidDestructionSystem implements System {
   /**
    * Handle asteroid destruction.
    *
-   * Emits event, spawns child asteroids if applicable, and removes entity.
+   * Emits event, spawns child asteroids if applicable, potentially spawns
+   * power-up, and removes entity.
    *
    * @param world - The ECS world
    * @param asteroidId - The asteroid entity ID
@@ -158,8 +161,30 @@ export class AsteroidDestructionSystem implements System {
     }
     // Small asteroids don't spawn children
 
+    // Maybe spawn a power-up (10% chance)
+    this.maybeSpawnPowerUp(world, transform.position)
+
     // Remove the asteroid entity from world
     world.destroyEntity(asteroidId)
+  }
+
+  /**
+   * Attempt to spawn a power-up at the given position.
+   *
+   * Power-ups have a 10% spawn chance on asteroid destruction.
+   * A random power-up type is selected with equal probability (25% each).
+   *
+   * @param world - The ECS world
+   * @param position - Position to spawn the power-up
+   */
+  private maybeSpawnPowerUp(world: World, position: Vector3): void {
+    if (shouldSpawnPowerUp()) {
+      const powerUpType = getRandomPowerUpType()
+      createPowerUp(world, {
+        position: position.clone(),
+        powerUpType
+      })
+    }
   }
 
   /**

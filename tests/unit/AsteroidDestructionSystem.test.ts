@@ -14,7 +14,7 @@ import {
   AsteroidDestructionSystem,
   type AsteroidDestroyedEvent
 } from '../../src/systems/AsteroidDestructionSystem'
-import { Asteroid, Health, Transform, Velocity } from '../../src/components'
+import { Asteroid, Health, Transform, Velocity, PowerUp, Lifetime } from '../../src/components'
 import { createAsteroid } from '../../src/entities/createAsteroid'
 
 describe('AsteroidDestructionSystem', () => {
@@ -621,6 +621,142 @@ describe('AsteroidDestructionSystem', () => {
   describe('System Type', () => {
     it('should have correct system type', () => {
       expect(destructionSystem.systemType).toBe('asteroidDestruction')
+    })
+  })
+
+  describe('Power-up Spawning', () => {
+    it('should spawn power-up when random value is below spawn chance', () => {
+      // Mock Math.random to always return 0.05 (below 0.10 threshold)
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.05)
+
+      const asteroidId = createAsteroid(world, new Vector3(100, 200, 0), 'small')
+      const health = world.getComponent(asteroidId, Health)
+      health!.current = 0
+
+      destructionSystem.update(world, 16)
+
+      // Should have spawned a power-up
+      const powerUps = world.query(PowerUp)
+      expect(powerUps.length).toBe(1)
+
+      mockRandom.mockRestore()
+    })
+
+    it('should not spawn power-up when random value is above spawn chance', () => {
+      // Mock Math.random to always return 0.50 (above 0.10 threshold)
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.50)
+
+      const asteroidId = createAsteroid(world, new Vector3(100, 200, 0), 'small')
+      const health = world.getComponent(asteroidId, Health)
+      health!.current = 0
+
+      destructionSystem.update(world, 16)
+
+      // Should not have spawned a power-up
+      const powerUps = world.query(PowerUp)
+      expect(powerUps.length).toBe(0)
+
+      mockRandom.mockRestore()
+    })
+
+    it('should spawn power-up at asteroid destruction position', () => {
+      // Mock Math.random to always spawn power-up
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.01)
+
+      const destroyPosition = new Vector3(150, 250, 0)
+      const asteroidId = createAsteroid(world, destroyPosition, 'small')
+      const health = world.getComponent(asteroidId, Health)
+      health!.current = 0
+
+      destructionSystem.update(world, 16)
+
+      const powerUps = world.query(PowerUp, Transform)
+      expect(powerUps.length).toBe(1)
+
+      const powerUpTransform = world.getComponent(powerUps[0], Transform)
+      expect(powerUpTransform?.position.x).toBe(150)
+      expect(powerUpTransform?.position.y).toBe(250)
+      expect(powerUpTransform?.position.z).toBe(0)
+
+      mockRandom.mockRestore()
+    })
+
+    it('should spawn power-up with Lifetime component', () => {
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.01)
+
+      const asteroidId = createAsteroid(world, new Vector3(0, 0, 0), 'small')
+      const health = world.getComponent(asteroidId, Health)
+      health!.current = 0
+
+      destructionSystem.update(world, 16)
+
+      const powerUps = world.query(PowerUp, Lifetime)
+      expect(powerUps.length).toBe(1)
+
+      const lifetime = world.getComponent(powerUps[0], Lifetime)
+      expect(lifetime?.remaining).toBe(3000)
+
+      mockRandom.mockRestore()
+    })
+
+    it('should spawn random power-up type', () => {
+      // First random call is for spawn chance (0.01 < 0.10 = true)
+      // Second random call is for power-up type selection
+      let callCount = 0
+      const mockRandom = vi.spyOn(Math, 'random').mockImplementation(() => {
+        callCount++
+        if (callCount === 1) return 0.01 // Spawn chance - always spawn
+        return 0.5 // Type selection - should give multiShot
+      })
+
+      const asteroidId = createAsteroid(world, new Vector3(0, 0, 0), 'small')
+      const health = world.getComponent(asteroidId, Health)
+      health!.current = 0
+
+      destructionSystem.update(world, 16)
+
+      const powerUps = world.query(PowerUp)
+      expect(powerUps.length).toBe(1)
+
+      mockRandom.mockRestore()
+    })
+
+    it('should not spawn power-up for surviving asteroids', () => {
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.01)
+
+      const asteroidId = createAsteroid(world, new Vector3(0, 0, 0), 'small')
+      // Health > 0, asteroid survives
+      const health = world.getComponent(asteroidId, Health)
+      health!.current = 5
+
+      destructionSystem.update(world, 16)
+
+      const powerUps = world.query(PowerUp)
+      expect(powerUps.length).toBe(0)
+
+      mockRandom.mockRestore()
+    })
+
+    it('should potentially spawn power-up for each destroyed asteroid', () => {
+      // Mock to always spawn
+      const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.01)
+
+      const asteroid1 = createAsteroid(world, new Vector3(0, 0, 0), 'small')
+      const asteroid2 = createAsteroid(world, new Vector3(100, 100, 0), 'small')
+
+      const health1 = world.getComponent(asteroid1, Health)
+      const health2 = world.getComponent(asteroid2, Health)
+
+      health1!.current = 0
+      health2!.current = 0
+
+      destructionSystem.update(world, 16)
+
+      // Both should spawn power-ups since we mocked random to always spawn
+      const powerUps = world.query(PowerUp)
+      expect(powerUps.length).toBe(2)
+
+      mockRandom.mockRestore()
     })
   })
 })

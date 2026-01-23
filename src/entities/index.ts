@@ -18,3 +18,10 @@ export {
   type ProjectileConfig,
   type ProjectileType
 } from './createProjectile'
+export {
+  createPowerUp,
+  shouldSpawnPowerUp,
+  getRandomPowerUpType,
+  POWER_UP_SPAWN_CHANCE,
+  type CreatePowerUpOptions
+} from './createPowerUp'
