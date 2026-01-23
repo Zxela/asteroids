@@ -33,3 +33,9 @@ export type {
   SfxConfig,
   MusicConfig
 } from './audioConfig'
+
+// ============================================
+// Power-up Configuration Exports
+// ============================================
+export { POWER_UP_CONFIGS, getPowerUpConfig } from './powerUpConfig'
+export type { PowerUpEffectConfig } from './powerUpConfig'

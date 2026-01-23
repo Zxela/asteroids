@@ -16,36 +16,36 @@ Implement power-up collection and effect application system. PowerUpSystem liste
 
 ## Target Files
 
-- [ ] `src/systems/PowerUpSystem.ts` - Power-up collection and effect management
-- [ ] `src/config/powerUpConfig.ts` - Power-up effect configurations
-- [ ] `tests/unit/PowerUpSystem.test.ts` - Power-up system unit tests
+- [x] `src/systems/PowerUpSystem.ts` - Power-up collection and effect management
+- [x] `src/config/powerUpConfig.ts` - Power-up effect configurations
+- [x] `tests/unit/PowerUpSystem.test.ts` - Power-up system unit tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for PowerUpSystem
-- [ ] Write failing test for PowerUpSystem initialization
-- [ ] Write failing test for collision between player and power-up detected
-- [ ] Write failing test for power-up entity removed on collection
-- [ ] Write failing test for powerUpCollected event emitted
-- [ ] Write failing test for Shield effect grants invulnerability
-- [ ] Write failing test for Shield effect duration is 10 seconds
-- [ ] Write failing test for RapidFire effect halves weapon cooldown
-- [ ] Write failing test for RapidFire effect duration is 15 seconds
-- [ ] Write failing test for MultiShot effect changes projectile count
-- [ ] Write failing test for MultiShot effect duration is 15 seconds
-- [ ] Write failing test for ExtraLife increments player lives
-- [ ] Write failing test for ExtraLife effect is permanent (no timer)
-- [ ] Write failing test for effect timers decrement each frame
-- [ ] Write failing test for expired effects removed
-- [ ] Write failing test for multiple effects can be active simultaneously
-- [ ] Write failing test for collecting same power-up refreshes timer
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for PowerUpSystem
+- [x] Write failing test for PowerUpSystem initialization
+- [x] Write failing test for collision between player and power-up detected
+- [x] Write failing test for power-up entity removed on collection
+- [x] Write failing test for powerUpCollected event emitted
+- [x] Write failing test for Shield effect grants invulnerability
+- [x] Write failing test for Shield effect duration is 10 seconds
+- [x] Write failing test for RapidFire effect halves weapon cooldown
+- [x] Write failing test for RapidFire effect duration is 15 seconds
+- [x] Write failing test for MultiShot effect changes projectile count
+- [x] Write failing test for MultiShot effect duration is 15 seconds
+- [x] Write failing test for ExtraLife increments player lives
+- [x] Write failing test for ExtraLife effect is permanent (no timer)
+- [x] Write failing test for effect timers decrement each frame
+- [x] Write failing test for expired effects removed
+- [x] Write failing test for multiple effects can be active simultaneously
+- [x] Write failing test for collecting same power-up refreshes timer
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Create Power-up Configuration**:
-- [ ] Create `src/config/powerUpConfig.ts`:
+- [x] Create `src/config/powerUpConfig.ts`:
   - Interface PowerUpEffectConfig:
     - type: PowerUpType
     - duration: number (milliseconds, -1 for permanent)
@@ -57,7 +57,7 @@ Implement power-up collection and effect application system. PowerUpSystem liste
     - extraLife: { duration: -1, description: 'Extra life' }
 
 **Implement PowerUpSystem**:
-- [ ] Create `src/systems/PowerUpSystem.ts`:
+- [x] Create `src/systems/PowerUpSystem.ts`:
   - Class PowerUpSystem implements System:
     - Private world: World
     - Private eventBus: EventBus
@@ -104,7 +104,7 @@ Implement power-up collection and effect application system. PowerUpSystem liste
     - Check if effect is currently active
 
 **Create unit tests**:
-- [ ] Create `tests/unit/PowerUpSystem.test.ts`:
+- [x] Create `tests/unit/PowerUpSystem.test.ts`:
   - Test initialization
   - Test collision detection (player + power-up)
   - Test power-up removal on collection
@@ -131,29 +131,29 @@ Implement power-up collection and effect application system. PowerUpSystem liste
   - Edge cases: collect while invulnerable, rapid collection
 
 ### 3. Refactor Phase
-- [ ] Verify effect durations match spec
-- [ ] Optimize effect application/removal
-- [ ] Ensure timer precision with variable deltaTime
-- [ ] Add safety checks for missing components
-- [ ] Confirm all tests pass
+- [x] Verify effect durations match spec
+- [x] Optimize effect application/removal
+- [x] Ensure timer precision with variable deltaTime
+- [x] Add safety checks for missing components
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Power-ups collectable (collision triggers collection)
-- [ ] Power-up entity removed on collection
-- [ ] powerUpCollected event emitted with power-up type
-- [ ] Shield grants invulnerability for 10 seconds
-- [ ] RapidFire halves weapon cooldown for 15 seconds
-- [ ] MultiShot enables triple projectile pattern for 15 seconds
-- [ ] ExtraLife permanently increments lives by 1
-- [ ] Effect timers count down correctly each frame
-- [ ] Expired effects removed automatically
-- [ ] Effects revert to normal on expiry (shield, rapidFire, multiShot)
-- [ ] Multiple effects can be active simultaneously
-- [ ] Collecting same power-up refreshes timer (doesn't stack duration)
-- [ ] Unit tests passing (20+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Power-ups collectable (collision triggers collection)
+- [x] Power-up entity removed on collection
+- [x] powerUpCollected event emitted with power-up type
+- [x] Shield grants invulnerability for 10 seconds
+- [x] RapidFire halves weapon cooldown for 15 seconds
+- [x] MultiShot enables triple projectile pattern for 15 seconds
+- [x] ExtraLife permanently increments lives by 1
+- [x] Effect timers count down correctly each frame
+- [x] Expired effects removed automatically
+- [x] Effects revert to normal on expiry (shield, rapidFire, multiShot)
+- [x] Multiple effects can be active simultaneously
+- [x] Collecting same power-up refreshes timer (doesn't stack duration)
+- [x] Unit tests passing (20+ test cases)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 
