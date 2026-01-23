@@ -13,3 +13,8 @@ export {
   getAsteroidPoints,
   type AsteroidSize
 } from './createAsteroid'
+export {
+  createProjectile,
+  type ProjectileConfig,
+  type ProjectileType
+} from './createProjectile'

@@ -11,3 +11,10 @@ export { ShipControlSystem } from './ShipControlSystem'
 export { RenderSystem } from './RenderSystem'
 export { CollisionSystem, type CollisionEvent } from './CollisionSystem'
 export { WaveSystem } from './WaveSystem'
+export {
+  RespawnSystem,
+  type PlayerDiedEvent,
+  type ShipDamagedEvent,
+  type RespawnSystemEvent
+} from './RespawnSystem'
+export { WeaponSystem, type WeaponFiredEvent } from './WeaponSystem'

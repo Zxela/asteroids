@@ -689,7 +689,7 @@ npm test
 
 #### Task 3.1: Projectile Entity and Factory
 **Dependencies**: Task 2.5, Task 2.7
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Create projectile entity with damage and lifetime tracking.
 
@@ -706,17 +706,17 @@ npm test
 2. Create unit tests for projectile creation
 
 **Completion Criteria**:
-- [ ] Projectiles created with correct position and direction
-- [ ] Lifetime tracked correctly
-- [ ] Damage property set per weapon type
+- [x] Projectiles created with correct position and direction
+- [x] Lifetime tracked correctly
+- [x] Damage property set per weapon type
 
-**Test Coverage**: Projectile component initialization
+**Test Coverage**: Projectile component initialization (35 tests passing)
 
 ---
 
 #### Task 3.2: Weapon System - Default Single Shot
 **Dependencies**: Task 3.1, Task 2.2, Task 2.5
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Implement weapon system for default single-shot firing.
 
@@ -740,10 +740,10 @@ npm test
 3. Create unit tests for firing logic (Red state)
 
 **Completion Criteria**:
-- [ ] Projectiles fire on spacebar
-- [ ] Cooldown enforced (no spam firing)
-- [ ] Firing only when action active
-- [ ] Unit tests passing
+- [x] Projectiles fire on spacebar
+- [x] Cooldown enforced (no spam firing)
+- [x] Firing only when action active
+- [x] Unit tests passing (35 tests)
 
 **Test Coverage**: Cooldown enforcement, fire rate limiting
 
@@ -820,7 +820,7 @@ npm test
 
 #### Task 3.5: Lives System with Respawn
 **Dependencies**: Task 2.5, Task 2.9
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement lives tracking and respawn with invulnerability period.
 
@@ -845,12 +845,12 @@ npm test
 3. Create unit tests for respawn logic
 
 **Completion Criteria**:
-- [ ] Ship loses 1 life on collision
-- [ ] Ship respawns at center with invulnerability
-- [ ] Invulnerability duration 3 seconds (3000ms)
-- [ ] Visual flashing during invulnerability
-- [ ] Game over when lives reach 0
-- [ ] Unit tests passing
+- [x] Ship loses 1 life on collision
+- [x] Ship respawns at center with invulnerability
+- [x] Invulnerability duration 3 seconds (3000ms)
+- [ ] Visual flashing during invulnerability (Task 3.6)
+- [x] Game over when lives reach 0
+- [x] Unit tests passing (29 tests)
 
 **Test Coverage**: Damage on collision, respawn timing, invulnerability
 
@@ -2120,9 +2120,9 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 2 (Minimal Playable Game) - IN PROGRESS
+- **Active Phase**: Phase 3 (Core Gameplay Loop) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 24% (11/45 tasks complete)
+- **Overall Progress**: 29% (13/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2136,6 +2136,8 @@ The entire project is complete when:
 - [x] Task 2.5: Ship Entity and Factory (2026-01-22)
 - [x] Task 2.8: Asteroid Entity and Spawning (2026-01-22)
 - [x] Task 2.9: Collision Detection System (2026-01-22)
+- [x] Task 3.1: Projectile Entity and Factory (2026-01-22)
+- [x] Task 3.5: Lives System with Respawn (2026-01-22)
 
 ---
 
@@ -2182,11 +2184,11 @@ The entire project is complete when:
 | 2.7 | 2 | Render System | 2.1, 2.3, 2.6 | 1.5 | - [ ] |
 | 2.8 | 2 | Asteroids | 2.3, 2.7 | 1 | - [x] |
 | 2.9 | 2 | Collision System | 2.3, 2.5, 2.8 | 1.5 | - [x] |
-| 3.1 | 3 | Projectiles | 2.5, 2.7 | 0.5 | - [ ] |
+| 3.1 | 3 | Projectiles | 2.5, 2.7 | 0.5 | - [x] |
 | 3.2 | 3 | Weapon System | 3.1, 2.2, 2.5 | 1 | - [ ] |
 | 3.3 | 3 | Destruction | 3.2, 2.9 | 1 | - [ ] |
 | 3.4 | 3 | Scoring | 3.3, 2.5 | 0.5 | - [ ] |
-| 3.5 | 3 | Lives System | 2.5, 2.9 | 1 | - [ ] |
+| 3.5 | 3 | Lives System | 2.5, 2.9 | 1 | - [x] |
 | 3.6 | 3 | Health Visual | 2.7, 3.5 | 0.5 | - [ ] |
 | 3.7 | 3 | HUD | 3.4, 3.5 | 0.5 | - [ ] |
 | 4.1 | 4 | State Machine | 1.1, 2.1 | 1 | - [ ] |
