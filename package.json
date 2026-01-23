@@ -1,0 +1,42 @@
+{
+  "name": "asteroids-3d",
+  "version": "0.1.0",
+  "description": "A modern 3D browser-based Asteroids game built with Three.js",
+  "type": "module",
+  "packageManager": "npm@10.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "type-check": "tsc --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:fresh": "vitest run --coverage --no-cache",
+    "check": "biome check --write src/",
+    "check:code": "biome check src/",
+    "check:deps": "npx dpdm --circular --warning=false src/main.ts",
+    "check:unused": "npx knip",
+    "check:all": "npm run check:code && npm run test",
+    "format": "biome format --write src/",
+    "lint:fix": "biome lint --write src/",
+    "cleanup:processes": "pkill -f vitest || true"
+  },
+  "dependencies": {
+    "howler": "^2.2.4",
+    "three": "^0.171.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/howler": "^2.2.12",
+    "@types/node": "^25.0.10",
+    "@types/three": "^0.171.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
