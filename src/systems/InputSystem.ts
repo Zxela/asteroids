@@ -18,7 +18,14 @@ import { Vector2 } from 'three'
 /**
  * Game actions that can be triggered by keyboard input.
  */
-export type GameAction = 'shoot' | 'pause' | 'switchWeapon1' | 'switchWeapon2' | 'switchWeapon3'
+export type GameAction =
+  | 'shoot'
+  | 'pause'
+  | 'switchWeapon1'
+  | 'switchWeapon2'
+  | 'switchWeapon3'
+  | 'switchWeaponPrev'
+  | 'switchWeaponNext'
 
 /**
  * Interface for objects that can receive keyboard events.
@@ -112,6 +119,12 @@ export class InputSystem {
     if (key === '3') {
       this.currentActions.add('switchWeapon3')
     }
+    if (key === 'z') {
+      this.currentActions.add('switchWeaponPrev')
+    }
+    if (key === 'x') {
+      this.currentActions.add('switchWeaponNext')
+    }
   }
 
   /**
@@ -139,6 +152,12 @@ export class InputSystem {
     }
     if (key === '3') {
       this.currentActions.delete('switchWeapon3')
+    }
+    if (key === 'z') {
+      this.currentActions.delete('switchWeaponPrev')
+    }
+    if (key === 'x') {
+      this.currentActions.delete('switchWeaponNext')
     }
   }
 

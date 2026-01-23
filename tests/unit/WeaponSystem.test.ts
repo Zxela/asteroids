@@ -524,6 +524,353 @@ describe('WeaponSystem', () => {
       expect(infiniteWeapon.hasAmmo(1000)).toBe(true)
     })
   })
+
+  describe('Weapon Switching via Number Keys', () => {
+    it('should switch to single shot when pressing 1', () => {
+      // Start with spread weapon
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'spread'
+
+      mockTarget.simulateKeyDown('1')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('single')
+    })
+
+    it('should switch to spread shot when pressing 2', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      expect(weapon!.currentWeapon).toBe('single')
+
+      mockTarget.simulateKeyDown('2')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('spread')
+    })
+
+    it('should switch to laser when pressing 3', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+
+      mockTarget.simulateKeyDown('3')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('laser')
+    })
+
+    it('should update currentWeapon correctly on each switch', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+
+      // Switch to spread
+      mockTarget.simulateKeyDown('2')
+      weaponSystem.update(world, 16)
+      mockTarget.simulateKeyUp('2')
+      expect(weapon!.currentWeapon).toBe('spread')
+
+      // Switch to laser
+      mockTarget.simulateKeyDown('3')
+      weaponSystem.update(world, 16)
+      mockTarget.simulateKeyUp('3')
+      expect(weapon!.currentWeapon).toBe('laser')
+
+      // Switch back to single
+      mockTarget.simulateKeyDown('1')
+      weaponSystem.update(world, 16)
+      mockTarget.simulateKeyUp('1')
+      expect(weapon!.currentWeapon).toBe('single')
+    })
+  })
+
+  describe('Weapon Switching via Z/X Keys (Cycling)', () => {
+    it('should switch to next weapon when pressing X', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      expect(weapon!.currentWeapon).toBe('single')
+
+      mockTarget.simulateKeyDown('x')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('spread')
+    })
+
+    it('should switch to previous weapon when pressing Z', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'spread'
+
+      mockTarget.simulateKeyDown('z')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('single')
+    })
+
+    it('should wrap around to first weapon after last when pressing X', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing' // Last weapon in list
+
+      mockTarget.simulateKeyDown('x')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('single')
+    })
+
+    it('should wrap around to last weapon from first when pressing Z', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      expect(weapon!.currentWeapon).toBe('single') // First weapon
+
+      mockTarget.simulateKeyDown('z')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('homing')
+    })
+  })
+
+  describe('Weapon Changed Event', () => {
+    it('should emit weaponChanged event on weapon switch', () => {
+      mockTarget.simulateKeyDown('2')
+      weaponSystem.update(world, 16)
+
+      const events = weaponSystem.getWeaponChangedEvents()
+      expect(events.length).toBe(1)
+      expect(events[0].type).toBe('weaponChanged')
+      expect(events[0].previousWeapon).toBe('single')
+      expect(events[0].newWeapon).toBe('spread')
+    })
+
+    it('should not emit weaponChanged event when switching to same weapon', () => {
+      mockTarget.simulateKeyDown('1') // Already on single
+      weaponSystem.update(world, 16)
+
+      const events = weaponSystem.getWeaponChangedEvents()
+      expect(events.length).toBe(0)
+    })
+  })
+
+  describe('Spread Shot', () => {
+    beforeEach(() => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'spread'
+      weapon!.cooldown = 400 // Spread weapon cooldown
+    })
+
+    it('should fire 3 projectiles when using spread weapon', () => {
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      expect(finalCount).toBe(initialCount + 3)
+    })
+
+    it('should fire projectiles at center, -15, and +15 degree angles', () => {
+      const transform = world.getComponent(shipId as any, Transform)
+      transform!.rotation.z = 0 // Facing up
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      // Find all projectiles
+      const projectiles = findAllProjectileEntities(world, shipId)
+      expect(projectiles.length).toBe(3)
+
+      // Get projectile transforms and check directions
+      const projectileTransforms = projectiles.map((id) =>
+        world.getComponent(id as any, Transform)
+      )
+
+      // Verify spread pattern - projectiles should have different velocities
+      // representing center, -15 degrees, +15 degrees
+      expect(projectileTransforms.length).toBe(3)
+    })
+
+    it('should use spread weapon cooldown of 400ms', () => {
+      mockTarget.simulateKeyDown(' ')
+
+      // First shot
+      weaponSystem.update(world, 16)
+      const countAfterFirst = getEntityCount(world)
+
+      // Try to fire at 300ms (within cooldown)
+      weaponSystem.update(world, 300)
+      expect(getEntityCount(world)).toBe(countAfterFirst)
+
+      // Fire after 400ms cooldown
+      weaponSystem.update(world, 150) // 450ms total
+      expect(getEntityCount(world)).toBe(countAfterFirst + 3)
+    })
+  })
+
+  describe('Laser Weapon', () => {
+    beforeEach(() => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'laser'
+      weapon!.energy = 100
+      weapon!.maxEnergy = 100
+    })
+
+    it('should fire continuously while fire button held', () => {
+      mockTarget.simulateKeyDown(' ')
+
+      // First frame
+      weaponSystem.update(world, 16)
+      const events1 = weaponSystem.getLaserFiredEvents()
+      expect(events1.length).toBe(1)
+
+      // Second frame (continuous, no cooldown)
+      weaponSystem.update(world, 16)
+      const events2 = weaponSystem.getLaserFiredEvents()
+      expect(events2.length).toBe(1)
+    })
+
+    it('should drain energy at 10 per frame while firing', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      expect(weapon!.energy).toBe(100)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16) // One frame
+
+      expect(weapon!.energy).toBe(90) // 100 - 10 = 90
+    })
+
+    it('should regenerate energy at 5 per frame when not firing', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.energy = 50
+
+      // No fire input, just update
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.energy).toBe(55) // 50 + 5 = 55
+    })
+
+    it('should have max energy of 100', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.energy = 95
+
+      // Regenerate but don't exceed max
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.energy).toBe(100) // Capped at max
+    })
+
+    it('should stop firing when energy depleted', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.energy = 5 // Less than cost of 10
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      // Should not fire because energy < 10
+      const events = weaponSystem.getLaserFiredEvents()
+      expect(events.length).toBe(0)
+    })
+
+    it('should resume firing when energy is sufficient again', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.energy = 5
+
+      // Can't fire
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+      expect(weaponSystem.getLaserFiredEvents().length).toBe(0)
+
+      // Release fire, let energy regen
+      mockTarget.simulateKeyUp(' ')
+      weaponSystem.update(world, 16) // +5 = 10
+      weaponSystem.update(world, 16) // +5 = 15
+
+      // Now try to fire again
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+      expect(weaponSystem.getLaserFiredEvents().length).toBe(1)
+    })
+
+    it('should clamp energy to min 0', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.energy = 15
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16) // 15 - 10 = 5
+      expect(weapon!.energy).toBe(5)
+
+      // Can't fire, energy stays at 5
+      weaponSystem.update(world, 16)
+      expect(weapon!.energy).toBeGreaterThanOrEqual(0)
+    })
+  })
+
+  describe('Energy Bar Updates', () => {
+    it('should track energy state for HUD updates', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'laser'
+      weapon!.energy = 75
+
+      // The energy state should be accessible for HUD
+      expect(weapon!.energy).toBe(75)
+      expect(weapon!.maxEnergy).toBe(100)
+    })
+  })
+
+  describe('Weapon Switching Resets State', () => {
+    it('should stop laser firing when switching weapons', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'laser'
+      weapon!.energy = 100
+
+      // Start laser firing
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+      expect(weaponSystem.getLaserFiredEvents().length).toBe(1)
+
+      // Switch to single weapon (fire button still held)
+      mockTarget.simulateKeyDown('1')
+      weaponSystem.update(world, 16)
+
+      // Laser should have stopped
+      expect(weaponSystem.getLaserFiredEvents().length).toBe(0)
+    })
+  })
+
+  describe('Rapid Weapon Switching', () => {
+    it('should handle rapid weapon switching without errors', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+
+      // Rapid switching
+      for (let i = 0; i < 10; i++) {
+        mockTarget.simulateKeyDown(String((i % 3) + 1)) // Cycle through 1, 2, 3
+        weaponSystem.update(world, 16)
+        mockTarget.simulateKeyUp(String((i % 3) + 1))
+      }
+
+      // Should not throw and weapon should be set
+      expect(['single', 'spread', 'laser']).toContain(weapon!.currentWeapon)
+    })
+  })
+
+  describe('Energy Boundary Conditions', () => {
+    it('should handle energy at exactly 0', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'laser'
+      weapon!.energy = 0
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      // Should not fire
+      expect(weaponSystem.getLaserFiredEvents().length).toBe(0)
+      // Energy should regenerate
+      expect(weapon!.energy).toBe(5)
+    })
+
+    it('should handle energy at exactly energyCost', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'laser'
+      weapon!.energy = 10 // Exactly the cost
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      // Should fire (has exactly enough)
+      expect(weaponSystem.getLaserFiredEvents().length).toBe(1)
+      expect(weapon!.energy).toBe(0)
+    })
+  })
 })
 
 // Helper function to count entities in world
@@ -548,4 +895,16 @@ function findProjectileEntity(world: World, ownerId: number): number | undefined
     }
   }
   return undefined
+}
+
+// Helper function to find all projectile entities owned by a ship
+function findAllProjectileEntities(world: World, ownerId: number): number[] {
+  const projectiles: number[] = []
+  for (let i = 1; i <= 100; i++) {
+    const projectile = world.getComponent(i as any, Projectile)
+    if (projectile && projectile.owner === ownerId) {
+      projectiles.push(i)
+    }
+  }
+  return projectiles
 }

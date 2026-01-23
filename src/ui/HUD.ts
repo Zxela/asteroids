@@ -34,6 +34,8 @@ export class HUD {
   private livesElement: HTMLElement
   private waveElement: HTMLElement
   private weaponElement: HTMLElement
+  private energyBarContainer: HTMLElement
+  private energyBarFill: HTMLElement
   private parentElement: HTMLElement | null = null
 
   constructor() {
@@ -42,18 +44,23 @@ export class HUD {
     this.livesElement = this.createLivesDisplay()
     this.waveElement = this.createWaveDisplay()
     this.weaponElement = this.createWeaponDisplay()
+    const energyBar = this.createEnergyBar()
+    this.energyBarContainer = energyBar.container
+    this.energyBarFill = energyBar.fill
 
     // Add elements to container
     this.container.appendChild(this.scoreElement)
     this.container.appendChild(this.livesElement)
     this.container.appendChild(this.waveElement)
     this.container.appendChild(this.weaponElement)
+    this.container.appendChild(this.energyBarContainer)
 
     // Initialize with default values
     this.updateScore(0)
     this.updateLives(3)
     this.updateWave(1)
     this.updateWeapon('single')
+    this.updateEnergyBar(100, 100)
   }
 
   /**
@@ -179,6 +186,96 @@ export class HUD {
       homing: 'HOMING MISSILES'
     }
     this.weaponElement.textContent = weaponNames[weapon]
+
+    // Show/hide energy bar based on weapon type
+    this.energyBarContainer.style.display = weapon === 'laser' ? 'block' : 'none'
+  }
+
+  /**
+   * Creates the energy bar display element.
+   * Positioned below weapon indicator on the right.
+   *
+   * @returns Object containing container, fill, and label elements
+   */
+  private createEnergyBar(): { container: HTMLElement; fill: HTMLElement; label: HTMLElement } {
+    // Container for the energy bar
+    const container = document.createElement('div')
+    container.setAttribute('data-hud', 'energy-bar')
+    container.style.position = 'absolute'
+    container.style.right = '20px'
+    container.style.top = '50px'
+    container.style.width = '150px'
+    container.style.display = 'none' // Hidden by default, shown when laser selected
+
+    // Label
+    const label = document.createElement('div')
+    label.style.marginBottom = '4px'
+    label.style.fontSize = '14px'
+    label.textContent = 'ENERGY'
+
+    // Bar background
+    const barBg = document.createElement('div')
+    barBg.style.width = '100%'
+    barBg.style.height = '12px'
+    barBg.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+    barBg.style.border = '1px solid white'
+    barBg.style.borderRadius = '2px'
+
+    // Bar fill
+    const fill = document.createElement('div')
+    fill.setAttribute('data-hud', 'energy-fill')
+    fill.style.width = '100%'
+    fill.style.height = '100%'
+    fill.style.backgroundColor = '#00ffff' // Cyan for full
+    fill.style.borderRadius = '1px'
+    fill.style.transition = 'width 0.1s ease-out, background-color 0.2s ease-out'
+
+    barBg.appendChild(fill)
+    container.appendChild(label)
+    container.appendChild(barBg)
+
+    return { container, fill, label }
+  }
+
+  /**
+   * Updates the energy bar display.
+   *
+   * @param current - Current energy value
+   * @param max - Maximum energy value
+   */
+  updateEnergyBar(current: number, max: number): void {
+    const percentage = max > 0 ? (current / max) * 100 : 0
+    const clampedPercentage = Math.max(0, Math.min(100, percentage))
+
+    // Update width
+    this.energyBarFill.style.width = `${clampedPercentage}%`
+
+    // Update color based on percentage
+    // Full: cyan (#00ffff)
+    // Medium: yellow (#ffff00)
+    // Low: orange (#ff8800)
+    // Empty: red (#ff0000)
+    let color: string
+    if (clampedPercentage > 66) {
+      color = '#00ffff' // Cyan
+    } else if (clampedPercentage > 33) {
+      color = '#ffff00' // Yellow
+    } else if (clampedPercentage > 10) {
+      color = '#ff8800' // Orange
+    } else {
+      color = '#ff0000' // Red
+    }
+    this.energyBarFill.style.backgroundColor = color
+  }
+
+  /**
+   * Gets the energy bar container element.
+   * Primarily used for testing.
+   *
+   * @returns The energy bar container HTMLElement
+   */
+  getEnergyBarContainer(): HTMLElement {
+    return this.energyBarContainer
   }
 
   /**
