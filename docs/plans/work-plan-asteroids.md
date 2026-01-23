@@ -1169,7 +1169,7 @@ npm test
 
 #### Task 5.1: Audio Manager and Sound Effects
 **Dependencies**: Task 4.1
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Implement Howler.js wrapper for audio playback and volume control.
 
@@ -1189,11 +1189,11 @@ npm test
 3. Create unit tests for AudioManager
 
 **Completion Criteria**:
-- [ ] Howler.js initialized with multiple sounds
-- [ ] Critical sounds preload, others lazy-load
-- [ ] Volume control works and persists
-- [ ] AudioContext resumes on user interaction (autoplay policy)
-- [ ] Unit tests passing
+- [x] Howler.js initialized with multiple sounds
+- [x] Critical sounds preload, others lazy-load
+- [x] Volume control works and persists
+- [x] AudioContext resumes on user interaction (autoplay policy)
+- [x] Unit tests passing (37 tests)
 
 **Test Coverage**: Volume persistence, sound loading
 
@@ -1226,7 +1226,7 @@ npm test
 
 #### Task 5.3: Power-up Entities and Spawning
 **Dependencies**: Task 2.7, Task 3.3
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Create power-up entities that spawn on asteroid destruction.
 
@@ -1249,10 +1249,10 @@ npm test
 3. Create unit tests for power-up creation
 
 **Completion Criteria**:
-- [ ] Power-ups spawn on asteroid destruction (10% chance)
-- [ ] Power-up types distributed randomly
-- [ ] Power-ups move slowly and despawn after 3 seconds
-- [ ] Unit tests passing
+- [x] Power-ups spawn on asteroid destruction (10% chance)
+- [x] Power-up types distributed randomly
+- [x] Power-ups move slowly and despawn after 3 seconds
+- [x] Unit tests passing (50 tests total: 43 createPowerUp + 7 power-up spawning)
 
 **Test Coverage**: Power-up creation, spawn chance
 
@@ -1322,7 +1322,7 @@ npm test
 
 #### Task 5.6: Weapon System - Spread Shot and Laser
 **Dependencies**: Task 3.2, Task 2.2
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Add weapon variants: Spread Shot (3 projectiles) and Laser (continuous beam with energy).
 
@@ -1347,12 +1347,12 @@ npm test
 3. Create unit tests for weapon variants
 
 **Completion Criteria**:
-- [ ] Weapons switchable via keyboard
-- [ ] Spread Shot fires 3 projectiles at correct spread
-- [ ] Laser fires continuously while held
-- [ ] Laser energy depletes and regenerates
-- [ ] Energy bar displays in HUD
-- [ ] Weapons can't fire without sufficient energy/ammo
+- [x] Weapons switchable via keyboard
+- [x] Spread Shot fires 3 projectiles at correct spread
+- [x] Laser fires continuously while held
+- [x] Laser energy depletes and regenerates
+- [x] Energy bar displays in HUD
+- [x] Weapons can't fire without sufficient energy/ammo
 
 **Test Coverage**: Weapon switching, projectile patterns, energy management
 
@@ -2120,9 +2120,9 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 4 (Game Flow and Progression) - IN PROGRESS
+- **Active Phase**: Phase 5 (Enhanced Features) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 47% (21/45 tasks complete)
+- **Overall Progress**: 49% (22/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2146,6 +2146,8 @@ The entire project is complete when:
 - [x] Task 4.4: Pause Menu (2026-01-23)
 - [x] Task 4.5: Game Over Screen (2026-01-22)
 - [x] Task 4.6: Leaderboard System (2026-01-23)
+- [x] Task 5.1: Audio Manager and Sound Effects (2026-01-23)
+- [x] Task 5.3: Power-up Entities and Spawning (2026-01-23)
 
 ---
 
@@ -2205,9 +2207,9 @@ The entire project is complete when:
 | 4.4 | 4 | Pause Menu | 4.1, 4.2 | 0.5 | - [x] |
 | 4.5 | 4 | Game Over Screen | 4.1, 3.4 | 0.5 | - [x] |
 | 4.6 | 4 | Leaderboard | 4.5 | 0.5 | - [x] |
-| 5.1 | 5 | Audio Manager | 4.1 | 1 | - [ ] |
+| 5.1 | 5 | Audio Manager | 4.1 | 1 | - [x] |
 | 5.2 | 5 | Audio Integration | 5.1, 3.2, 3.3 | 0.5 | - [ ] |
-| 5.3 | 5 | Power-up Entities | 2.7, 3.3 | 0.5 | - [ ] |
+| 5.3 | 5 | Power-up Entities | 2.7, 3.3 | 0.5 | - [x] |
 | 5.4 | 5 | Power-up Effects | 5.3, 2.9 | 1 | - [ ] |
 | 5.5 | 5 | Power-up HUD | 3.7, 5.4 | 0.5 | - [ ] |
 | 5.6 | 5 | Weapons (Spread/Laser) | 3.2, 2.2 | 1 | - [ ] |
