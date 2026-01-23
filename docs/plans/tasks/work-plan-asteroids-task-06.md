@@ -13,31 +13,31 @@ Initialize Three.js WebGPURenderer with fallback to WebGL 2, set up scene, camer
 
 ## Target Files
 
-- [ ] `src/rendering/SceneManager.ts` - Three.js renderer and scene setup
-- [ ] `src/game/Game.ts` - Main game class and loop orchestration
-- [ ] `src/main.ts` - Application entry point
-- [ ] `tests/unit/rendering.test.ts` - Renderer unit tests
+- [x] `src/rendering/SceneManager.ts` - Three.js renderer and scene setup
+- [x] `src/game/Game.ts` - Main game class and loop orchestration
+- [x] `src/main.ts` - Application entry point
+- [x] `tests/unit/rendering.test.ts` - Renderer unit tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
 
 **Write failing tests** in `tests/unit/rendering.test.ts`:
-- [ ] SceneManager initializes successfully
-- [ ] Scene is created with camera
-- [ ] Renderer is WebGPURenderer or WebGL2Renderer
-- [ ] Canvas responds to resize events
-- [ ] Camera is positioned correctly (2.5D gameplay)
-- [ ] Lighting set up (Directional + Ambient)
-- [ ] Renderer pixel ratio matches device DPI
-- [ ] Game loop runs at target FPS
-- [ ] Fixed timestep maintains consistency
+- [x] SceneManager initializes successfully
+- [x] Scene is created with camera
+- [x] Renderer is WebGPURenderer or WebGL2Renderer
+- [x] Canvas responds to resize events
+- [x] Camera is positioned correctly (2.5D gameplay)
+- [x] Lighting set up (Directional + Ambient)
+- [x] Renderer pixel ratio matches device DPI
+- [x] Game loop runs at target FPS
+- [x] Fixed timestep maintains consistency
 
 ### 2. Green Phase
 
 **Implement renderer and game loop**:
 
-- [ ] Create `src/rendering/SceneManager.ts`:
+- [x] Create `src/rendering/SceneManager.ts`:
   ```typescript
   import * as THREE from 'three';
   import { gameConfig } from '../config';
@@ -138,7 +138,7 @@ Initialize Three.js WebGPURenderer with fallback to WebGL 2, set up scene, camer
   }
   ```
 
-- [ ] Create `src/game/Game.ts`:
+- [x] Create `src/game/Game.ts`:
   ```typescript
   import { World } from '../ecs';
   import { SceneManager } from '../rendering/SceneManager';
@@ -207,7 +207,7 @@ Initialize Three.js WebGPURenderer with fallback to WebGL 2, set up scene, camer
   }
   ```
 
-- [ ] Implement `src/main.ts`:
+- [x] Implement `src/main.ts`:
   ```typescript
   import { Game } from './game/Game';
 
@@ -226,19 +226,19 @@ Initialize Three.js WebGPURenderer with fallback to WebGL 2, set up scene, camer
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify WebGPU detection logic is robust
-- [ ] Ensure canvas sizing handles mobile properly
-- [ ] Optimize game loop performance
-- [ ] Add performance monitoring capability (FPS counter)
+- [x] Verify WebGPU detection logic is robust
+- [x] Ensure canvas sizing handles mobile properly
+- [x] Optimize game loop performance
+- [ ] Add performance monitoring capability (FPS counter) - deferred to Phase 8
 
 ## Completion Criteria
 
-- [ ] WebGPURenderer initializes (or falls back to WebGL 2)
-- [ ] Scene renders without errors
-- [ ] Canvas responds to window resize
-- [ ] Game loop runs at target FPS (60)
-- [ ] Camera positioned correctly for 2.5D gameplay
-- [ ] Unit tests passing for renderer setup
+- [x] WebGPURenderer initializes (or falls back to WebGL 2)
+- [x] Scene renders without errors
+- [x] Canvas responds to window resize
+- [x] Game loop runs at target FPS (60)
+- [x] Camera positioned correctly for 2.5D gameplay
+- [x] Unit tests passing for renderer setup
 
 ## Verification Method
 

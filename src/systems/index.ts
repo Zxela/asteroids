@@ -5,4 +5,4 @@
  * Systems contain logic that operates on entities with specific components.
  */
 
-export {}
+export { InputSystem, type GameAction } from './InputSystem'

@@ -1,11 +1,17 @@
 /**
  * 3D Asteroids Game - Entry Point
  *
- * This is the main entry point for the 3D Asteroids game.
- * Game initialization and loop will be implemented in Task 2.1 (Renderer Setup).
+ * Main application entry point that initializes and starts the game.
+ * Uses the Game class to orchestrate all game systems.
  */
 
-function main(): void {
+import { Game } from './game/Game'
+
+/**
+ * Main entry point function.
+ * Initializes and starts the game.
+ */
+async function main(): Promise<void> {
   const canvas = document.getElementById('game') as HTMLCanvasElement | null
   const loadingElement = document.getElementById('loading')
 
@@ -14,25 +20,37 @@ function main(): void {
     return
   }
 
-  // Hide loading indicator
-  if (loadingElement) {
-    loadingElement.classList.add('hidden')
+  try {
+    // Create and initialize the game
+    const game = new Game()
+    await game.initialize()
+
+    // Hide loading indicator after initialization
+    if (loadingElement) {
+      loadingElement.classList.add('hidden')
+    }
+
+    // Start the game loop
+    game.start()
+
+    console.log('3D Asteroids - Game started')
+  } catch (error) {
+    console.error('Failed to initialize game:', error)
+
+    // Show error message to user
+    if (loadingElement) {
+      loadingElement.textContent = 'Failed to load game. Please refresh.'
+    }
   }
-
-  // Game initialization will be implemented in subsequent tasks
-  // Task 2.1: Three.js Renderer Setup with WebGPU Support
-  // Task 2.2: Input System Implementation
-  // etc.
-
-  console.log('3D Asteroids - Entry point loaded')
-  console.log('Canvas dimensions:', canvas.width, 'x', canvas.height)
 }
 
 // Initialize game when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', main)
+  document.addEventListener('DOMContentLoaded', () => {
+    main().catch(console.error)
+  })
 } else {
-  main()
+  main().catch(console.error)
 }
 
 export { main }

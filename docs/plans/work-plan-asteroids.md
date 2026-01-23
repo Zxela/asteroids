@@ -324,7 +324,7 @@ npm test
 
 #### Task 2.1: Three.js Renderer Setup with WebGPU Support
 **Dependencies**: Task 1.1, Task 1.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Initialize Three.js WebGPURenderer with fallback to WebGL 2, scene setup, camera, and lighting.
 
@@ -348,10 +348,10 @@ npm test
    - Start game loop
 
 **Completion Criteria**:
-- [ ] WebGPURenderer initializes (or falls back to WebGL 2)
-- [ ] Scene renders without errors
-- [ ] Canvas responds to window resize
-- [ ] Game loop runs at target FPS
+- [x] WebGPURenderer initializes (or falls back to WebGL 2)
+- [x] Scene renders without errors
+- [x] Canvas responds to window resize
+- [x] Game loop runs at target FPS
 
 **Quality Checks**:
 ```bash
@@ -365,7 +365,7 @@ npm run type-check
 
 #### Task 2.2: Input System Implementation
 **Dependencies**: Task 1.1, Task 1.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement keyboard input handling for movement and actions.
 
@@ -380,10 +380,10 @@ npm run type-check
 3. Create unit tests for input state tracking (Red state)
 
 **Completion Criteria**:
-- [ ] Keyboard input tracked accurately
-- [ ] Movement vector normalized correctly
-- [ ] Action set updated per frame
-- [ ] Unit tests passing for input logic
+- [x] Keyboard input tracked accurately
+- [x] Movement vector normalized correctly
+- [x] Action set updated per frame
+- [x] Unit tests passing for input logic
 
 **Test Coverage**: Key state tracking, movement normalization
 
@@ -2120,9 +2120,9 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 1 (Foundation) - COMPLETE
+- **Active Phase**: Phase 2 (Minimal Playable Game) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 11% (5/45 tasks complete)
+- **Overall Progress**: 13% (6/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2130,6 +2130,7 @@ The entire project is complete when:
 - [x] Task 1.3: Type Definitions System (2026-01-22)
 - [x] Task 1.4: Configuration Constants (2026-01-22)
 - [x] Task 1.5: Utility Implementations (Math, Random, Events) (2026-01-22)
+- [x] Task 2.2: Input System Implementation (2026-01-22)
 
 ---
 
@@ -2168,7 +2169,7 @@ The entire project is complete when:
 | 1.4 | 1 | Configuration | 1.3 | 0.5 | - [x] |
 | 1.5 | 1 | Utilities | 1.1 | 1 | - [x] |
 | 2.1 | 2 | Renderer Setup | 1.1, 1.4 | 1.5 | - [ ] |
-| 2.2 | 2 | Input System | 1.1, 1.4 | 0.5 | - [ ] |
+| 2.2 | 2 | Input System | 1.1, 1.4 | 0.5 | - [x] |
 | 2.3 | 2 | Components | 1.3 | 1 | - [ ] |
 | 2.4 | 2 | Physics System | 2.3, 1.4 | 1 | - [ ] |
 | 2.5 | 2 | Ship Entity | 2.3, 2.4 | 0.5 | - [ ] |

@@ -13,29 +13,29 @@ Implement keyboard input handling for movement and actions. The input system pro
 
 ## Target Files
 
-- [ ] `src/systems/InputSystem.ts` - Keyboard input tracking
-- [ ] `tests/unit/input.test.ts` - Unit tests for input
+- [x] `src/systems/InputSystem.ts` - Keyboard input tracking
+- [x] `tests/unit/input.test.ts` - Unit tests for input
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
 
 **Write failing tests** in `tests/unit/input.test.ts`:
-- [ ] Input system can be instantiated
-- [ ] Keyboard events update internal state
-- [ ] `getMovementInput()` returns normalized Vector2
-- [ ] Movement vector is clamped to [-1, 1]
-- [ ] Multiple movement keys handled correctly
-- [ ] `getActions()` returns set of active actions
-- [ ] Action 'shoot' detected on spacebar
-- [ ] Action 'pause' detected on ESC
-- [ ] Key release removes action from set
+- [x] Input system can be instantiated
+- [x] Keyboard events update internal state
+- [x] `getMovementInput()` returns normalized Vector2
+- [x] Movement vector is clamped to [-1, 1]
+- [x] Multiple movement keys handled correctly
+- [x] `getActions()` returns set of active actions
+- [x] Action 'shoot' detected on spacebar
+- [x] Action 'pause' detected on ESC
+- [x] Key release removes action from set
 
 ### 2. Green Phase
 
 **Implement input tracking**:
 
-- [ ] Create `src/systems/InputSystem.ts`:
+- [x] Create `src/systems/InputSystem.ts`:
   ```typescript
   import * as THREE from 'three';
   import type { System } from '../types/ecs';
@@ -132,7 +132,7 @@ Implement keyboard input handling for movement and actions. The input system pro
   }
   ```
 
-- [ ] Create `tests/unit/input.test.ts`:
+- [x] Create `tests/unit/input.test.ts`:
   ```typescript
   import { describe, it, expect, beforeEach, vi } from 'vitest';
   import { InputSystem } from '../src/systems/InputSystem';
@@ -186,19 +186,19 @@ Implement keyboard input handling for movement and actions. The input system pro
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify all key mappings are correct
-- [ ] Ensure movement normalization works for all directions
-- [ ] Test diagonal movement produces unit vector
-- [ ] Add JSDoc for public methods
+- [x] Verify all key mappings are correct
+- [x] Ensure movement normalization works for all directions
+- [x] Test diagonal movement produces unit vector
+- [x] Add JSDoc for public methods
 
 ## Completion Criteria
 
-- [ ] Keyboard input tracked accurately
-- [ ] Movement vector normalized correctly (unit circle)
-- [ ] Action set updated per frame
-- [ ] Unit tests passing for input logic
-- [ ] Arrow keys and WASD both work
-- [ ] Spacebar and ESC handled correctly
+- [x] Keyboard input tracked accurately
+- [x] Movement vector normalized correctly (unit circle)
+- [x] Action set updated per frame
+- [x] Unit tests passing for input logic
+- [x] Arrow keys and WASD both work
+- [x] Spacebar and ESC handled correctly
 
 ## Verification Method
 

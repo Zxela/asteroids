@@ -1,8 +1,8 @@
 /**
  * Rendering Module
  *
- * Three.js rendering integration will be implemented in Task 2.1 and 2.7.
- * Includes SceneManager, MeshFactory, and effect managers.
+ * Three.js rendering integration including SceneManager and future MeshFactory.
+ * Follows ADR-0003: WebGPURenderer with automatic WebGL 2 fallback.
  */
 
-export {}
+export { SceneManager } from './SceneManager'

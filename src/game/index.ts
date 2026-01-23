@@ -1,8 +1,8 @@
 /**
  * Game Module
  *
- * Main game orchestration will be implemented in Task 2.1.
- * Includes Game class and game loop management.
+ * Main game orchestration including the Game class and game loop management.
+ * Game coordinates ECS World and SceneManager for complete gameplay.
  */
 
-export {}
+export { Game } from './Game'
