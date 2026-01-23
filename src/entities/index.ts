@@ -25,3 +25,9 @@ export {
   POWER_UP_SPAWN_CHANCE,
   type CreatePowerUpOptions
 } from './createPowerUp'
+export {
+  createBoss,
+  getBossBaseHealth,
+  getBossTypeForWave,
+  BOSS_CONFIG
+} from './createBoss'

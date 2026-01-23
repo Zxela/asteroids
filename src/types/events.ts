@@ -27,6 +27,7 @@ export type GameEventType =
   | 'waveProgressed'
   | 'bossSpawned'
   | 'bossPhaseChanged'
+  | 'bossDamaged'
   | 'bossDefeated'
   | 'scoreChanged'
   | 'livesChanged'
@@ -275,6 +276,24 @@ export interface BossDefeatedEvent extends GameEvent<'bossDefeated'> {
   data: BossDefeatedEventData
 }
 
+/**
+ * Boss damaged event data.
+ */
+export interface BossDamagedEventData {
+  entityId: EntityId
+  damage: number
+  currentHealth: number
+  maxHealth: number
+  healthPercentage: number
+}
+
+/**
+ * Boss damaged event type.
+ */
+export interface BossDamagedEvent extends GameEvent<'bossDamaged'> {
+  data: BossDamagedEventData
+}
+
 // ============================================
 // Score and Lives Events
 // ============================================
@@ -385,6 +404,7 @@ export type AnyGameEvent =
   | WaveProgressedEvent
   | BossSpawnedEvent
   | BossPhaseChangedEvent
+  | BossDamagedEvent
   | BossDefeatedEvent
   | ScoreChangedEvent
   | LivesChangedEvent
