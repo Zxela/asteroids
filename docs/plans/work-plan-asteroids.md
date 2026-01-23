@@ -951,7 +951,7 @@ npm test
 
 #### Task 4.1: Game State Machine
 **Dependencies**: Task 1.1, Task 2.1
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement finite state machine for game flow (Loading → MainMenu → Playing → Paused → GameOver → Leaderboard).
 
@@ -977,11 +977,11 @@ npm test
 4. Create unit tests for state transitions (Red state)
 
 **Completion Criteria**:
-- [ ] FSM transitions work correctly per defined events
-- [ ] Only one state active at a time
-- [ ] State entry/exit actions execute
-- [ ] Game loop only runs in Playing state
-- [ ] Unit tests passing
+- [x] FSM transitions work correctly per defined events
+- [x] Only one state active at a time
+- [x] State entry/exit actions execute
+- [x] Game loop only runs in Playing state
+- [x] Unit tests passing (41 tests)
 
 **Test Coverage**: State transitions, state entry/exit actions
 
@@ -2120,9 +2120,9 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 3 (Core Gameplay Loop) - IN PROGRESS
+- **Active Phase**: Phase 4 (Game Flow and Progression) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 36% (16/45 tasks complete)
+- **Overall Progress**: 38% (17/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2141,6 +2141,7 @@ The entire project is complete when:
 - [x] Task 3.5: Lives System with Respawn (2026-01-22)
 - [x] Task 3.6: Render System Health/Invulnerability Visual (2026-01-22)
 - [x] Task 3.7: Basic HUD Implementation (2026-01-22)
+- [x] Task 4.1: Game State Machine (2026-01-22)
 
 ---
 
@@ -2194,7 +2195,7 @@ The entire project is complete when:
 | 3.5 | 3 | Lives System | 2.5, 2.9 | 1 | - [x] |
 | 3.6 | 3 | Health Visual | 2.7, 3.5 | 0.5 | - [x] |
 | 3.7 | 3 | HUD | 3.4, 3.5 | 0.5 | - [x] |
-| 4.1 | 4 | State Machine | 1.1, 2.1 | 1 | - [ ] |
+| 4.1 | 4 | State Machine | 1.1, 2.1 | 1 | - [x] |
 | 4.2 | 4 | Wave System | 3.3, 3.4 | 0.5 | - [ ] |
 | 4.3 | 4 | Main Menu | 4.1 | 0.5 | - [ ] |
 | 4.4 | 4 | Pause Menu | 4.1, 4.2 | 0.5 | - [ ] |
