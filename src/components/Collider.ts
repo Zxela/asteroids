@@ -37,6 +37,9 @@ export class Collider implements ColliderComponent {
   /** Collision layers this entity can collide with */
   mask: CollisionLayer[]
 
+  /** Whether this collider is enabled for collision detection */
+  enabled: boolean
+
   /**
    * Create a Collider component.
    *
@@ -58,5 +61,6 @@ export class Collider implements ColliderComponent {
     this.layer = layer
     this.mask = mask
     this.size = size
+    this.enabled = true
   }
 }

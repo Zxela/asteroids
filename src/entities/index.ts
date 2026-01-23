@@ -7,3 +7,9 @@
  */
 
 export { createShip } from './createShip'
+export {
+  createAsteroid,
+  getAsteroidRadius,
+  getAsteroidPoints,
+  type AsteroidSize
+} from './createAsteroid'

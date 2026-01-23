@@ -1,0 +1,255 @@
+/**
+ * Wave System
+ *
+ * Manages wave progression and asteroid spawning.
+ * Spawns asteroids from screen edges with randomized trajectories.
+ *
+ * Wave formula: 3 + (wave - 1) * 2 asteroids per wave
+ * Speed multiplier: min(1 + (wave - 1) * 0.05, 2.0)
+ */
+
+import { Vector3 } from 'three'
+import { Asteroid } from '../components/Asteroid'
+import { gameConfig } from '../config'
+import type { ComponentClass, System, World } from '../ecs/types'
+import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
+import { randomInt, randomRange } from '../utils/random'
+
+// Type assertion for component class to work with ECS type system
+// Runtime behavior is correct; this bridges TypeScript's stricter type checking
+const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
+
+/** Screen dimensions (placeholder - will use actual canvas dimensions at runtime) */
+const SCREEN_WIDTH = 1920
+const SCREEN_HEIGHT = 1080
+const SCREEN_HALF_WIDTH = SCREEN_WIDTH / 2
+const SCREEN_HALF_HEIGHT = SCREEN_HEIGHT / 2
+
+/** Distance beyond screen edge where asteroids spawn */
+const SPAWN_OFFSET = 50
+
+/**
+ * Wave System - manages wave progression and asteroid spawning.
+ *
+ * The system tracks the current wave, spawns asteroids at the start of each wave,
+ * and handles wave transitions when all asteroids are destroyed.
+ *
+ * @example
+ * ```typescript
+ * const world = new World()
+ * const waveSystem = new WaveSystem()
+ * world.registerSystem(waveSystem)
+ * // Asteroids will spawn on first update
+ * ```
+ */
+export class WaveSystem implements System {
+  private currentWave = 1
+  private asteroidsDestroyedThisWave = 0
+  private targetAsteroids: number
+  private transitionDelay = 0
+  private transitioning = false
+  private hasSpawnedThisWave = false
+
+  constructor() {
+    this.targetAsteroids = this.calculateAsteroidCount(1)
+  }
+
+  /**
+   * Updates the wave system each frame.
+   *
+   * Handles:
+   * - Wave transition delay countdown
+   * - Initial asteroid spawning
+   * - Detecting when all asteroids are destroyed
+   *
+   * @param world - The ECS world
+   * @param deltaTime - Time elapsed since last frame in milliseconds
+   */
+  update(world: World, deltaTime: number): void {
+    // Handle wave transition delay
+    if (this.transitioning) {
+      this.transitionDelay -= deltaTime
+      if (this.transitionDelay <= 0) {
+        this.startNextWave(world)
+        this.transitioning = false
+      }
+      return
+    }
+
+    // Query asteroid count
+    const asteroids = world.query(AsteroidClass)
+
+    // Spawn initial wave asteroids (only on first update of new wave)
+    if (!this.hasSpawnedThisWave) {
+      this.spawnWaveAsteroids(world)
+      this.hasSpawnedThisWave = true
+      return
+    }
+
+    // Check if all asteroids destroyed
+    if (asteroids.length === 0 && this.asteroidsDestroyedThisWave > 0) {
+      this.beginWaveTransition()
+    }
+  }
+
+  /**
+   * Spawns asteroids for the current wave.
+   *
+   * @param world - The ECS world
+   */
+  private spawnWaveAsteroids(world: World): void {
+    const asteroidCount = this.calculateAsteroidCount(this.currentWave)
+
+    // Spawn asteroids from screen edges with random trajectories
+    for (let i = 0; i < asteroidCount; i++) {
+      const spawn = this.getRandomScreenEdgeSpawn()
+      const size = this.getAsteroidSizeForWave(this.currentWave)
+
+      createAsteroid(world, spawn, size)
+    }
+  }
+
+  /**
+   * Gets a random spawn position at the screen edge.
+   * Asteroids spawn 50 units beyond the visible screen area.
+   *
+   * @returns Position at screen edge
+   */
+  private getRandomScreenEdgeSpawn(): Vector3 {
+    const edge = randomInt(0, 3) // 0=top, 1=right, 2=bottom, 3=left
+
+    let x: number
+    let y: number
+
+    switch (edge) {
+      case 0: // Top
+        x = randomRange(-SCREEN_HALF_WIDTH, SCREEN_HALF_WIDTH)
+        y = SCREEN_HALF_HEIGHT + SPAWN_OFFSET
+        break
+      case 1: // Right
+        x = SCREEN_HALF_WIDTH + SPAWN_OFFSET
+        y = randomRange(-SCREEN_HALF_HEIGHT, SCREEN_HALF_HEIGHT)
+        break
+      case 2: // Bottom
+        x = randomRange(-SCREEN_HALF_WIDTH, SCREEN_HALF_WIDTH)
+        y = -SCREEN_HALF_HEIGHT - SPAWN_OFFSET
+        break
+      case 3: // Left
+        x = -SCREEN_HALF_WIDTH - SPAWN_OFFSET
+        y = randomRange(-SCREEN_HALF_HEIGHT, SCREEN_HALF_HEIGHT)
+        break
+      default:
+        x = 0
+        y = SCREEN_HALF_HEIGHT + SPAWN_OFFSET
+    }
+
+    return new Vector3(x, y, 0)
+  }
+
+  /**
+   * Calculates the number of asteroids for a given wave.
+   * Formula: 3 + (wave - 1) * 2
+   *
+   * @param wave - Wave number
+   * @returns Number of asteroids to spawn
+   */
+  calculateAsteroidCount(wave: number): number {
+    return gameConfig.wave.baseAsteroidCount + (wave - 1) * gameConfig.wave.asteroidIncrement
+  }
+
+  /**
+   * Calculates the speed multiplier for a given wave.
+   * Formula: min(1 + (wave - 1) * 0.05, 2.0)
+   *
+   * @param wave - Wave number
+   * @returns Speed multiplier (capped at 2.0)
+   */
+  calculateSpeedMultiplier(wave: number): number {
+    const multiplier = 1 + (wave - 1) * (gameConfig.wave.speedMultiplier - 1)
+    return Math.min(multiplier, 2.0)
+  }
+
+  /**
+   * Determines asteroid size based on wave number.
+   * Early waves spawn only large asteroids.
+   * Later waves mix sizes for variety.
+   *
+   * @param wave - Current wave number
+   * @returns Asteroid size to spawn
+   */
+  private getAsteroidSizeForWave(wave: number): AsteroidSize {
+    // Early waves have only large asteroids
+    if (wave <= 3) {
+      return 'large'
+    }
+
+    // Mid waves mix large and medium
+    if (wave <= 6) {
+      const rand = Math.random()
+      return rand < 0.5 ? 'large' : 'medium'
+    }
+
+    // Later waves mix all sizes
+    const rand = Math.random()
+    if (rand < 0.33) return 'large'
+    if (rand < 0.66) return 'medium'
+    return 'small'
+  }
+
+  /**
+   * Begins the wave transition period.
+   * There is a delay before the next wave starts.
+   */
+  private beginWaveTransition(): void {
+    this.transitioning = true
+    this.transitionDelay = gameConfig.gameplay.waveTransitionDelay
+  }
+
+  /**
+   * Starts the next wave.
+   *
+   * @param world - The ECS world
+   */
+  private startNextWave(_world: World): void {
+    this.currentWave++
+    this.asteroidsDestroyedThisWave = 0
+    this.targetAsteroids = this.calculateAsteroidCount(this.currentWave)
+    this.hasSpawnedThisWave = false
+    // Spawning will happen on next update
+  }
+
+  /**
+   * Gets the current wave number.
+   *
+   * @returns Current wave number
+   */
+  getCurrentWave(): number {
+    return this.currentWave
+  }
+
+  /**
+   * Gets the target asteroid count for the current wave.
+   *
+   * @returns Number of asteroids to destroy to complete the wave
+   */
+  getAsteroidsRemaining(): number {
+    return this.targetAsteroids
+  }
+
+  /**
+   * Records an asteroid destruction.
+   * Called when an asteroid is destroyed to track wave progress.
+   */
+  recordAsteroidDestruction(): void {
+    this.asteroidsDestroyedThisWave++
+  }
+
+  /**
+   * Checks if the wave is currently transitioning.
+   *
+   * @returns True if in wave transition period
+   */
+  isWaveTransitioning(): boolean {
+    return this.transitioning
+  }
+}

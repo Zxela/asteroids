@@ -33,3 +33,6 @@ export type { EventHandler } from './EventEmitter'
 
 // Object pooling for performance optimization
 export { ObjectPool } from './ObjectPool'
+
+// Spatial partitioning for collision detection
+export { SpatialGrid, type SpatialGridConfig } from './SpatialGrid'

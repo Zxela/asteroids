@@ -16,25 +16,25 @@ Implement collision detection with broad phase spatial optimization and narrow p
 
 ## Target Files
 
-- [ ] `src/utils/SpatialGrid.ts` - Broad-phase spatial grid for collision acceleration
-- [ ] `src/systems/CollisionSystem.ts` - Collision detection and event emission
-- [ ] `tests/unit/CollisionSystem.test.ts` - Unit tests for collision detection
+- [x] `src/utils/SpatialGrid.ts` - Broad-phase spatial grid for collision acceleration
+- [x] `src/systems/CollisionSystem.ts` - Collision detection and event emission
+- [x] `tests/unit/CollisionSystem.test.ts` - Unit tests for collision detection
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for collision system
-- [ ] Write failing test for circle-circle collision detection
-- [ ] Write failing test for collision layer/mask filtering
-- [ ] Write failing test for spatial grid insertion and query
-- [ ] Write failing test for collision event emission
-- [ ] Write failing test for performance budget (<5ms)
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for collision system
+- [x] Write failing test for circle-circle collision detection
+- [x] Write failing test for collision layer/mask filtering
+- [x] Write failing test for spatial grid insertion and query
+- [x] Write failing test for collision event emission
+- [x] Write failing test for performance budget (<5ms)
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement SpatialGrid**:
-- [ ] Create `src/utils/SpatialGrid.ts`:
+- [x] Create `src/utils/SpatialGrid.ts`:
   ```typescript
   import { Vector3 } from 'three';
 
@@ -115,7 +115,7 @@ Implement collision detection with broad phase spatial optimization and narrow p
   ```
 
 **Implement CollisionSystem**:
-- [ ] Create `src/systems/CollisionSystem.ts`:
+- [x] Create `src/systems/CollisionSystem.ts`:
   ```typescript
   import { System, World } from '../types/ecs';
   import { Transform, Collider } from '../components';
@@ -277,7 +277,7 @@ Implement collision detection with broad phase spatial optimization and narrow p
   ```
 
 **Create unit tests**:
-- [ ] Create `tests/unit/CollisionSystem.test.ts`:
+- [x] Create `tests/unit/CollisionSystem.test.ts`:
   ```typescript
   import { describe, it, expect, beforeEach, vi } from 'vitest';
   import { Vector3 } from 'three';
@@ -545,23 +545,23 @@ Implement collision detection with broad phase spatial optimization and narrow p
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify collision math is accurate
-- [ ] Optimize spatial grid cell calculations
-- [ ] Review performance metrics
-- [ ] Add performance logging
-- [ ] Confirm all tests pass
-- [ ] Ensure no false positives/negatives
+- [x] Verify collision math is accurate
+- [x] Optimize spatial grid cell calculations
+- [x] Review performance metrics
+- [x] Add performance logging
+- [x] Confirm all tests pass
+- [x] Ensure no false positives/negatives
 
 ## Completion Criteria
 
-- [ ] Collisions detected accurately (circle-circle)
-- [ ] Collision events emitted with correct entity pairs
-- [ ] Collision system runs in <5ms (frame budget 16ms at 60 FPS)
-- [ ] Layer/mask filtering works correctly
-- [ ] Spatial grid reduces collision checks by 80%+
-- [ ] Unit tests passing (15+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Performance baseline: collision detection < 3ms with 20 entities
+- [x] Collisions detected accurately (circle-circle)
+- [x] Collision events emitted with correct entity pairs
+- [x] Collision system runs in <5ms (frame budget 16ms at 60 FPS)
+- [x] Layer/mask filtering works correctly
+- [x] Spatial grid reduces collision checks by 80%+
+- [x] Unit tests passing (15+ test cases)
+- [x] Build succeeds with no errors
+- [x] Performance baseline: collision detection < 3ms with 20 entities
 
 ## Verification Method
 
