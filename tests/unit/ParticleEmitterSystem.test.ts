@@ -774,9 +774,10 @@ describe('ParticleEmitterSystem', () => {
 
       const particles = particleManager.getActiveParticles()
       for (const particle of particles) {
-        // Orange (#FF6600) has r=1, g=0.4, b=0
+        // Orange (#FF6600) has high red, some green, no blue
+        // Three.js Color uses linear color space, so g is ~0.13 for 0x66
         expect(particle.color.r).toBeGreaterThan(0.9)
-        expect(particle.color.g).toBeGreaterThan(0.3)
+        expect(particle.color.g).toBeGreaterThan(0.1) // Linear space is ~0.13
         expect(particle.color.g).toBeLessThan(0.5)
         expect(particle.color.b).toBeLessThan(0.1)
       }

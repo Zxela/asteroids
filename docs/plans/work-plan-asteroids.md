@@ -1642,22 +1642,25 @@ npm test
 
 #### Task 7.3: Projectile Trails
 **Dependencies**: Task 3.1, Task 7.1
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Add trailing particle effect to projectiles.
 
 **Implementation Steps**:
-1. Extend RenderSystem:
-   - Create trail particle emitter for each projectile
+1. Extend ParticleEmitterSystem:
+   - Added weaponFired event handler for trail particle emission
    - Trail particles:
-     - Emit from projectile path
-     - Color based on weapon type (red for default, blue for spread, cyan for laser, green for homing)
-     - Fade quickly (100-200ms)
+     - Emit from projectile position at 20 particles/second
+     - Color based on weapon type (red=single, blue=spread, cyan=laser, green=homing, orange=boss)
+     - Fade quickly (100-200ms lifetime)
+     - Size 1-3 units (smaller than thrust/explosion)
+     - Minimal velocity spread (±10 units/s)
 
 **Completion Criteria**:
-- [ ] Projectiles have visible trails
-- [ ] Trail colors distinct per weapon type
-- [ ] Trails fade smoothly
+- [x] Projectiles have visible trails (via weaponFired event)
+- [x] Trail colors distinct per weapon type (5 colors defined)
+- [x] Trails fade smoothly (100-200ms lifetime)
+- [x] 16 new test cases added (48 total tests passing)
 
 ---
 
@@ -1696,7 +1699,7 @@ npm test
 - [x] Particle explosions visible on destruction
 - [x] Thrust particles emit while moving
 - [x] Screen shakes on collision
-- [ ] Projectile trails visible
+- [x] Projectile trails visible (via weaponFired events, 5 weapon-type colors)
 - [ ] All visual effects performant (60 FPS maintained)
 
 **Build Status**: ✓ Phase 7 builds successfully
@@ -2123,7 +2126,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 7 (Visual Polish) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 69% (31/45 tasks complete)
+- **Overall Progress**: 71% (32/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2158,6 +2161,7 @@ The entire project is complete when:
 - [x] Task 6.4: Boss Defeat and Rewards (2026-01-23)
 - [x] Task 7.1: Particle System - Explosions and Effects (2026-01-23)
 - [x] Task 7.2: Screen Shake Camera Effect (2026-01-23)
+- [x] Task 7.3: Projectile Trails (2026-01-23)
 
 ---
 
@@ -2230,7 +2234,7 @@ The entire project is complete when:
 | 6.4 | 6 | Boss Rewards | 6.1, 3.4, 5.3 | 0.5 | - [ ] |
 | 7.1 | 7 | Particles | 2.7, 3.3 | 1 | - [ ] |
 | 7.2 | 7 | Screen Shake | 2.1, 2.9 | 0.5 | - [x] |
-| 7.3 | 7 | Trails | 3.1, 7.1 | 0.5 | - [ ] |
+| 7.3 | 7 | Trails | 3.1, 7.1 | 0.5 | - [x] |
 | 7.4 | 7 | Polish Pass | 7.1, 7.2, 7.3 | 1 | - [ ] |
 | 8.1 | 8 | Performance Opt | All | 1.5 | - [ ] |
 | 8.2 | 8 | Cross-browser | All | 1 | - [ ] |

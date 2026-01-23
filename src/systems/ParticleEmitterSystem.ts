@@ -18,8 +18,12 @@
 import { Color, Vector3 } from 'three'
 import type { System, World } from '../ecs/types'
 import type { ParticleManager } from '../rendering/ParticleManager'
-import type { AsteroidSize } from '../types/components'
-import type { AsteroidDestroyedEventData, ShipThrustEventData } from '../types/events'
+import type { AsteroidSize, WeaponType } from '../types/components'
+import type {
+  AsteroidDestroyedEventData,
+  ShipThrustEventData,
+  WeaponFiredEventData
+} from '../types/events'
 import type { EventEmitter } from '../utils/EventEmitter'
 
 /**
@@ -28,6 +32,7 @@ import type { EventEmitter } from '../utils/EventEmitter'
 interface ParticleEvents extends Record<string, unknown> {
   asteroidDestroyed: AsteroidDestroyedEventData
   shipThrust: ShipThrustEventData
+  weaponFired: WeaponFiredEventData
 }
 
 /**
@@ -66,6 +71,19 @@ const THRUST_CONFIG = {
 }
 
 /**
+ * Trail particle configuration for projectiles.
+ */
+const TRAIL_CONFIG = {
+  rate: 20, // particles per second (lower than thrust)
+  minSpeed: 0,
+  maxSpeed: 10, // minimal random spread ±10 units/s
+  minSize: 1,
+  maxSize: 3, // smaller than thrust (2-4) and explosion (2-8)
+  minLifetime: 100,
+  maxLifetime: 200 // quick fade (100-200ms)
+}
+
+/**
  * Explosion colors (orange, red, yellow).
  */
 const EXPLOSION_COLORS: Color[] = [
@@ -83,11 +101,30 @@ const THRUST_COLORS: Color[] = [
 ]
 
 /**
+ * Trail colors based on weapon type.
+ */
+const TRAIL_COLORS: Record<WeaponType, Color> = {
+  single: new Color(0xff0000), // Red
+  spread: new Color(0x0000ff), // Blue
+  laser: new Color(0x00ffff), // Cyan
+  homing: new Color(0x00ff00), // Green
+  boss: new Color(0xff6600) // Orange
+}
+
+/**
  * Pending explosion event data.
  */
 interface PendingExplosion {
   position: Vector3
   size: AsteroidSize
+}
+
+/**
+ * Pending trail event data for projectiles.
+ */
+interface PendingTrail {
+  position: Vector3
+  weaponType: WeaponType
 }
 
 /**
@@ -113,6 +150,9 @@ export class ParticleEmitterSystem implements System {
   /** Pending explosion events to process */
   private pendingExplosions: PendingExplosion[] = []
 
+  /** Pending trail events for projectiles */
+  private pendingTrails: PendingTrail[] = []
+
   /** Current thrust state */
   private thrustActive = false
   private thrustPosition: Vector3 = new Vector3()
@@ -120,6 +160,9 @@ export class ParticleEmitterSystem implements System {
 
   /** Accumulated time for thrust particle emission */
   private thrustAccumulator = 0
+
+  /** Accumulated time for trail particle emission */
+  private trailAccumulator = 0
 
   /**
    * Create a ParticleEmitterSystem.
@@ -148,6 +191,13 @@ export class ParticleEmitterSystem implements System {
       this.thrustPosition.copy(data.position)
       this.thrustDirection.copy(data.direction)
     })
+
+    eventEmitter.on('weaponFired', (data) => {
+      this.pendingTrails.push({
+        position: data.position.clone(),
+        weaponType: data.weaponType
+      })
+    })
   }
 
   /**
@@ -162,7 +212,7 @@ export class ParticleEmitterSystem implements System {
   /**
    * Update particle emitters.
    *
-   * Processes pending explosion events and emits thrust particles.
+   * Processes pending explosion events, emits thrust particles, and trail particles.
    *
    * @param _world - ECS world (unused)
    * @param deltaTime - Time since last update in milliseconds
@@ -175,6 +225,9 @@ export class ParticleEmitterSystem implements System {
     if (this.thrustActive) {
       this.emitThrustParticles(deltaTime)
     }
+
+    // Process pending trail events for projectiles
+    this.processTrails(deltaTime)
   }
 
   /**
@@ -318,5 +371,75 @@ export class ParticleEmitterSystem implements System {
     // Random size
     particle.size =
       THRUST_CONFIG.minSize + Math.random() * (THRUST_CONFIG.maxSize - THRUST_CONFIG.minSize)
+  }
+
+  /**
+   * Process all pending trail events for projectiles.
+   *
+   * @param deltaTime - Time since last update in milliseconds
+   */
+  private processTrails(deltaTime: number): void {
+    if (this.pendingTrails.length === 0) {
+      return
+    }
+
+    // Accumulate time
+    this.trailAccumulator += deltaTime
+
+    // Calculate how many particles to emit per trail
+    const particleInterval = 1000 / TRAIL_CONFIG.rate // ms per particle (50ms at 20/sec)
+    const particlesToEmitPerTrail = Math.floor(this.trailAccumulator / particleInterval)
+
+    if (particlesToEmitPerTrail > 0) {
+      this.trailAccumulator -= particlesToEmitPerTrail * particleInterval
+
+      // Emit particles for each pending trail
+      for (const trail of this.pendingTrails) {
+        for (let i = 0; i < particlesToEmitPerTrail; i++) {
+          this.spawnTrailParticle(trail.position, trail.weaponType)
+        }
+      }
+    }
+
+    // Clear processed trails
+    this.pendingTrails = []
+  }
+
+  /**
+   * Spawn a single trail particle for a projectile.
+   *
+   * @param position - Projectile position
+   * @param weaponType - Weapon type for color determination
+   */
+  private spawnTrailParticle(position: Vector3, weaponType: WeaponType): void {
+    const particle = this.particleManager.acquireParticle()
+    if (!particle) {
+      return // Pool exhausted
+    }
+
+    // Spawn at projectile position
+    particle.position.copy(position)
+
+    // Minimal random velocity spread (±10 units/s in X and Y)
+    const vx = (Math.random() - 0.5) * 2 * TRAIL_CONFIG.maxSpeed // -10 to +10
+    const vy = (Math.random() - 0.5) * 2 * TRAIL_CONFIG.maxSpeed // -10 to +10
+    particle.velocity.set(vx, vy, 0)
+
+    // Random lifetime (100-200ms)
+    const lifetime =
+      TRAIL_CONFIG.minLifetime +
+      Math.random() * (TRAIL_CONFIG.maxLifetime - TRAIL_CONFIG.minLifetime)
+    particle.lifetime = lifetime
+    particle.maxLifetime = lifetime
+
+    // Color based on weapon type
+    const trailColor = TRAIL_COLORS[weaponType]
+    if (trailColor) {
+      particle.color.copy(trailColor)
+    }
+
+    // Random size (1-3 units, smaller than thrust and explosion)
+    particle.size =
+      TRAIL_CONFIG.minSize + Math.random() * (TRAIL_CONFIG.maxSize - TRAIL_CONFIG.minSize)
   }
 }
