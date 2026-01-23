@@ -18,5 +18,8 @@ export {
   type RespawnSystemEvent
 } from './RespawnSystem'
 export { WeaponSystem, type WeaponFiredEvent } from './WeaponSystem'
+export { ProjectileSystem } from './ProjectileSystem'
 export { ScoreSystem } from './ScoreSystem'
 export { UISystem } from './UISystem'
+export { AudioSystem } from './AudioSystem'
+export { PowerUpSystem } from './PowerUpSystem'

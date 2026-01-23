@@ -22,7 +22,7 @@
  */
 
 import { Vector3 } from 'three'
-import { Transform, Weapon } from '../components'
+import { Asteroid, Transform, Weapon } from '../components'
 import { gameConfig } from '../config'
 import { WEAPON_CONFIGS, getNextWeapon, getPreviousWeapon } from '../config/weaponConfig'
 import type { ComponentClass, EntityId, World as IWorld, System } from '../ecs/types'
@@ -33,6 +33,7 @@ import type { InputSystem } from './InputSystem'
 // Type assertions for component classes to work with ECS type system
 const TransformClass = Transform as unknown as ComponentClass<Transform>
 const WeaponClass = Weapon as unknown as ComponentClass<Weapon>
+const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
 
 /**
  * Event emitted when a weapon fires.
@@ -183,6 +184,12 @@ export class WeaponSystem implements System {
     ) {
       newWeapon = 'laser'
       this.processedSwitchActions.add('switchWeapon3')
+    } else if (
+      this.inputSystem.hasAction('switchWeapon4') &&
+      !this.processedSwitchActions.has('switchWeapon4')
+    ) {
+      newWeapon = 'homing'
+      this.processedSwitchActions.add('switchWeapon4')
     }
 
     // Cycling via Z/X keys
@@ -226,9 +233,17 @@ export class WeaponSystem implements System {
       'switchWeapon1',
       'switchWeapon2',
       'switchWeapon3',
+      'switchWeapon4',
       'switchWeaponPrev',
       'switchWeaponNext'
-    ] = ['switchWeapon1', 'switchWeapon2', 'switchWeapon3', 'switchWeaponPrev', 'switchWeaponNext']
+    ] = [
+      'switchWeapon1',
+      'switchWeapon2',
+      'switchWeapon3',
+      'switchWeapon4',
+      'switchWeaponPrev',
+      'switchWeaponNext'
+    ]
     for (const action of actionsToCheck) {
       if (!this.inputSystem.hasAction(action)) {
         this.processedSwitchActions.delete(action)
@@ -255,9 +270,18 @@ export class WeaponSystem implements System {
       return
     }
 
+    // For homing missiles, check ammo
+    if (weapon.currentWeapon === 'homing') {
+      if (!weapon.hasAmmo()) {
+        return // No ammo, cannot fire
+      }
+    }
+
     // Fire based on weapon type
     if (weapon.currentWeapon === 'spread') {
       this.fireSpreadShot(world, entityId, transform, weapon)
+    } else if (weapon.currentWeapon === 'homing') {
+      this.fireHomingMissile(world, entityId, transform, weapon)
     } else {
       this.fireSingleShot(world, entityId, transform, weapon)
     }
@@ -397,6 +421,76 @@ export class WeaponSystem implements System {
         speed: weaponConfig.projectileSpeed
       })
     }
+  }
+
+  /**
+   * Fire a homing missile projectile.
+   *
+   * @param world - The ECS world
+   * @param shipId - Entity ID of the ship
+   * @param transform - Transform component
+   * @param weapon - Weapon component
+   */
+  private fireHomingMissile(
+    world: IWorld,
+    shipId: EntityId,
+    transform: Transform,
+    weapon: Weapon
+  ): void {
+    const weaponConfig = WEAPON_CONFIGS.homing
+    const direction = this.getShipForwardDirection(transform.rotation.z)
+
+    // Calculate projectile spawn position (slightly ahead of ship)
+    const spawnDistance = 21 // Ship radius (20) + offset (1)
+    const spawnOffset = direction.clone().multiplyScalar(spawnDistance)
+    const projectilePosition = transform.position.clone().add(spawnOffset)
+
+    // Find nearest target within homing range
+    const homingRange = weaponConfig.homingRange ?? 500
+    const homingTarget = this.findNearestTarget(world, transform.position, homingRange)
+
+    // Create projectile entity with homing target
+    createProjectile(world, {
+      position: projectilePosition,
+      direction: direction.clone(),
+      type: 'homing',
+      owner: shipId,
+      damage: weaponConfig.damage,
+      speed: weaponConfig.projectileSpeed,
+      homingTarget: homingTarget ?? undefined
+    })
+
+    // Consume ammo
+    weapon.consumeAmmo(1)
+  }
+
+  /**
+   * Find the nearest asteroid target within range.
+   *
+   * @param world - The ECS world
+   * @param position - Position to search from
+   * @param range - Maximum range to acquire target
+   * @returns EntityId of nearest asteroid, or null if none in range
+   */
+  private findNearestTarget(world: IWorld, position: Vector3, range: number): EntityId | null {
+    // Query for all asteroids
+    const asteroids = world.query(TransformClass, AsteroidClass)
+
+    let nearestTarget: EntityId | null = null
+    let nearestDistance = range
+
+    for (const asteroidId of asteroids) {
+      const asteroidTransform = world.getComponent(asteroidId, TransformClass)
+      if (!asteroidTransform) continue
+
+      const distance = position.distanceTo(asteroidTransform.position)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearestTarget = asteroidId
+      }
+    }
+
+    return nearestTarget
   }
 
   /**

@@ -24,6 +24,7 @@ export type GameAction =
   | 'switchWeapon1'
   | 'switchWeapon2'
   | 'switchWeapon3'
+  | 'switchWeapon4'
   | 'switchWeaponPrev'
   | 'switchWeaponNext'
 
@@ -119,6 +120,9 @@ export class InputSystem {
     if (key === '3') {
       this.currentActions.add('switchWeapon3')
     }
+    if (key === '4') {
+      this.currentActions.add('switchWeapon4')
+    }
     if (key === 'z') {
       this.currentActions.add('switchWeaponPrev')
     }
@@ -152,6 +156,9 @@ export class InputSystem {
     }
     if (key === '3') {
       this.currentActions.delete('switchWeapon3')
+    }
+    if (key === '4') {
+      this.currentActions.delete('switchWeapon4')
     }
     if (key === 'z') {
       this.currentActions.delete('switchWeaponPrev')

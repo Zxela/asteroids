@@ -36,6 +36,8 @@ export class HUD {
   private weaponElement: HTMLElement
   private energyBarContainer: HTMLElement
   private energyBarFill: HTMLElement
+  private ammoDisplayContainer: HTMLElement
+  private ammoDisplayValue: HTMLElement
   private parentElement: HTMLElement | null = null
 
   constructor() {
@@ -47,6 +49,9 @@ export class HUD {
     const energyBar = this.createEnergyBar()
     this.energyBarContainer = energyBar.container
     this.energyBarFill = energyBar.fill
+    const ammoDisplay = this.createAmmoDisplay()
+    this.ammoDisplayContainer = ammoDisplay.container
+    this.ammoDisplayValue = ammoDisplay.value
 
     // Add elements to container
     this.container.appendChild(this.scoreElement)
@@ -54,6 +59,7 @@ export class HUD {
     this.container.appendChild(this.waveElement)
     this.container.appendChild(this.weaponElement)
     this.container.appendChild(this.energyBarContainer)
+    this.container.appendChild(this.ammoDisplayContainer)
 
     // Initialize with default values
     this.updateScore(0)
@@ -61,6 +67,7 @@ export class HUD {
     this.updateWave(1)
     this.updateWeapon('single')
     this.updateEnergyBar(100, 100)
+    this.updateAmmoDisplay('infinite')
   }
 
   /**
@@ -187,8 +194,11 @@ export class HUD {
     }
     this.weaponElement.textContent = weaponNames[weapon]
 
-    // Show/hide energy bar based on weapon type
+    // Show/hide energy bar based on weapon type (laser only)
     this.energyBarContainer.style.display = weapon === 'laser' ? 'block' : 'none'
+
+    // Show/hide ammo display based on weapon type (homing only)
+    this.ammoDisplayContainer.style.display = weapon === 'homing' ? 'block' : 'none'
   }
 
   /**
@@ -266,6 +276,62 @@ export class HUD {
       color = '#ff0000' // Red
     }
     this.energyBarFill.style.backgroundColor = color
+  }
+
+  /**
+   * Creates the ammo display element.
+   * Positioned below weapon indicator on the right.
+   *
+   * @returns Object containing container and value elements
+   */
+  private createAmmoDisplay(): { container: HTMLElement; value: HTMLElement } {
+    // Container for the ammo display
+    const container = document.createElement('div')
+    container.setAttribute('data-hud', 'ammo-display')
+    container.style.position = 'absolute'
+    container.style.right = '20px'
+    container.style.top = '50px'
+    container.style.display = 'none' // Hidden by default, shown when homing selected
+
+    // Value display
+    const value = document.createElement('div')
+    value.setAttribute('data-hud', 'ammo-value')
+    value.style.fontSize = '14px'
+
+    container.appendChild(value)
+
+    return { container, value }
+  }
+
+  /**
+   * Updates the ammo display.
+   *
+   * @param ammo - Current ammo value or 'infinite' for unlimited
+   */
+  updateAmmoDisplay(ammo: number | 'infinite'): void {
+    if (ammo === 'infinite') {
+      this.ammoDisplayValue.textContent = 'MISSILES: --'
+      this.ammoDisplayValue.style.color = 'white'
+    } else {
+      this.ammoDisplayValue.textContent = `MISSILES: ${ammo}`
+
+      // Color: red when ammo low (< 3), normal otherwise
+      if (ammo < 3) {
+        this.ammoDisplayValue.style.color = '#ff0000' // Red
+      } else {
+        this.ammoDisplayValue.style.color = 'white'
+      }
+    }
+  }
+
+  /**
+   * Gets the ammo display container element.
+   * Primarily used for testing.
+   *
+   * @returns The ammo display container HTMLElement
+   */
+  getAmmoDisplayContainer(): HTMLElement {
+    return this.ammoDisplayContainer
   }
 
   /**

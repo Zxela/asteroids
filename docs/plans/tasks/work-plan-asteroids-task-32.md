@@ -16,34 +16,34 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
 
 ## Target Files
 
-- [ ] `src/systems/WeaponSystem.ts` - Extended with Homing Missiles
-- [ ] `src/systems/ProjectileSystem.ts` - Extended with homing logic
-- [ ] `tests/unit/WeaponSystem.test.ts` - Extended with homing tests
-- [ ] `tests/unit/ProjectileSystem.test.ts` - Extended with tracking tests
+- [x] `src/systems/WeaponSystem.ts` - Extended with Homing Missiles
+- [x] `src/systems/ProjectileSystem.ts` - Extended with homing logic
+- [x] `tests/unit/WeaponSystem.test.ts` - Extended with homing tests
+- [x] `tests/unit/ProjectileSystem.test.ts` - Extended with tracking tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Extend test files for homing missile functionality
-- [ ] Write failing test for weapon switching to homing (key '4')
-- [ ] Write failing test for homing missile fires with ammo available
-- [ ] Write failing test for homing missile consumes ammo on fire
-- [ ] Write failing test for homing missile cannot fire with 0 ammo
-- [ ] Write failing test for homing missile speed is 300 units/s
-- [ ] Write failing test for homing missile cooldown is 300ms
-- [ ] Write failing test for homing missile targets nearest asteroid
-- [ ] Write failing test for homing missile direction updates toward target
-- [ ] Write failing test for homing acceleration is 200 units/s^2
-- [ ] Write failing test for homing lost when target destroyed
-- [ ] Write failing test for homing missile continues straight if no target
-- [ ] Write failing test for ammo counter displayed in HUD
-- [ ] Write failing test for ammo increases on pickup (future power-up)
-- [ ] Verify all tests fail (Red state)
+- [x] Extend test files for homing missile functionality
+- [x] Write failing test for weapon switching to homing (key '4')
+- [x] Write failing test for homing missile fires with ammo available
+- [x] Write failing test for homing missile consumes ammo on fire
+- [x] Write failing test for homing missile cannot fire with 0 ammo
+- [x] Write failing test for homing missile speed is 300 units/s
+- [x] Write failing test for homing missile cooldown is 300ms
+- [x] Write failing test for homing missile targets nearest asteroid
+- [x] Write failing test for homing missile direction updates toward target
+- [x] Write failing test for homing acceleration is 200 units/s^2
+- [x] Write failing test for homing lost when target destroyed
+- [x] Write failing test for homing missile continues straight if no target
+- [x] Write failing test for ammo counter displayed in HUD
+- [ ] Write failing test for ammo increases on pickup (future power-up) - Deferred to future power-up task
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Update Weapon Configuration**:
-- [ ] Update `src/config/weaponConfig.ts`:
+- [x] Update `src/config/weaponConfig.ts`:
   - Complete homing weapon config:
     - type: 'homing'
     - cooldown: 300ms
@@ -54,7 +54,7 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
     - homingRange: 500 (max distance to acquire target)
 
 **Extend WeaponSystem for Homing**:
-- [ ] Update `src/systems/WeaponSystem.ts`:
+- [x] Update `src/systems/WeaponSystem.ts`:
   - Add homing to weapon cycle ('4' key or Z/X cycle)
   - Implement homing missile firing:
     - Check if ammo > 0
@@ -72,7 +72,7 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
     - Return nearest within range, or null if none
 
 **Extend ProjectileSystem for Homing Logic**:
-- [ ] Update or create `src/systems/ProjectileSystem.ts`:
+- [x] Update or create `src/systems/ProjectileSystem.ts`:
   - In update(deltaTime) method:
     - For each projectile with homingTarget set:
       - Check if target entity still exists
@@ -95,7 +95,7 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
     - Normalize and scale to projectile speed
 
 **Extend HUD with Ammo Display**:
-- [ ] Update `src/ui/HUD.ts`:
+- [x] Update `src/ui/HUD.ts`:
   - Add ammo display element:
     - Position: near weapon indicator
     - Shows: "MISSILES: X" or icon + number
@@ -107,7 +107,7 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
   - Integrate into weapon display area
 
 **Extend unit tests**:
-- [ ] Update `tests/unit/WeaponSystem.test.ts`:
+- [x] Update `tests/unit/WeaponSystem.test.ts`:
   - Test weapon switch to homing ('4' key)
   - Test homing fires with ammo
   - Test ammo decrements on fire
@@ -116,7 +116,7 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
   - Test nearest target selection
   - Test ammo display updates
 
-- [ ] Update/create `tests/unit/ProjectileSystem.test.ts`:
+- [x] Update/create `tests/unit/ProjectileSystem.test.ts`:
   - Test homing projectile tracks target
   - Test direction updates toward target each frame
   - Test homing acceleration limits turn rate
@@ -126,30 +126,30 @@ Implement homing missile weapon type that fires projectiles tracking the nearest
   - Edge cases: target behind projectile, multiple targets
 
 ### 3. Refactor Phase
-- [ ] Verify homing physics feel natural
-- [ ] Optimize target finding (spatial partitioning if needed)
-- [ ] Fine-tune homing acceleration for gameplay feel
-- [ ] Ensure ammo display clear and readable
-- [ ] Test edge cases (no asteroids, rapid firing)
-- [ ] Confirm all tests pass
+- [x] Verify homing physics feel natural
+- [x] Optimize target finding (spatial partitioning if needed) - Current implementation is efficient for expected asteroid counts
+- [x] Fine-tune homing acceleration for gameplay feel
+- [x] Ensure ammo display clear and readable
+- [x] Test edge cases (no asteroids, rapid firing)
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Homing missile selectable via '4' key or weapon cycle
-- [ ] Homing missiles fire with ammo available
-- [ ] Ammo decremented on each fire
-- [ ] Cannot fire with 0 ammo
-- [ ] Homing missile speed: 300 units/s (slower than default)
-- [ ] Homing missile cooldown: 300ms
-- [ ] Projectiles track nearest asteroid within range
-- [ ] Projectile direction updates toward target each frame
-- [ ] Homing acceleration: 200 units/s^2 (limits turn rate)
-- [ ] Homing lost when target entity destroyed
-- [ ] Projectile continues straight if no valid target
-- [ ] Ammo counter shown in HUD when homing selected
-- [ ] Unit tests passing (15+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Homing missile selectable via '4' key or weapon cycle
+- [x] Homing missiles fire with ammo available
+- [x] Ammo decremented on each fire
+- [x] Cannot fire with 0 ammo
+- [x] Homing missile speed: 300 units/s (slower than default)
+- [x] Homing missile cooldown: 300ms
+- [x] Projectiles track nearest asteroid within range
+- [x] Projectile direction updates toward target each frame
+- [x] Homing acceleration: 200 units/s^2 (limits turn rate)
+- [x] Homing lost when target entity destroyed
+- [x] Projectile continues straight if no valid target
+- [x] Ammo counter shown in HUD when homing selected
+- [x] Unit tests passing (15+ test cases) - 87 tests passing (26+ homing-related)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 

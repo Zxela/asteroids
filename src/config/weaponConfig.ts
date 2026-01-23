@@ -33,6 +33,10 @@ export interface WeaponTypeConfig {
   spreadAngle?: number
   /** Number of projectiles per shot (for spread shot) */
   projectileCount?: number
+  /** Homing acceleration in units/s^2 (for homing missiles) */
+  homingAcceleration?: number
+  /** Maximum range to acquire a homing target (for homing missiles) */
+  homingRange?: number
 }
 
 /**
@@ -76,7 +80,9 @@ export const WEAPON_CONFIGS: Record<WeaponType, WeaponTypeConfig> = {
     cooldown: 300,
     projectileSpeed: 300,
     damage: 2,
-    ammo: 10
+    ammo: 10,
+    homingAcceleration: 200,
+    homingRange: 500
   }
 }
 

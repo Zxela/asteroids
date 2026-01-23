@@ -12,7 +12,7 @@ import { Vector3 } from 'three'
 import { World } from '../../src/ecs/World'
 import { WeaponSystem, type WeaponFiredEvent } from '../../src/systems/WeaponSystem'
 import { InputSystem } from '../../src/systems/InputSystem'
-import { Transform, Weapon, Projectile } from '../../src/components'
+import { Transform, Weapon, Projectile, Asteroid } from '../../src/components'
 import { gameConfig } from '../../src/config'
 
 /**
@@ -908,3 +908,265 @@ function findAllProjectileEntities(world: World, ownerId: number): number[] {
   }
   return projectiles
 }
+
+describe('Homing Missile Weapon', () => {
+  let world: World
+  let weaponSystem: WeaponSystem
+  let inputSystem: InputSystem
+  let mockTarget: MockEventTarget
+  let shipId: number
+
+  beforeEach(() => {
+    world = new World()
+    mockTarget = new MockEventTarget()
+    inputSystem = new InputSystem(mockTarget)
+    weaponSystem = new WeaponSystem(inputSystem)
+
+    // Create a test ship with homing weapon and initial ammo
+    shipId = world.createEntity() as unknown as number
+    world.addComponent(shipId as any, new Transform())
+    world.addComponent(shipId as any, new Weapon('homing', 300, 10)) // homing weapon, 300ms cooldown, 10 ammo
+  })
+
+  afterEach(() => {
+    inputSystem.destroy()
+  })
+
+  describe('Weapon Switching to Homing', () => {
+    it('should switch to homing weapon when pressing 4', () => {
+      // Start with single weapon
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'single'
+
+      mockTarget.simulateKeyDown('4')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('homing')
+    })
+
+    it('should cycle to homing via X key from laser', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'laser'
+
+      mockTarget.simulateKeyDown('x')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.currentWeapon).toBe('homing')
+    })
+
+    it('should emit weaponChanged event when switching to homing', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'single'
+
+      mockTarget.simulateKeyDown('4')
+      weaponSystem.update(world, 16)
+
+      const events = weaponSystem.getWeaponChangedEvents()
+      expect(events.length).toBe(1)
+      expect(events[0].previousWeapon).toBe('single')
+      expect(events[0].newWeapon).toBe('homing')
+    })
+  })
+
+  describe('Homing Missile Firing with Ammo', () => {
+    it('should fire homing missile when ammo available', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      expect(finalCount).toBe(initialCount + 1)
+    })
+
+    it('should decrement ammo on fire', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      expect(weapon!.ammo).toBe(9)
+    })
+
+    it('should not fire when ammo is 0', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 0
+
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      expect(finalCount).toBe(initialCount) // No projectile created
+    })
+
+    it('should emit weaponFired event when firing homing', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const events = weaponSystem.getEvents()
+      expect(events.length).toBe(1)
+      expect(events[0].weaponType).toBe('homing')
+    })
+  })
+
+  describe('Homing Missile Configuration', () => {
+    it('should use homing missile speed of 300 units/s', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const projectileId = findProjectileEntity(world, shipId)
+      expect(projectileId).toBeDefined()
+
+      const projectile = world.getComponent(projectileId! as any, Projectile)
+      expect(projectile?.projectileType).toBe('homing')
+    })
+
+    it('should use homing missile cooldown of 300ms', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+      weapon!.cooldown = 300
+
+      mockTarget.simulateKeyDown(' ')
+
+      // First shot
+      weaponSystem.update(world, 16)
+      const countAfterFirst = getEntityCount(world)
+
+      // Try to fire at 200ms (within cooldown)
+      weaponSystem.update(world, 200)
+      expect(getEntityCount(world)).toBe(countAfterFirst)
+
+      // Fire after 300ms cooldown
+      weaponSystem.update(world, 150) // 350ms total
+      expect(getEntityCount(world)).toBe(countAfterFirst + 1)
+    })
+  })
+
+  describe('Homing Target Acquisition', () => {
+    it('should set homingTarget to nearest asteroid when firing', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      // Create an asteroid entity near the ship
+      const asteroidId = world.createEntity()
+      world.addComponent(asteroidId, new Transform(new Vector3(100, 100, 0)))
+      world.addComponent(asteroidId, new Asteroid('large', 25))
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const projectileId = findProjectileEntity(world, shipId)
+      expect(projectileId).toBeDefined()
+
+      const projectile = world.getComponent(projectileId! as any, Projectile)
+      expect(projectile?.homingTarget).toBe(asteroidId)
+    })
+
+    it('should select nearest asteroid within range', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      // Create two asteroids - one closer, one farther
+      const nearAsteroidId = world.createEntity()
+      world.addComponent(nearAsteroidId, new Transform(new Vector3(100, 0, 0)))
+      world.addComponent(nearAsteroidId, new Asteroid('large', 25))
+
+      const farAsteroidId = world.createEntity()
+      world.addComponent(farAsteroidId, new Transform(new Vector3(300, 0, 0)))
+      world.addComponent(farAsteroidId, new Asteroid('large', 25))
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const projectileId = findProjectileEntity(world, shipId)
+      const projectile = world.getComponent(projectileId! as any, Projectile)
+
+      // Should target the nearest asteroid
+      expect(projectile?.homingTarget).toBe(nearAsteroidId)
+    })
+
+    it('should not set homingTarget if no asteroids within range', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      // Create an asteroid far outside homing range (500 units)
+      const farAsteroidId = world.createEntity()
+      world.addComponent(farAsteroidId, new Transform(new Vector3(1000, 0, 0)))
+      world.addComponent(farAsteroidId, new Asteroid('large', 25))
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const projectileId = findProjectileEntity(world, shipId)
+      const projectile = world.getComponent(projectileId! as any, Projectile)
+
+      // Should have no target (fires straight)
+      expect(projectile?.homingTarget).toBeUndefined()
+    })
+
+    it('should fire straight if no asteroids exist', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 10
+
+      // No asteroids created
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const projectileId = findProjectileEntity(world, shipId)
+      expect(projectileId).toBeDefined()
+
+      const projectile = world.getComponent(projectileId! as any, Projectile)
+      expect(projectile?.homingTarget).toBeUndefined()
+    })
+  })
+
+  describe('Homing Missile Multiple Fires', () => {
+    it('should consume ammo correctly over multiple shots', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'homing'
+      weapon!.ammo = 3
+
+      mockTarget.simulateKeyDown(' ')
+
+      // First shot
+      weaponSystem.update(world, 16)
+      expect(weapon!.ammo).toBe(2)
+
+      // Wait for cooldown and fire again
+      weaponSystem.update(world, 350)
+      expect(weapon!.ammo).toBe(1)
+
+      // Wait for cooldown and fire again
+      weaponSystem.update(world, 350)
+      expect(weapon!.ammo).toBe(0)
+
+      // Try to fire with no ammo
+      weaponSystem.update(world, 350)
+      expect(weapon!.ammo).toBe(0) // Still 0, no projectile
+      expect(getEntityCount(world)).toBe(4) // ship + 3 projectiles
+    })
+  })
+})
