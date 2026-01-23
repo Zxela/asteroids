@@ -16,31 +16,31 @@ Connect audio playback to game events through an AudioSystem that listens for ga
 
 ## Target Files
 
-- [ ] `src/systems/AudioSystem.ts` - Event listener and audio trigger system
-- [ ] `tests/unit/AudioSystem.test.ts` - Audio system unit tests
+- [x] `src/systems/AudioSystem.ts` - Event listener and audio trigger system
+- [x] `tests/unit/AudioSystem.test.ts` - Audio system unit tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for AudioSystem
-- [ ] Write failing test for AudioSystem initialization with AudioManager
-- [ ] Write failing test for weaponFired event triggers shoot sound
-- [ ] Write failing test for asteroidDestroyed event triggers explosion sound
-- [ ] Write failing test for powerUpCollected event triggers powerup sound
-- [ ] Write failing test for shipThrust event triggers thrust sound
-- [ ] Write failing test for playerDied event triggers game over sound
-- [ ] Write failing test for waveStarted event triggers wave start sound
-- [ ] Write failing test for bossSpawned event triggers boss theme music
-- [ ] Write failing test for bossDefeated event stops boss theme
-- [ ] Write failing test for game state change triggers appropriate music
-- [ ] Write failing test for system respects volume settings
-- [ ] Write failing test for system handles missing AudioManager gracefully
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for AudioSystem
+- [x] Write failing test for AudioSystem initialization with AudioManager
+- [x] Write failing test for weaponFired event triggers shoot sound
+- [x] Write failing test for asteroidDestroyed event triggers explosion sound
+- [x] Write failing test for powerUpCollected event triggers powerup sound
+- [x] Write failing test for shipThrust event triggers thrust sound
+- [x] Write failing test for playerDied event triggers game over sound
+- [x] Write failing test for waveStarted event triggers wave start sound
+- [x] Write failing test for bossSpawned event triggers boss theme music
+- [x] Write failing test for bossDefeated event stops boss theme
+- [x] Write failing test for game state change triggers appropriate music
+- [x] Write failing test for system respects volume settings
+- [x] Write failing test for system handles missing AudioManager gracefully
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement AudioSystem**:
-- [ ] Create `src/systems/AudioSystem.ts`:
+- [x] Create `src/systems/AudioSystem.ts`:
   - Class AudioSystem implements System:
     - Private audioManager: AudioManager
     - Private eventBus: EventBus
@@ -82,12 +82,12 @@ Connect audio playback to game events through an AudioSystem that listens for ga
     - Stop all sounds
 
 **Integrate into game loop**:
-- [ ] Register AudioSystem with Game class
-- [ ] Initialize after AudioManager
-- [ ] Call update() each frame
+- [x] Register AudioSystem with Game class
+- [x] Initialize after AudioManager
+- [x] Call update() each frame
 
 **Create unit tests**:
-- [ ] Create `tests/unit/AudioSystem.test.ts`:
+- [x] Create `tests/unit/AudioSystem.test.ts`:
   - Test initialization with AudioManager
   - Test weaponFired triggers shoot sound
   - Test asteroidDestroyed triggers explosion
@@ -102,27 +102,27 @@ Connect audio playback to game events through an AudioSystem that listens for ga
   - Mock AudioManager and EventBus for testing
 
 ### 3. Refactor Phase
-- [ ] Verify all event subscriptions complete
-- [ ] Optimize thrust sound loop handling
-- [ ] Add sound cooldowns for rapid events (prevent spam)
-- [ ] Ensure music crossfades are smooth
-- [ ] Confirm all tests pass
+- [x] Verify all event subscriptions complete
+- [x] Optimize thrust sound loop handling
+- [x] Add sound cooldowns for rapid events (prevent spam)
+- [x] Ensure music crossfades are smooth
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Audio plays on weapon fire (shoot sound)
-- [ ] Audio plays on asteroid destruction (explosion sound)
-- [ ] Audio plays on power-up collection (powerup sound)
-- [ ] Audio plays on ship thrust (thrust loop)
-- [ ] Audio plays on player death (game over sound)
-- [ ] Boss theme plays during boss encounters
-- [ ] Background music changes with game state
-- [ ] Volume levels appropriate and configurable
-- [ ] Sound selection appropriate for each event type
-- [ ] No audio spam on rapid events
-- [ ] Unit tests passing (15+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Audio plays on weapon fire (shoot sound)
+- [x] Audio plays on asteroid destruction (explosion sound)
+- [x] Audio plays on power-up collection (powerup sound)
+- [x] Audio plays on ship thrust (thrust loop)
+- [x] Audio plays on player death (game over sound)
+- [x] Boss theme plays during boss encounters
+- [x] Background music changes with game state
+- [x] Volume levels appropriate and configurable
+- [x] Sound selection appropriate for each event type
+- [x] No audio spam on rapid events
+- [x] Unit tests passing (15+ test cases) - 36 tests passing
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 
