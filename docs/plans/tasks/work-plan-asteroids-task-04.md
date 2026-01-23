@@ -13,22 +13,22 @@ Implement game configuration with all physics, gameplay, audio, and visual const
 
 ## Target Files
 
-- [ ] `src/config/gameConfig.ts` - Game physics and gameplay constants
-- [ ] `src/config/audioConfig.ts` - Audio and sound definitions
-- [ ] `src/config/index.ts` - Configuration exports
+- [x] `src/config/gameConfig.ts` - Game physics and gameplay constants
+- [x] `src/config/audioConfig.ts` - Audio and sound definitions
+- [x] `src/config/index.ts` - Configuration exports
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for configuration structure
-- [ ] Verify all config constants are accessible
-- [ ] Test that config values match Design Doc specifications
+- [x] Create test file for configuration structure
+- [x] Verify all config constants are accessible
+- [x] Test that config values match Design Doc specifications
 
 ### 2. Green Phase
 
 **Implement game configuration**:
 
-- [ ] Create `src/config/gameConfig.ts`:
+- [x] Create `src/config/gameConfig.ts`:
   ```typescript
   export interface GameConfig {
     // Physics constants
@@ -146,7 +146,7 @@ Implement game configuration with all physics, gameplay, audio, and visual const
   };
   ```
 
-- [ ] Create `src/config/audioConfig.ts`:
+- [x] Create `src/config/audioConfig.ts`:
   ```typescript
   export interface AudioDefinition {
     id: string;
@@ -212,7 +212,7 @@ Implement game configuration with all physics, gameplay, audio, and visual const
   };
   ```
 
-- [ ] Create `src/config/index.ts`:
+- [x] Create `src/config/index.ts`:
   ```typescript
   export { gameConfig } from './gameConfig';
   export type { GameConfig } from './gameConfig';
@@ -221,19 +221,19 @@ Implement game configuration with all physics, gameplay, audio, and visual const
   ```
 
 ### 3. Refactor Phase
-- [ ] Verify all magic numbers are in config (no hardcoded values elsewhere)
-- [ ] Check consistency with Design Doc specifications
-- [ ] Ensure configuration is immutable (const or readonly)
-- [ ] Document any configuration rationale in JSDoc
+- [x] Verify all magic numbers are in config (no hardcoded values elsewhere)
+- [x] Check consistency with Design Doc specifications
+- [x] Ensure configuration is immutable (const or readonly)
+- [x] Document any configuration rationale in JSDoc
 
 ## Completion Criteria
 
-- [ ] All physics constants defined and match Design Doc specs
-- [ ] All gameplay constants match AC requirements
-- [ ] Audio configuration with preload/lazy-load strategy
-- [ ] Configuration values are centralized (not hardcoded elsewhere)
-- [ ] Configuration is type-safe and exported
-- [ ] TypeScript strict mode passes
+- [x] All physics constants defined and match Design Doc specs
+- [x] All gameplay constants match AC requirements
+- [x] Audio configuration with preload/lazy-load strategy
+- [x] Configuration values are centralized (not hardcoded elsewhere)
+- [x] Configuration is type-safe and exported
+- [x] TypeScript strict mode passes
 
 ## Verification Method
 

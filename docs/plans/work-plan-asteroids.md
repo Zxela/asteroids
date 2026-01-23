@@ -241,7 +241,7 @@ npm run check:deps
 
 #### Task 1.4: Configuration Constants
 **Dependencies**: Task 1.3
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Implement game configuration with all physics, gameplay, audio, and visual constants.
 
@@ -255,10 +255,10 @@ npm run check:deps
 3. Add configuration exports to `src/config/index.ts`
 
 **Completion Criteria**:
-- [ ] All physics constants defined and match Design Doc specs
-- [ ] All gameplay constants match AC requirements
-- [ ] Configuration values are used throughout (not hardcoded elsewhere)
-- [ ] Configuration is type-safe and exported
+- [x] All physics constants defined and match Design Doc specs
+- [x] All gameplay constants match AC requirements
+- [x] Configuration values are used throughout (not hardcoded elsewhere)
+- [x] Configuration is type-safe and exported
 
 **Quality Checks**:
 ```bash
@@ -303,9 +303,9 @@ npm test
 ### Phase 1 Verification
 
 **Integration Point 1 Setup Check**:
-- [ ] ECS World operational (entities can be created/destroyed)
-- [ ] All types compile without errors
-- [ ] Configuration loaded successfully
+- [x] ECS World operational (entities can be created/destroyed)
+- [x] All types compile without errors
+- [x] Configuration loaded successfully
 - [x] Utilities testable and working
 
 **Build Status**: ✓ Phase 1 builds successfully
@@ -2120,14 +2120,15 @@ The entire project is complete when:
 - [?] **At Risk**: Task behind schedule
 
 ### Current Phase
-- **Active Phase**: Phase 1 (Foundation)
+- **Active Phase**: Phase 1 (Foundation) - COMPLETE
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 9% (4/45 tasks complete)
+- **Overall Progress**: 11% (5/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
 - [x] Task 1.2: Core ECS Implementation and World (2026-01-22)
 - [x] Task 1.3: Type Definitions System (2026-01-22)
+- [x] Task 1.4: Configuration Constants (2026-01-22)
 - [x] Task 1.5: Utility Implementations (Math, Random, Events) (2026-01-22)
 
 ---
@@ -2162,9 +2163,9 @@ The entire project is complete when:
 | Task ID | Phase | Title | Dependencies | Est. Days | Status |
 |---------|-------|-------|--------------|-----------|--------|
 | 1.1 | 1 | Project Setup | None | 1 | - [x] |
-| 1.2 | 1 | ECS Implementation | 1.1 | 1.5 | - [ ] |
+| 1.2 | 1 | ECS Implementation | 1.1 | 1.5 | - [x] |
 | 1.3 | 1 | Type Definitions | 1.1 | 1 | - [x] |
-| 1.4 | 1 | Configuration | 1.3 | 0.5 | - [ ] |
+| 1.4 | 1 | Configuration | 1.3 | 0.5 | - [x] |
 | 1.5 | 1 | Utilities | 1.1 | 1 | - [x] |
 | 2.1 | 2 | Renderer Setup | 1.1, 1.4 | 1.5 | - [ ] |
 | 2.2 | 2 | Input System | 1.1, 1.4 | 0.5 | - [ ] |

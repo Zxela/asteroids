@@ -1,8 +1,35 @@
 /**
  * Configuration Module
  *
- * Game configuration constants will be implemented in Task 1.4.
- * Includes physics, gameplay, audio, and visual settings.
+ * Centralized game configuration constants for physics, gameplay, audio, and visual settings.
+ * All values match Design Doc specifications for easy reference and tuning.
  */
 
-export {}
+// ============================================
+// Game Configuration Exports
+// ============================================
+export { gameConfig } from './gameConfig'
+export type {
+  GameConfig,
+  PhysicsConfig,
+  GameplayConfig,
+  ScoringConfig,
+  WaveConfig,
+  PowerUpsConfig,
+  ShieldPowerUpConfig,
+  RapidFirePowerUpConfig,
+  MultiShotPowerUpConfig,
+  VisualConfig,
+  PerformanceConfig
+} from './gameConfig'
+
+// ============================================
+// Audio Configuration Exports
+// ============================================
+export { audioConfig } from './audioConfig'
+export type {
+  AudioConfig,
+  AudioDefinition,
+  SfxConfig,
+  MusicConfig
+} from './audioConfig'
