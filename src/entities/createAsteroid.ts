@@ -11,7 +11,7 @@
  */
 
 import { Vector3 } from 'three'
-import { Collider, Physics, Renderable, Transform, Velocity } from '../components'
+import { Collider, Health, Physics, Renderable, Transform, Velocity } from '../components'
 import { Asteroid } from '../components/Asteroid'
 import { gameConfig } from '../config'
 import type { EntityId, World } from '../ecs/types'
@@ -32,7 +32,8 @@ const ASTEROID_CONFIG = {
     points: 25,
     speed: 50,
     scale: 2,
-    maxSpeed: 100
+    maxSpeed: 100,
+    health: 30
   },
   medium: {
     radius: 20,
@@ -40,7 +41,8 @@ const ASTEROID_CONFIG = {
     points: 50,
     speed: 75,
     scale: 1.5,
-    maxSpeed: 150
+    maxSpeed: 150,
+    health: 20
   },
   small: {
     radius: 10,
@@ -48,7 +50,8 @@ const ASTEROID_CONFIG = {
     points: 100,
     speed: 100,
     scale: 1,
-    maxSpeed: 200
+    maxSpeed: 200,
+    health: 10
   }
 } as const
 
@@ -123,6 +126,9 @@ export function createAsteroid(
 
   // Asteroid: Size and point value
   world.addComponent(asteroidId, new Asteroid(size, config.points))
+
+  // Health: Size-based health for destruction tracking
+  world.addComponent(asteroidId, new Health(config.health, config.health))
 
   return asteroidId
 }

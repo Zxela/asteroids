@@ -757,7 +757,7 @@ npm test
 
 #### Task 3.3: Projectile-Asteroid Collision and Destruction
 **Dependencies**: Task 3.2, Task 2.9
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-22)
 
 **Description**: Handle projectile collisions with asteroids and asteroid destruction logic.
 
@@ -779,11 +779,11 @@ npm test
 3. Create unit tests for destruction logic
 
 **Completion Criteria**:
-- [ ] Projectiles destroyed on asteroid collision
-- [ ] Asteroids destroyed when taking damage
-- [ ] Asteroid splitting creates correct child sizes
-- [ ] Child asteroid count within spec (2-3)
-- [ ] Unit tests passing
+- [x] Projectiles destroyed on asteroid collision
+- [x] Asteroids destroyed when taking damage
+- [x] Asteroid splitting creates correct child sizes
+- [x] Child asteroid count within spec (2-3)
+- [x] Unit tests passing (35 tests)
 
 **Test Coverage**: Collision damage, asteroid splitting, entity cleanup
 
@@ -791,7 +791,7 @@ npm test
 
 #### Task 3.4: Scoring System
 **Dependencies**: Task 3.3, Task 2.5
-**Status**: - [ ]
+**Status**: - [x] COMPLETED
 
 **Description**: Implement score tracking and point calculation.
 
@@ -809,10 +809,10 @@ npm test
 3. Create unit tests for score calculation
 
 **Completion Criteria**:
-- [ ] Score increases on asteroid destruction
-- [ ] Score values match spec (100/50/25)
-- [ ] Score persists across multiple destructions
-- [ ] Unit tests passing
+- [x] Score increases on asteroid destruction
+- [x] Score values match spec (100/50/25)
+- [x] Score persists across multiple destructions
+- [x] Unit tests passing (24 tests)
 
 **Test Coverage**: Score calculation, point values
 
@@ -2122,7 +2122,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 3 (Core Gameplay Loop) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 29% (13/45 tasks complete)
+- **Overall Progress**: 31% (14/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2137,6 +2137,7 @@ The entire project is complete when:
 - [x] Task 2.8: Asteroid Entity and Spawning (2026-01-22)
 - [x] Task 2.9: Collision Detection System (2026-01-22)
 - [x] Task 3.1: Projectile Entity and Factory (2026-01-22)
+- [x] Task 3.3: Projectile-Asteroid Collision and Destruction (2026-01-22)
 - [x] Task 3.5: Lives System with Respawn (2026-01-22)
 
 ---
@@ -2186,7 +2187,7 @@ The entire project is complete when:
 | 2.9 | 2 | Collision System | 2.3, 2.5, 2.8 | 1.5 | - [x] |
 | 3.1 | 3 | Projectiles | 2.5, 2.7 | 0.5 | - [x] |
 | 3.2 | 3 | Weapon System | 3.1, 2.2, 2.5 | 1 | - [ ] |
-| 3.3 | 3 | Destruction | 3.2, 2.9 | 1 | - [ ] |
+| 3.3 | 3 | Destruction | 3.2, 2.9 | 1 | - [x] |
 | 3.4 | 3 | Scoring | 3.3, 2.5 | 0.5 | - [ ] |
 | 3.5 | 3 | Lives System | 2.5, 2.9 | 1 | - [x] |
 | 3.6 | 3 | Health Visual | 2.7, 3.5 | 0.5 | - [ ] |
