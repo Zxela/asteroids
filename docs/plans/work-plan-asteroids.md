@@ -1302,7 +1302,7 @@ npm test
 
 #### Task 5.5: Enhanced HUD with Power-up Display
 **Dependencies**: Task 3.7, Task 5.4
-**Status**: - [ ]
+**Status**: - [x] COMPLETED (2026-01-23)
 
 **Description**: Update HUD to display active power-ups with remaining time.
 
@@ -1314,10 +1314,10 @@ npm test
    - Hide when power-up expires
 
 **Completion Criteria**:
-- [ ] Active power-ups displayed with icons
-- [ ] Timers show remaining duration
-- [ ] Multiple power-ups displayed correctly
-- [ ] Display clears when power-up expires
+- [x] Active power-ups displayed with icons
+- [x] Timers show remaining duration
+- [x] Multiple power-ups displayed correctly
+- [x] Display clears when power-up expires
 
 ---
 
@@ -2123,7 +2123,7 @@ The entire project is complete when:
 ### Current Phase
 - **Active Phase**: Phase 5 (Enhanced Features) - IN PROGRESS
 - **Completion Target**: 2026-Q2
-- **Overall Progress**: 53% (24/45 tasks complete)
+- **Overall Progress**: 56% (25/45 tasks complete)
 
 ### Completed Tasks
 - [x] Task 1.1: Project Setup and Build Configuration (2026-01-22)
@@ -2151,6 +2151,7 @@ The entire project is complete when:
 - [x] Task 5.2: Audio System Integration (2026-01-23)
 - [x] Task 5.3: Power-up Entities and Spawning (2026-01-23)
 - [x] Task 5.4: Power-up Effects System (2026-01-23)
+- [x] Task 5.5: Enhanced HUD with Power-up Display (2026-01-23)
 
 ---
 
@@ -2214,7 +2215,7 @@ The entire project is complete when:
 | 5.2 | 5 | Audio Integration | 5.1, 3.2, 3.3 | 0.5 | - [ ] |
 | 5.3 | 5 | Power-up Entities | 2.7, 3.3 | 0.5 | - [x] |
 | 5.4 | 5 | Power-up Effects | 5.3, 2.9 | 1 | - [x] |
-| 5.5 | 5 | Power-up HUD | 3.7, 5.4 | 0.5 | - [ ] |
+| 5.5 | 5 | Power-up HUD | 3.7, 5.4 | 0.5 | - [x] |
 | 5.6 | 5 | Weapons (Spread/Laser) | 3.2, 2.2 | 1 | - [ ] |
 | 5.7 | 5 | Homing Missiles | 5.6 | 0.5 | - [x] |
 | 6.1 | 6 | Boss Entity | 4.2, 3.5 | 1 | - [ ] |

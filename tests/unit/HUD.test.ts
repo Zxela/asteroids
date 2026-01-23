@@ -535,4 +535,257 @@ describe('HUD', () => {
       expect(weaponElement?.textContent?.toLowerCase()).toContain('single')
     })
   })
+
+  describe('Power-up Display', () => {
+    it('should create power-up display container', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      const container = hud.getContainer()
+      const powerUpDisplay = container.querySelector('[data-hud="power-up-display"]')
+
+      expect(powerUpDisplay).not.toBeNull()
+    })
+
+    it('should position power-up display in top right below weapon', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      const container = hud.getContainer()
+      const powerUpDisplay = container.querySelector('[data-hud="power-up-display"]') as HTMLElement
+
+      expect(powerUpDisplay?.style.position).toBe('absolute')
+      expect(powerUpDisplay?.style.right).toBe('20px')
+      // Should be below weapon indicator (top 20px) and below energy bar area
+      expect(parseInt(powerUpDisplay?.style.top)).toBeGreaterThanOrEqual(80)
+    })
+
+    it('should show no icons when no power-ups active', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([])
+
+      const container = hud.getContainer()
+      const powerUpDisplay = container.querySelector('[data-hud="power-up-display"]')
+      const icons = powerUpDisplay?.querySelectorAll('[data-powerup-type]')
+
+      expect(icons?.length).toBe(0)
+    })
+
+    it('should display shield power-up icon when active', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      const shieldIcon = container.querySelector('[data-powerup-type="shield"]')
+
+      expect(shieldIcon).not.toBeNull()
+    })
+
+    it('should display rapidFire power-up icon when active', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'rapidFire', remainingTime: 10000, totalDuration: 15000 }
+      ])
+
+      const container = hud.getContainer()
+      const rapidFireIcon = container.querySelector('[data-powerup-type="rapidFire"]')
+
+      expect(rapidFireIcon).not.toBeNull()
+    })
+
+    it('should display multiShot power-up icon when active', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'multiShot', remainingTime: 8000, totalDuration: 15000 }
+      ])
+
+      const container = hud.getContainer()
+      const multiShotIcon = container.querySelector('[data-powerup-type="multiShot"]')
+
+      expect(multiShotIcon).not.toBeNull()
+    })
+
+    it('should display timer showing remaining seconds', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      const timerElement = container.querySelector('[data-powerup-type="shield"] [data-hud="power-up-timer"]')
+
+      expect(timerElement?.textContent).toContain('5')
+    })
+
+    it('should update timer on each call', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      let timerElement = container.querySelector('[data-powerup-type="shield"] [data-hud="power-up-timer"]')
+      expect(timerElement?.textContent).toContain('5')
+
+      // Update with less time
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 3500, totalDuration: 10000 }
+      ])
+
+      timerElement = container.querySelector('[data-powerup-type="shield"] [data-hud="power-up-timer"]')
+      expect(timerElement?.textContent).toContain('3.5')
+    })
+
+    it('should remove icon when power-up expires', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      // First add a power-up
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      expect(container.querySelector('[data-powerup-type="shield"]')).not.toBeNull()
+
+      // Now remove it (empty array)
+      hud.updatePowerUpDisplay([])
+
+      expect(container.querySelector('[data-powerup-type="shield"]')).toBeNull()
+    })
+
+    it('should display multiple power-ups simultaneously', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 },
+        { powerUpType: 'rapidFire', remainingTime: 10000, totalDuration: 15000 },
+        { powerUpType: 'multiShot', remainingTime: 8000, totalDuration: 15000 }
+      ])
+
+      const container = hud.getContainer()
+      const icons = container.querySelectorAll('[data-powerup-type]')
+
+      expect(icons.length).toBe(3)
+    })
+
+    it('should maintain consistent display order for power-ups', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      // Add in different order
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'multiShot', remainingTime: 8000, totalDuration: 15000 },
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 },
+        { powerUpType: 'rapidFire', remainingTime: 10000, totalDuration: 15000 }
+      ])
+
+      const container = hud.getContainer()
+      const icons = container.querySelectorAll('[data-powerup-type]')
+
+      // Should be in consistent order: shield, rapidFire, multiShot
+      expect(icons[0].getAttribute('data-powerup-type')).toBe('shield')
+      expect(icons[1].getAttribute('data-powerup-type')).toBe('rapidFire')
+      expect(icons[2].getAttribute('data-powerup-type')).toBe('multiShot')
+    })
+
+    it('should format time as whole seconds when >= 10 seconds', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 12500, totalDuration: 15000 }
+      ])
+
+      const container = hud.getContainer()
+      const timerElement = container.querySelector('[data-powerup-type="shield"] [data-hud="power-up-timer"]')
+
+      expect(timerElement?.textContent).toBe('12s')
+    })
+
+    it('should format time with one decimal when < 10 seconds', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5500, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      const timerElement = container.querySelector('[data-powerup-type="shield"] [data-hud="power-up-timer"]')
+
+      expect(timerElement?.textContent).toBe('5.5s')
+    })
+
+    it('should format time with one decimal for sub-second values', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 800, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      const timerElement = container.querySelector('[data-powerup-type="shield"] [data-hud="power-up-timer"]')
+
+      expect(timerElement?.textContent).toBe('0.8s')
+    })
+
+    it('should apply warning visual when timer < 3 seconds', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 2500, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      const powerUpItem = container.querySelector('[data-powerup-type="shield"]') as HTMLElement
+
+      // Check for warning class or style
+      expect(
+        powerUpItem?.classList.contains('power-up-warning') ||
+        powerUpItem?.style.animation?.includes('pulse')
+      ).toBe(true)
+    })
+
+    it('should not apply warning visual when timer >= 3 seconds', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      hud.updatePowerUpDisplay([
+        { powerUpType: 'shield', remainingTime: 5000, totalDuration: 10000 }
+      ])
+
+      const container = hud.getContainer()
+      const powerUpItem = container.querySelector('[data-powerup-type="shield"]') as HTMLElement
+
+      expect(powerUpItem?.classList.contains('power-up-warning')).toBe(false)
+    })
+
+    it('should get power-up display container for testing', async () => {
+      const HUD = await getHUD()
+      const hud = new HUD()
+
+      const displayContainer = hud.getPowerUpDisplayContainer()
+
+      expect(displayContainer).toBeDefined()
+      expect(displayContainer.getAttribute('data-hud')).toBe('power-up-display')
+    })
+  })
 })

@@ -13,7 +13,17 @@
  * @module ui/HUD
  */
 
-import type { WeaponType } from '../types/components'
+import type { ActivePowerUp, PowerUpType, WeaponType } from '../types/components'
+
+/**
+ * Interface for tracking power-up icon elements in the HUD.
+ */
+interface PowerUpIconElement {
+  container: HTMLElement
+  icon: HTMLElement
+  timer: HTMLElement
+  type: PowerUpType
+}
 
 /**
  * HUD class for displaying game state information.
@@ -38,7 +48,17 @@ export class HUD {
   private energyBarFill: HTMLElement
   private ammoDisplayContainer: HTMLElement
   private ammoDisplayValue: HTMLElement
+  private powerUpDisplayContainer: HTMLElement
+  private activeIcons: Map<PowerUpType, PowerUpIconElement> = new Map()
   private parentElement: HTMLElement | null = null
+
+  /** Display order for power-ups to ensure consistent visual order */
+  private static readonly POWER_UP_ORDER: PowerUpType[] = [
+    'shield',
+    'rapidFire',
+    'multiShot',
+    'extraLife'
+  ]
 
   constructor() {
     this.container = this.createContainer()
@@ -52,6 +72,7 @@ export class HUD {
     const ammoDisplay = this.createAmmoDisplay()
     this.ammoDisplayContainer = ammoDisplay.container
     this.ammoDisplayValue = ammoDisplay.value
+    this.powerUpDisplayContainer = this.createPowerUpDisplay()
 
     // Add elements to container
     this.container.appendChild(this.scoreElement)
@@ -60,6 +81,7 @@ export class HUD {
     this.container.appendChild(this.weaponElement)
     this.container.appendChild(this.energyBarContainer)
     this.container.appendChild(this.ammoDisplayContainer)
+    this.container.appendChild(this.powerUpDisplayContainer)
 
     // Initialize with default values
     this.updateScore(0)
@@ -301,6 +323,202 @@ export class HUD {
     container.appendChild(value)
 
     return { container, value }
+  }
+
+  /**
+   * Creates the power-up display container element.
+   * Positioned below weapon indicator and energy bar on the right.
+   *
+   * @returns The power-up display container HTMLElement
+   */
+  private createPowerUpDisplay(): HTMLElement {
+    const container = document.createElement('div')
+    container.setAttribute('data-hud', 'power-up-display')
+    container.style.position = 'absolute'
+    container.style.right = '20px'
+    container.style.top = '85px' // Below weapon (20px) and energy bar area
+    container.style.display = 'flex'
+    container.style.flexDirection = 'column'
+    container.style.gap = '8px'
+    container.style.alignItems = 'flex-end'
+    return container
+  }
+
+  /**
+   * Creates a power-up icon element for display.
+   *
+   * @param type - The type of power-up
+   * @returns The PowerUpIconElement with container, icon, and timer
+   */
+  private createPowerUpIcon(type: PowerUpType): PowerUpIconElement {
+    const container = document.createElement('div')
+    container.setAttribute('data-powerup-type', type)
+    container.style.display = 'flex'
+    container.style.alignItems = 'center'
+    container.style.gap = '8px'
+    container.style.padding = '4px 8px'
+    container.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+    container.style.borderRadius = '4px'
+    container.style.border = '1px solid'
+    container.style.borderColor = this.getPowerUpColor(type)
+
+    // Icon element (CSS-based)
+    const icon = document.createElement('div')
+    icon.setAttribute('data-hud', 'power-up-icon')
+    icon.style.width = '16px'
+    icon.style.height = '16px'
+    icon.style.borderRadius = '4px'
+    icon.style.backgroundColor = this.getPowerUpColor(type)
+    icon.textContent = this.getPowerUpSymbol(type)
+    icon.style.fontSize = '10px'
+    icon.style.textAlign = 'center'
+    icon.style.lineHeight = '16px'
+
+    // Timer element
+    const timer = document.createElement('div')
+    timer.setAttribute('data-hud', 'power-up-timer')
+    timer.style.fontSize = '14px'
+    timer.style.color = 'white'
+    timer.style.minWidth = '40px'
+    timer.style.textAlign = 'right'
+
+    container.appendChild(icon)
+    container.appendChild(timer)
+
+    return { container, icon, timer, type }
+  }
+
+  /**
+   * Gets the display color for a power-up type.
+   *
+   * @param type - The power-up type
+   * @returns The color string
+   */
+  private getPowerUpColor(type: PowerUpType): string {
+    const colors: Record<PowerUpType, string> = {
+      shield: '#00ffff', // Cyan
+      rapidFire: '#ff8800', // Orange
+      multiShot: '#ff00ff', // Magenta
+      extraLife: '#00ff00' // Green
+    }
+    return colors[type]
+  }
+
+  /**
+   * Gets the display symbol for a power-up type.
+   *
+   * @param type - The power-up type
+   * @returns The symbol character
+   */
+  private getPowerUpSymbol(type: PowerUpType): string {
+    const symbols: Record<PowerUpType, string> = {
+      shield: 'S',
+      rapidFire: 'R',
+      multiShot: 'M',
+      extraLife: '+'
+    }
+    return symbols[type]
+  }
+
+  /**
+   * Formats time in milliseconds to display string.
+   * >= 10 seconds: whole seconds (e.g., "12s")
+   * < 10 seconds: one decimal (e.g., "5.5s")
+   *
+   * @param ms - Time in milliseconds
+   * @returns Formatted time string
+   */
+  private formatTime(ms: number): string {
+    const seconds = ms / 1000
+    if (seconds >= 10) {
+      return `${Math.floor(seconds)}s`
+    }
+    return `${seconds.toFixed(1)}s`
+  }
+
+  /**
+   * Removes a power-up icon from the display.
+   *
+   * @param type - The power-up type to remove
+   */
+  private removePowerUpIcon(type: PowerUpType): void {
+    const iconElement = this.activeIcons.get(type)
+    if (iconElement) {
+      if (iconElement.container.parentElement) {
+        iconElement.container.parentElement.removeChild(iconElement.container)
+      }
+      this.activeIcons.delete(type)
+    }
+  }
+
+  /**
+   * Updates the power-up display to show active power-ups.
+   * Creates icons for new power-ups, updates timers for existing ones,
+   * and removes icons for expired power-ups.
+   *
+   * @param effects - Array of active power-up effects
+   */
+  updatePowerUpDisplay(effects: ActivePowerUp[]): void {
+    // Create a set of active power-up types for quick lookup
+    const activeTypes = new Set(effects.map((e) => e.powerUpType))
+
+    // Remove icons for expired power-ups
+    for (const [type] of this.activeIcons) {
+      if (!activeTypes.has(type)) {
+        this.removePowerUpIcon(type)
+      }
+    }
+
+    // Sort effects by the predefined order for consistent display
+    const sortedEffects = [...effects].sort((a, b) => {
+      const orderA = HUD.POWER_UP_ORDER.indexOf(a.powerUpType)
+      const orderB = HUD.POWER_UP_ORDER.indexOf(b.powerUpType)
+      return orderA - orderB
+    })
+
+    // Clear container and re-add in order
+    while (this.powerUpDisplayContainer.firstChild) {
+      this.powerUpDisplayContainer.removeChild(this.powerUpDisplayContainer.firstChild)
+    }
+
+    // Update or create icons for each active effect
+    for (const effect of sortedEffects) {
+      const { powerUpType, remainingTime } = effect
+
+      let iconElement = this.activeIcons.get(powerUpType)
+
+      // Create icon if it doesn't exist
+      if (!iconElement) {
+        iconElement = this.createPowerUpIcon(powerUpType)
+        this.activeIcons.set(powerUpType, iconElement)
+      }
+
+      // Update timer text
+      iconElement.timer.textContent = this.formatTime(remainingTime)
+
+      // Apply warning visual when time < 3 seconds
+      const isWarning = remainingTime < 3000
+      if (isWarning) {
+        iconElement.container.classList.add('power-up-warning')
+        iconElement.container.style.animation = 'pulse 0.5s ease-in-out infinite'
+      } else {
+        iconElement.container.classList.remove('power-up-warning')
+        iconElement.container.style.animation = ''
+      }
+
+      // Add to container in sorted order
+      this.powerUpDisplayContainer.appendChild(iconElement.container)
+    }
+  }
+
+  /**
+   * Gets the power-up display container element.
+   * Primarily used for testing.
+   *
+   * @returns The power-up display container HTMLElement
+   */
+  getPowerUpDisplayContainer(): HTMLElement {
+    return this.powerUpDisplayContainer
   }
 
   /**

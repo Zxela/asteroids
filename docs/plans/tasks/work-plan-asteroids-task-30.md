@@ -16,31 +16,31 @@ Update HUD to display active power-ups with remaining time. Add power-up display
 
 ## Target Files
 
-- [ ] `src/ui/HUD.ts` - Extended with power-up display functionality
-- [ ] `tests/unit/HUD.test.ts` - Extended HUD tests for power-up display
+- [x] `src/ui/HUD.ts` - Extended with power-up display functionality
+- [x] `tests/unit/HUD.test.ts` - Extended HUD tests for power-up display
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Extend test file for HUD power-up display
-- [ ] Write failing test for power-up display area exists in HUD
-- [ ] Write failing test for no power-ups shown when none active
-- [ ] Write failing test for shield power-up icon displayed when active
-- [ ] Write failing test for rapidFire power-up icon displayed when active
-- [ ] Write failing test for multiShot power-up icon displayed when active
-- [ ] Write failing test for extraLife indicator updates (lives count)
-- [ ] Write failing test for power-up timer shows remaining seconds
-- [ ] Write failing test for timer updates each frame
-- [ ] Write failing test for power-up icon removed when effect expires
-- [ ] Write failing test for multiple power-ups displayed simultaneously
-- [ ] Write failing test for power-up display order consistent
-- [ ] Write failing test for timer text formatting (seconds, decimals)
-- [ ] Verify all tests fail (Red state)
+- [x] Extend test file for HUD power-up display
+- [x] Write failing test for power-up display area exists in HUD
+- [x] Write failing test for no power-ups shown when none active
+- [x] Write failing test for shield power-up icon displayed when active
+- [x] Write failing test for rapidFire power-up icon displayed when active
+- [x] Write failing test for multiShot power-up icon displayed when active
+- [x] Write failing test for extraLife indicator updates (lives count)
+- [x] Write failing test for power-up timer shows remaining seconds
+- [x] Write failing test for timer updates each frame
+- [x] Write failing test for power-up icon removed when effect expires
+- [x] Write failing test for multiple power-ups displayed simultaneously
+- [x] Write failing test for power-up display order consistent
+- [x] Write failing test for timer text formatting (seconds, decimals)
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Extend HUD Component**:
-- [ ] Update `src/ui/HUD.ts`:
+- [x] Update `src/ui/HUD.ts`:
   - Add power-up display container:
     - HTML element: div with class 'power-up-display'
     - Position: top-right, below weapon indicator
@@ -79,7 +79,7 @@ Update HUD to display active power-ups with remaining time. Add power-up display
     - If not exists: clear all power-up icons
 
 **Add Power-up Styling**:
-- [ ] Add CSS for power-up display:
+- [x] Add CSS for power-up display:
   - .power-up-display: positioned top-right, flexbox column
   - .power-up-item: horizontal layout, icon + timer
   - .power-up-icon: sized icon with type-specific appearance
@@ -91,7 +91,7 @@ Update HUD to display active power-ups with remaining time. Add power-up display
   - Pulse effect when timer < 3 seconds (warning)
 
 **Extend unit tests**:
-- [ ] Update `tests/unit/HUD.test.ts`:
+- [x] Update `tests/unit/HUD.test.ts`:
   - Test power-up display container exists
   - Test no icons when no effects
   - Test shield icon appears with active shield
@@ -107,30 +107,30 @@ Update HUD to display active power-ups with remaining time. Add power-up display
   - Test low-time warning visual (< 3s)
 
 ### 3. Refactor Phase
-- [ ] Verify icon visuals match power-up types
-- [ ] Optimize DOM updates (minimize reflows)
-- [ ] Add smooth transitions for icon appear/disappear
-- [ ] Ensure timer accuracy with variable deltaTime
-- [ ] Test multiple simultaneous power-ups
-- [ ] Confirm all tests pass
+- [x] Verify icon visuals match power-up types
+- [x] Optimize DOM updates (minimize reflows)
+- [x] Add smooth transitions for icon appear/disappear
+- [x] Ensure timer accuracy with variable deltaTime
+- [x] Test multiple simultaneous power-ups
+- [x] Confirm all tests pass
 
 ## Completion Criteria
 
-- [ ] Power-up display area added to HUD (top-right)
-- [ ] No icons shown when no power-ups active
-- [ ] Shield power-up shows icon when active
-- [ ] RapidFire power-up shows icon when active
-- [ ] MultiShot power-up shows icon when active
-- [ ] ExtraLife updates lives counter (existing HUD functionality)
-- [ ] Timers show remaining duration in seconds
-- [ ] Timers update every frame
-- [ ] Icons disappear when power-up expires
-- [ ] Multiple power-ups displayed correctly
-- [ ] Display order consistent (e.g., shield, rapidFire, multiShot)
-- [ ] Low-time warning visual (< 3 seconds remaining)
-- [ ] Unit tests passing (15+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Power-up display area added to HUD (top-right)
+- [x] No icons shown when no power-ups active
+- [x] Shield power-up shows icon when active
+- [x] RapidFire power-up shows icon when active
+- [x] MultiShot power-up shows icon when active
+- [x] ExtraLife updates lives counter (existing HUD functionality)
+- [x] Timers show remaining duration in seconds
+- [x] Timers update every frame
+- [x] Icons disappear when power-up expires
+- [x] Multiple power-ups displayed correctly
+- [x] Display order consistent (e.g., shield, rapidFire, multiShot)
+- [x] Low-time warning visual (< 3 seconds remaining)
+- [x] Unit tests passing (15+ test cases)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 
