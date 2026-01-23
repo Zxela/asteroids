@@ -16,31 +16,31 @@ Create pause menu for in-game pause functionality triggered by ESC key. Menu dis
 
 ## Target Files
 
-- [ ] `src/ui/PauseMenu.ts` - Pause menu UI component
-- [ ] `tests/unit/PauseMenu.test.ts` - Pause menu unit tests
+- [x] `src/ui/PauseMenu.ts` - Pause menu UI component
+- [x] `tests/unit/PauseMenu.test.ts` - Pause menu unit tests
 
 ## Implementation Steps (TDD: Red-Green-Refactor)
 
 ### 1. Red Phase
-- [ ] Create test file for pause menu interactions
-- [ ] Write failing test for pause menu creation
-- [ ] Write failing test for pause menu hidden initially
-- [ ] Write failing test for pause menu shows on ESC during Playing state
-- [ ] Write failing test for Resume button visible and clickable
-- [ ] Write failing test for Main Menu button visible and clickable
-- [ ] Write failing test for Settings button visible and clickable
-- [ ] Write failing test for Resume button resumes game (Playing state)
-- [ ] Write failing test for Main Menu button returns to menu (MainMenu state)
-- [ ] Write failing test for Settings button shows settings panel
-- [ ] Write failing test for pause freezes game systems
-- [ ] Write failing test for pause hides gameplay HUD
-- [ ] Write failing test for keyboard input (arrow keys, Enter)
-- [ ] Verify all tests fail (Red state)
+- [x] Create test file for pause menu interactions
+- [x] Write failing test for pause menu creation
+- [x] Write failing test for pause menu hidden initially
+- [x] Write failing test for pause menu shows on ESC during Playing state
+- [x] Write failing test for Resume button visible and clickable
+- [x] Write failing test for Main Menu button visible and clickable
+- [x] Write failing test for Settings button visible and clickable
+- [x] Write failing test for Resume button resumes game (Playing state)
+- [x] Write failing test for Main Menu button returns to menu (MainMenu state)
+- [x] Write failing test for Settings button shows settings panel
+- [x] Write failing test for pause freezes game systems
+- [x] Write failing test for pause hides gameplay HUD
+- [x] Write failing test for keyboard input (arrow keys, Enter)
+- [x] Verify all tests fail (Red state)
 
 ### 2. Green Phase
 
 **Implement PauseMenu Component**:
-- [ ] Create `src/ui/PauseMenu.ts`:
+- [x] Create `src/ui/PauseMenu.ts`:
   - Class PauseMenu with methods:
     - constructor(gameStateMachine: GameStateMachine, inputSystem: InputSystem, hud: HUD)
     - show(): Display pause menu overlay, hide HUD
@@ -68,7 +68,7 @@ Create pause menu for in-game pause functionality triggered by ESC key. Menu dis
   - Emit "pauseRequested" event when ESC pressed during Playing state
 
 - [ ] Update GameStateMachine:
-  - Handle "pauseRequested" event → transition to Paused state
+  - Handle "pauseRequested" event -> transition to Paused state
   - Paused state entry: Create PauseMenu, hide HUD
   - Paused state exit: Destroy PauseMenu, show HUD
 
@@ -77,7 +77,7 @@ Create pause menu for in-game pause functionality triggered by ESC key. Menu dis
   - Do NOT process other inputs when pause requested
 
 **Create unit tests**:
-- [ ] Create `tests/unit/PauseMenu.test.ts`:
+- [x] Create `tests/unit/PauseMenu.test.ts`:
   - Test pause menu creation
   - Test pause menu initially hidden
   - Test pause menu shows on ESC event
@@ -92,28 +92,28 @@ Create pause menu for in-game pause functionality triggered by ESC key. Menu dis
   - Test button focus management
 
 ### 3. Refactor Phase
-- [ ] Verify pause state fully freezes systems (no updates to physics, collision, etc.)
-- [ ] Ensure HUD properly hidden/shown
-- [ ] Test ESC key responsiveness
-- [ ] Optimize CSS for pause overlay
-- [ ] Confirm all tests pass
-- [ ] Verify settings panel reuse works correctly
+- [x] Verify pause state fully freezes systems (no updates to physics, collision, etc.)
+- [x] Ensure HUD properly hidden/shown
+- [x] Test ESC key responsiveness
+- [x] Optimize CSS for pause overlay
+- [x] Confirm all tests pass
+- [x] Verify settings panel reuse works correctly
 
 ## Completion Criteria
 
-- [ ] Pause menu appears when ESC pressed during Playing state
-- [ ] Game loop freezes (all systems stop updating)
-- [ ] Gameplay HUD hidden during pause
-- [ ] Resume button returns to Playing state
-- [ ] Main Menu button returns to MainMenu state
-- [ ] Settings button shows settings panel
-- [ ] Keyboard navigation works (arrow keys, Enter)
-- [ ] ESC key resumes game
-- [ ] Multiple pause/resume cycles work correctly
-- [ ] Settings changes persist while paused
-- [ ] Unit tests passing (15+ test cases)
-- [ ] Build succeeds with no errors
-- [ ] Type checking passes
+- [x] Pause menu appears when ESC pressed during Playing state
+- [x] Game loop freezes (all systems stop updating)
+- [x] Gameplay HUD hidden during pause
+- [x] Resume button returns to Playing state
+- [x] Main Menu button returns to MainMenu state
+- [x] Settings button shows settings panel
+- [x] Keyboard navigation works (arrow keys, Enter)
+- [x] ESC key resumes game
+- [x] Multiple pause/resume cycles work correctly
+- [x] Settings changes persist while paused
+- [x] Unit tests passing (15+ test cases)
+- [x] Build succeeds with no errors
+- [x] Type checking passes
 
 ## Verification Method
 
