@@ -295,7 +295,7 @@ export const gameConfig: GameConfig = {
     shipAcceleration: 500, // units/s^2 - reaches max speed in ~0.6 seconds
     shipMaxSpeed: 300,
     shipRotationSpeed: Math.PI,
-    damping: 0.99,
+    damping: 0.98, // Linear damping - ship retains 98% velocity per second (classic drift)
     asteroidSpeeds: {
       large: 50,
       medium: 75,

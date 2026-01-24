@@ -104,9 +104,9 @@ describe("Game Configuration", () => {
       expect(gameConfig.physics.shipRotationSpeed).toBe(Math.PI)
     })
 
-    it("damping is 0.99 per frame", async () => {
+    it("damping is 0.98 per second (classic drift)", async () => {
       const { gameConfig } = await import("../../src/config/gameConfig")
-      expect(gameConfig.physics.damping).toBe(0.99)
+      expect(gameConfig.physics.damping).toBe(0.98)
     })
 
     it("asteroid speeds are configured correctly", async () => {

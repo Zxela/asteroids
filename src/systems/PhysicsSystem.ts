@@ -75,9 +75,11 @@ export class PhysicsSystem implements System {
 
       // Apply exponential damping: v = v0 * damping^dt
       // This creates smooth deceleration that is framerate-independent
-      const dampingFactor = physics.damping ** dt
-      velocity.linear.multiplyScalar(dampingFactor)
-      velocity.angular.multiplyScalar(dampingFactor)
+      // Linear damping for momentum/drift, angular damping for responsive rotation
+      const linearDampingFactor = physics.damping ** dt
+      const angularDampingFactor = physics.angularDamping ** dt
+      velocity.linear.multiplyScalar(linearDampingFactor)
+      velocity.angular.multiplyScalar(angularDampingFactor)
 
       // Enforce max speed limit on velocity magnitude
       this.enforceMaxSpeed(velocity, physics.maxSpeed)

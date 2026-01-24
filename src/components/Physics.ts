@@ -21,8 +21,11 @@ export class Physics implements PhysicsComponent {
   /** Entity mass (affects acceleration) */
   mass: number
 
-  /** Velocity damping factor applied each frame (0-1) */
+  /** Linear velocity damping factor (0-1, applied per second) */
   damping: number
+
+  /** Angular velocity damping factor (0-1, applied per second) */
+  angularDamping: number
 
   /** Maximum velocity magnitude (units/second) */
   maxSpeed: number
@@ -34,13 +37,15 @@ export class Physics implements PhysicsComponent {
    * Create a Physics component.
    *
    * @param mass - Entity mass (default: 1)
-   * @param damping - Velocity damping (default: 0.99)
+   * @param damping - Linear velocity damping (default: 0.98)
    * @param maxSpeed - Maximum speed (default: 300)
    * @param wrapScreen - Enable screen wrapping (default: false)
+   * @param angularDamping - Angular velocity damping (default: 0.01, high friction for responsive rotation)
    */
-  constructor(mass = 1, damping = 0.99, maxSpeed = 300, wrapScreen = false) {
+  constructor(mass = 1, damping = 0.98, maxSpeed = 300, wrapScreen = false, angularDamping = 0.01) {
     this.mass = mass
     this.damping = damping
+    this.angularDamping = angularDamping
     this.maxSpeed = maxSpeed
     this.wrapScreen = wrapScreen
   }

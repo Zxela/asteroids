@@ -133,19 +133,20 @@ describe('PhysicsSystem', () => {
       expect(velocity?.linear.x).toBeCloseTo(initialVelocity * expectedDamping, 0)
     })
 
-    it('should reduce angular velocity with damping', () => {
+    it('should reduce angular velocity with angularDamping', () => {
       const entityId = world.createEntity()
       world.addComponent(entityId, new Transform())
       world.addComponent(
         entityId,
         new Velocity(new Vector3(0, 0, 0), new Vector3(10, 0, 0))
       )
-      world.addComponent(entityId, new Physics(1, 0.5, 300, false))
+      // Pass angularDamping=0.5 to test angular velocity damping
+      world.addComponent(entityId, new Physics(1, 0.5, 300, false, 0.5))
 
       physicsSystem.update(world, 1000) // 1 second
 
       const velocity = world.getComponent(entityId, Velocity)
-      // Expected: 10 * (0.5 ^ 1) = 5
+      // Expected: 10 * (0.5 ^ 1) = 5 (using angularDamping)
       expect(velocity?.angular.x).toBeCloseTo(5, 0)
     })
 

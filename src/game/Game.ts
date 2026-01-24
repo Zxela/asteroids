@@ -46,6 +46,9 @@ import { WeaponSystem } from '../systems/WeaponSystem'
 // Entities
 import { createShip } from '../entities/createShip'
 
+// Config
+import { gameConfig } from '../config/gameConfig'
+
 /**
  * Main game orchestrator class.
  *
@@ -71,11 +74,15 @@ export class Game {
   private gameOverScreen: GameOverScreen | null = null
   private hud: HUD | null = null
 
-  // Systems
+  // Systems (stored for inter-system event passing)
   private inputSystem: InputSystem | null = null
   private waveSystem: WaveSystem | null = null
   private renderSystem: RenderSystem | null = null
   private collisionSystem: CollisionSystem | null = null
+  private asteroidDestructionSystem: AsteroidDestructionSystem | null = null
+  private scoreSystem: ScoreSystem | null = null
+  private respawnSystem: RespawnSystem | null = null
+  private powerUpSystem: PowerUpSystem | null = null
 
   // Game state
   private shipEntityId: number | null = null
@@ -160,19 +167,25 @@ export class Game {
     this.waveSystem = new WaveSystem()
     this.renderSystem = new RenderSystem(scene)
 
-    // Register all systems with the world
+    // Create systems that need references for event passing
+    this.collisionSystem = new CollisionSystem()
+    this.asteroidDestructionSystem = new AsteroidDestructionSystem()
+    this.scoreSystem = new ScoreSystem()
+    this.respawnSystem = new RespawnSystem()
+
+    // Register all systems with the world (order matters!)
     this.world.registerSystem(new ShipControlSystem(this.inputSystem))
     this.world.registerSystem(new PhysicsSystem())
-    this.collisionSystem = new CollisionSystem()
     this.world.registerSystem(this.collisionSystem)
     this.world.registerSystem(new DamageSystem(this.collisionSystem))
     this.world.registerSystem(new WeaponSystem(this.inputSystem))
     this.world.registerSystem(new ProjectileSystem())
     this.world.registerSystem(this.waveSystem)
-    this.world.registerSystem(new AsteroidDestructionSystem())
-    this.world.registerSystem(new ScoreSystem())
-    this.world.registerSystem(new RespawnSystem())
-    this.world.registerSystem(new PowerUpSystem())
+    this.world.registerSystem(this.asteroidDestructionSystem)
+    this.world.registerSystem(this.scoreSystem)
+    this.world.registerSystem(this.respawnSystem)
+    this.powerUpSystem = new PowerUpSystem()
+    this.world.registerSystem(this.powerUpSystem)
     this.world.registerSystem(this.renderSystem)
 
     // Create the player ship
@@ -184,12 +197,28 @@ export class Game {
 
   /**
    * Reset gameplay for a new game.
+   * Clears all entities, meshes, and system state.
    */
   private resetGameplay(): void {
-    // Clear all entities
-    // Note: Full reset would require clearing the world and re-registering systems
-    // For now, this is a placeholder
+    // Clear all meshes from the scene
+    this.sceneManager.clearGameObjects()
+
+    // Create a new world (clears all entities and systems)
+    this.world = new World()
+
+    // Clear system references
+    this.inputSystem = null
+    this.waveSystem = null
+    this.renderSystem = null
+    this.collisionSystem = null
+    this.asteroidDestructionSystem = null
+    this.scoreSystem = null
+    this.respawnSystem = null
+    this.powerUpSystem = null
+
+    // Reset game state
     this.shipEntityId = null
+    this.gameplayInitialized = false
   }
 
   /**
@@ -239,11 +268,13 @@ export class Game {
         this.mainMenu?.show()
         break
       case 'playing':
-        // Initialize gameplay systems and entities if not already done
-        if (!this.gameplayInitialized) {
-          this.initializeGameplay()
-        }
+        // Initialize or reset gameplay for new game
+        this.initializeGameplay()
         this.hud?.show()
+        // Reset HUD to initial values
+        this.hud?.updateScore(0)
+        this.hud?.updateLives(gameConfig.gameplay.initialLives)
+        this.hud?.updateWave(1)
         break
       case 'paused':
         this.hud?.show()
@@ -356,7 +387,66 @@ export class Game {
     // Convert deltaTime to milliseconds (systems expect ms)
     const deltaTimeMs = deltaTime * 1000
 
+    // Pass events between systems BEFORE update (uses events from previous frame)
+    this.passSystemEvents()
+
     // Update all registered systems through the ECS World
     this.world.update(deltaTimeMs)
+
+    // Handle game over from respawn system
+    this.handleRespawnEvents()
+
+    // Handle score updates for HUD
+    this.handleScoreEvents()
+  }
+
+  /**
+   * Pass events between producer and consumer systems.
+   * Called before world.update() to propagate events from previous frame.
+   */
+  private passSystemEvents(): void {
+    // Pass asteroid destroyed events to score system
+    if (this.asteroidDestructionSystem && this.scoreSystem) {
+      const asteroidEvents = this.asteroidDestructionSystem.getEvents()
+      this.scoreSystem.setAsteroidDestroyedEvents(asteroidEvents)
+    }
+
+    // Pass collision events to power-up system
+    if (this.collisionSystem && this.powerUpSystem) {
+      const collisions = this.collisionSystem.getCollisions()
+      this.powerUpSystem.setCollisions(collisions)
+    }
+  }
+
+  /**
+   * Handle events from respawn system (game over, HUD updates).
+   */
+  private handleRespawnEvents(): void {
+    if (!this.respawnSystem) return
+
+    const events = this.respawnSystem.getEvents()
+    for (const event of events) {
+      if (event.type === 'playerDied') {
+        // Transition to game over state
+        this.fsm.transition('playerDied')
+        this.onStateChange('gameOver', { score: event.finalScore, wave: event.wavesReached })
+      } else if (event.type === 'shipDamaged') {
+        // Update HUD lives display
+        this.hud?.updateLives(event.remainingLives)
+      }
+    }
+  }
+
+  /**
+   * Handle events from score system (HUD score display).
+   */
+  private handleScoreEvents(): void {
+    if (!this.scoreSystem) return
+
+    const events = this.scoreSystem.getEvents()
+    for (const event of events) {
+      // Update HUD score display
+      this.hud?.updateScore(event.data.newScore)
+    }
   }
 }

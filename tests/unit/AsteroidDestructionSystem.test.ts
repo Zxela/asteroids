@@ -84,8 +84,8 @@ describe('AsteroidDestructionSystem', () => {
       const events = destructionSystem.getEvents()
       expect(events.length).toBeGreaterThan(0)
       expect(events[0].type).toBe('asteroidDestroyed')
-      expect(events[0].size).toBe('large')
-      expect(events[0].asteroidId).toBe(asteroidId)
+      expect(events[0].data.size).toBe('large')
+      expect(events[0].data.entityId).toBe(asteroidId)
     })
 
     it('should emit correct points for large asteroid', () => {
@@ -100,7 +100,7 @@ describe('AsteroidDestructionSystem', () => {
       destructionSystem.update(world, 16)
 
       const events = destructionSystem.getEvents()
-      expect(events[0].pointsAwarded).toBe(expectedPoints)
+      expect(events[0].data.points).toBe(expectedPoints)
     })
 
     it('should destroy the original large asteroid', () => {
@@ -169,7 +169,7 @@ describe('AsteroidDestructionSystem', () => {
       destructionSystem.update(world, 16)
 
       const events = destructionSystem.getEvents()
-      expect(events[0].size).toBe('medium')
+      expect(events[0].data.size).toBe('medium')
     })
 
     it('should emit correct points for medium asteroid', () => {
@@ -184,7 +184,7 @@ describe('AsteroidDestructionSystem', () => {
       destructionSystem.update(world, 16)
 
       const events = destructionSystem.getEvents()
-      expect(events[0].pointsAwarded).toBe(expectedPoints)
+      expect(events[0].data.points).toBe(expectedPoints)
     })
   })
 
@@ -214,7 +214,7 @@ describe('AsteroidDestructionSystem', () => {
       destructionSystem.update(world, 16)
 
       const events = destructionSystem.getEvents()
-      expect(events[0].size).toBe('small')
+      expect(events[0].data.size).toBe('small')
     })
 
     it('should emit correct points for small asteroid', () => {
@@ -229,7 +229,7 @@ describe('AsteroidDestructionSystem', () => {
       destructionSystem.update(world, 16)
 
       const events = destructionSystem.getEvents()
-      expect(events[0].pointsAwarded).toBe(expectedPoints)
+      expect(events[0].data.points).toBe(expectedPoints)
     })
 
     it('should remove small asteroid from world', () => {
@@ -433,9 +433,9 @@ describe('AsteroidDestructionSystem', () => {
       destructionSystem.update(world, 16)
 
       const events = destructionSystem.getEvents()
-      expect(events[0].position.x).toBe(100)
-      expect(events[0].position.y).toBe(200)
-      expect(events[0].position.z).toBe(0)
+      expect(events[0].data.position.x).toBe(100)
+      expect(events[0].data.position.y).toBe(200)
+      expect(events[0].data.position.z).toBe(0)
     })
 
     it('should emit one event per destroyed asteroid', () => {
@@ -487,8 +487,8 @@ describe('AsteroidDestructionSystem', () => {
       transform!.position.set(999, 999, 999)
 
       // Event position should not be affected
-      expect(events[0].position.x).toBe(100)
-      expect(events[0].position.y).toBe(200)
+      expect(events[0].data.position.x).toBe(100)
+      expect(events[0].data.position.y).toBe(200)
     })
   })
 

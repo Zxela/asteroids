@@ -162,27 +162,30 @@ describe('Physics Component', () => {
       const physics = new Physics()
 
       expect(physics.mass).toBe(1)
-      expect(physics.damping).toBe(0.99)
+      expect(physics.damping).toBe(0.98)
+      expect(physics.angularDamping).toBe(0.01)
       expect(physics.maxSpeed).toBe(300)
       expect(physics.wrapScreen).toBe(false)
     })
 
     it('should create with custom values', () => {
-      const physics = new Physics(5, 0.95, 500, true)
+      const physics = new Physics(5, 0.95, 500, true, 0.5)
 
       expect(physics.mass).toBe(5)
       expect(physics.damping).toBe(0.95)
       expect(physics.maxSpeed).toBe(500)
       expect(physics.wrapScreen).toBe(true)
+      expect(physics.angularDamping).toBe(0.5)
     })
 
     it('should allow partial custom values', () => {
       const physics = new Physics(10)
 
       expect(physics.mass).toBe(10)
-      expect(physics.damping).toBe(0.99) // default
+      expect(physics.damping).toBe(0.98) // default
       expect(physics.maxSpeed).toBe(300) // default
       expect(physics.wrapScreen).toBe(false) // default
+      expect(physics.angularDamping).toBe(0.01) // default
     })
   })
 

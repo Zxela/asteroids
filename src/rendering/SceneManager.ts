@@ -167,6 +167,41 @@ export class SceneManager {
   }
 
   /**
+   * Clear all game objects from the scene.
+   * Preserves lights and cameras.
+   */
+  clearGameObjects(): void {
+    // Collect objects to remove (can't modify array while iterating)
+    const objectsToRemove: THREE.Object3D[] = []
+
+    this.scene.traverse((child) => {
+      // Keep lights and cameras
+      if (child instanceof THREE.Light || child instanceof THREE.Camera) {
+        return
+      }
+      // Keep the scene itself
+      if (child === this.scene) {
+        return
+      }
+      objectsToRemove.push(child)
+    })
+
+    // Remove collected objects
+    for (const obj of objectsToRemove) {
+      this.scene.remove(obj)
+      // Dispose of geometry and materials to free memory
+      if (obj instanceof THREE.Mesh) {
+        obj.geometry?.dispose()
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach((m) => m.dispose())
+        } else if (obj.material) {
+          obj.material.dispose()
+        }
+      }
+    }
+  }
+
+  /**
    * Clean up resources and remove event listeners.
    */
   dispose(): void {

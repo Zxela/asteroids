@@ -21,6 +21,7 @@ import { Velocity } from '../components/Velocity'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
 import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
 import { createPowerUp, getRandomPowerUpType, shouldSpawnPowerUp } from '../entities/createPowerUp'
+import type { AsteroidDestroyedEvent, EntityId as EventEntityId } from '../types'
 
 // Type assertions for component classes to work with ECS type system
 const TransformClass = Transform as unknown as ComponentClass<Transform>
@@ -28,22 +29,8 @@ const HealthClass = Health as unknown as ComponentClass<Health>
 const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
 const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
 
-/**
- * Event emitted when an asteroid is destroyed.
- * Used by ScoreSystem and ParticleSystem.
- */
-export interface AsteroidDestroyedEvent {
-  /** Event type identifier */
-  type: 'asteroidDestroyed'
-  /** ID of the destroyed asteroid entity */
-  asteroidId: EntityId
-  /** Size category of the destroyed asteroid */
-  size: AsteroidSize
-  /** Position at destruction (cloned to prevent mutation) */
-  position: Vector3
-  /** Points awarded for destruction */
-  pointsAwarded: number
-}
+// Re-export for consumers that import from this module
+export type { AsteroidDestroyedEvent } from '../types'
 
 /**
  * Offset distance for child asteroid spawning (prevents overlap).
@@ -144,12 +131,17 @@ export class AsteroidDestructionSystem implements System {
     const { size, points } = asteroid
 
     // Emit destruction event (clone position to prevent mutation)
+    const spawnChildren = size !== 'small' // Large/Medium spawn children, small don't
     const event: AsteroidDestroyedEvent = {
       type: 'asteroidDestroyed',
-      asteroidId,
-      size,
-      position: transform.position.clone(),
-      pointsAwarded: points
+      data: {
+        entityId: asteroidId as unknown as EventEntityId,
+        position: transform.position.clone(),
+        size,
+        points,
+        spawnChildren
+      },
+      timestamp: Date.now()
     }
     this.events.push(event)
 

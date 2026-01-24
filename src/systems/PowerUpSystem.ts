@@ -15,6 +15,7 @@
 
 import { Vector3 } from 'three'
 import { Health } from '../components/Health'
+import { Lifetime } from '../components/Lifetime'
 import { Player } from '../components/Player'
 import { PowerUp } from '../components/PowerUp'
 import { PowerUpEffect } from '../components/PowerUpEffect'
@@ -33,6 +34,7 @@ const PowerUpEffectClass = PowerUpEffect as unknown as ComponentClass<PowerUpEff
 const HealthClass = Health as unknown as ComponentClass<Health>
 const WeaponClass = Weapon as unknown as ComponentClass<Weapon>
 const TransformClass = Transform as unknown as ComponentClass<Transform>
+const LifetimeClass = Lifetime as unknown as ComponentClass<Lifetime>
 
 /**
  * System for managing power-up collection and effect application.
@@ -103,11 +105,34 @@ export class PowerUpSystem implements System {
     this.currentWorld = world
     this.events = []
 
+    // Update power-up lifetimes and destroy expired ones
+    this.updatePowerUpLifetimes(world, deltaTime)
+
     // Process collisions for power-up collection
     this.processCollisions(world)
 
     // Update effect timers and handle expiration
     this.updateEffectTimers(world, deltaTime)
+  }
+
+  /**
+   * Update power-up lifetimes and destroy expired power-ups.
+   */
+  private updatePowerUpLifetimes(world: World, deltaTime: number): void {
+    const powerUps = world.query(PowerUpClass, LifetimeClass)
+
+    for (const powerUpId of powerUps) {
+      const lifetime = world.getComponent(powerUpId, LifetimeClass)
+      if (!lifetime) continue
+
+      // Decrement lifetime
+      lifetime.remaining -= deltaTime
+
+      // Destroy if expired
+      if (lifetime.remaining <= 0) {
+        world.destroyEntity(powerUpId)
+      }
+    }
   }
 
   /**

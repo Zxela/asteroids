@@ -39,6 +39,7 @@ export interface PhysicsComponent extends Component {
   readonly type: 'physics'
   mass: number
   damping: number
+  angularDamping: number
   maxSpeed: number
   wrapScreen: boolean
 }
