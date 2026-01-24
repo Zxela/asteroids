@@ -20,30 +20,31 @@
 
 import type { AudioManager } from '../audio/AudioManager'
 import type {
-  AsteroidDestroyedEvent,
-  BossDefeatedEvent,
-  BossSpawnedEvent,
-  PlayerDiedEvent,
-  PowerUpCollectedEvent,
-  ShipThrustEvent,
-  WaveStartedEvent,
-  WeaponFiredEvent
+  AsteroidDestroyedEventData,
+  BossDefeatedEventData,
+  BossSpawnedEventData,
+  PlayerDiedEventData,
+  PowerUpCollectedEventData,
+  ShipThrustEventData,
+  WaveStartedEventData,
+  WeaponFiredEventData
 } from '../types/events'
 import type { GameFlowState } from '../types/game'
 import type { EventEmitter, EventHandler } from '../utils/EventEmitter'
 
 /**
  * Event map type for the EventBus used by AudioSystem
+ * Uses EventData types (payload only) to match Game.ts event emitter
  */
 interface AudioEventMap extends Record<string, unknown> {
-  weaponFired: WeaponFiredEvent
-  asteroidDestroyed: AsteroidDestroyedEvent
-  powerUpCollected: PowerUpCollectedEvent
-  shipThrust: ShipThrustEvent
-  playerDied: PlayerDiedEvent
-  waveStarted: WaveStartedEvent
-  bossSpawned: BossSpawnedEvent
-  bossDefeated: BossDefeatedEvent
+  weaponFired: WeaponFiredEventData
+  asteroidDestroyed: AsteroidDestroyedEventData
+  powerUpCollected: PowerUpCollectedEventData
+  shipThrust: ShipThrustEventData
+  playerDied: PlayerDiedEventData
+  waveStarted: WaveStartedEventData
+  bossSpawned: BossSpawnedEventData
+  bossDefeated: BossDefeatedEventData
   gameStateChanged: { state: GameFlowState }
 }
 
@@ -102,14 +103,14 @@ export class AudioSystem {
 
   /** Event handler references for cleanup */
   private handlers: {
-    weaponFired: EventHandler<WeaponFiredEvent>
-    asteroidDestroyed: EventHandler<AsteroidDestroyedEvent>
-    powerUpCollected: EventHandler<PowerUpCollectedEvent>
-    shipThrust: EventHandler<ShipThrustEvent>
-    playerDied: EventHandler<PlayerDiedEvent>
-    waveStarted: EventHandler<WaveStartedEvent>
-    bossSpawned: EventHandler<BossSpawnedEvent>
-    bossDefeated: EventHandler<BossDefeatedEvent>
+    weaponFired: EventHandler<WeaponFiredEventData>
+    asteroidDestroyed: EventHandler<AsteroidDestroyedEventData>
+    powerUpCollected: EventHandler<PowerUpCollectedEventData>
+    shipThrust: EventHandler<ShipThrustEventData>
+    playerDied: EventHandler<PlayerDiedEventData>
+    waveStarted: EventHandler<WaveStartedEventData>
+    bossSpawned: EventHandler<BossSpawnedEventData>
+    bossDefeated: EventHandler<BossDefeatedEventData>
     gameStateChanged: EventHandler<{ state: GameFlowState }>
   }
 
@@ -182,13 +183,13 @@ export class AudioSystem {
    *
    * @param event - Weapon fired event data
    */
-  private onWeaponFired(event: WeaponFiredEvent): void {
+  private onWeaponFired(event: WeaponFiredEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     // Vary volume slightly based on weapon type
     let volume = 1.0
-    if (event.data?.weaponType) {
-      switch (event.data.weaponType) {
+    if (event.weaponType) {
+      switch (event.weaponType) {
         case 'spread':
           volume = 0.9
           break
@@ -212,11 +213,11 @@ export class AudioSystem {
    *
    * @param event - Asteroid destroyed event data
    */
-  private onAsteroidDestroyed(event: AsteroidDestroyedEvent): void {
+  private onAsteroidDestroyed(event: AsteroidDestroyedEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     // Scale volume based on asteroid size (larger = louder)
-    const size = event.data?.size || 'medium'
+    const size = event.size || 'medium'
     const volume = ASTEROID_VOLUME_MULTIPLIERS[size] ?? 0.7
 
     this.audioManager.playSound('explosion', { volume })
@@ -228,7 +229,7 @@ export class AudioSystem {
    *
    * @param _event - Power-up collected event data
    */
-  private onPowerUpCollected(_event: PowerUpCollectedEvent): void {
+  private onPowerUpCollected(_event: PowerUpCollectedEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     this.audioManager.playSound('powerup', { volume: 1.0 })
@@ -240,10 +241,10 @@ export class AudioSystem {
    *
    * @param event - Ship thrust event data
    */
-  private onShipThrust(event: ShipThrustEvent): void {
+  private onShipThrust(event: ShipThrustEventData): void {
     if (this.destroyed || !this.audioManager) return
 
-    const active = event.data?.active ?? false
+    const active = event.active ?? false
 
     if (active && !this.thrustSoundPlaying) {
       // Start thrust sound loop
@@ -263,7 +264,7 @@ export class AudioSystem {
    *
    * @param _event - Player died event data
    */
-  private onPlayerDied(_event: PlayerDiedEvent): void {
+  private onPlayerDied(_event: PlayerDiedEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     // Stop background music
@@ -282,7 +283,7 @@ export class AudioSystem {
    *
    * @param _event - Wave started event data
    */
-  private onWaveStarted(_event: WaveStartedEvent): void {
+  private onWaveStarted(_event: WaveStartedEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     // Wave start sound is optional - not implemented in audioConfig
@@ -295,7 +296,7 @@ export class AudioSystem {
    *
    * @param _event - Boss spawned event data
    */
-  private onBossSpawned(_event: BossSpawnedEvent): void {
+  private onBossSpawned(_event: BossSpawnedEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     // Crossfade to boss theme
@@ -308,7 +309,7 @@ export class AudioSystem {
    *
    * @param _event - Boss defeated event data
    */
-  private onBossDefeated(_event: BossDefeatedEvent): void {
+  private onBossDefeated(_event: BossDefeatedEventData): void {
     if (this.destroyed || !this.audioManager) return
 
     // Crossfade back to background music

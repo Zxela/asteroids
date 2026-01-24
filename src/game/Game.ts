@@ -12,7 +12,7 @@
  * This ensures deterministic physics regardless of frame rate.
  */
 
-import { World } from '../ecs'
+import { type EntityId, World } from '../ecs'
 import { SceneManager } from '../rendering/SceneManager'
 import { GameStateMachine } from '../state/GameStateMachine'
 import { GameOverState } from '../state/states/GameOverState'
@@ -31,8 +31,9 @@ import { CollisionSystem } from '../systems/CollisionSystem'
 import { DamageSystem } from '../systems/DamageSystem'
 // Systems
 import { InputSystem } from '../systems/InputSystem'
-// Note: ParticleEmitterSystem and ParticleRenderSystem exist but require
-// EventEmitter and ParticleManager infrastructure to be wired up
+import { UFOSpawnSystem } from '../systems/UFOSpawnSystem'
+import { ParticleEmitterSystem } from '../systems/ParticleEmitterSystem'
+import { ParticleRenderSystem } from '../systems/ParticleRenderSystem'
 import { PhysicsSystem } from '../systems/PhysicsSystem'
 import { PowerUpSystem } from '../systems/PowerUpSystem'
 import { ProjectileSystem } from '../systems/ProjectileSystem'
@@ -48,6 +49,45 @@ import { createShip } from '../entities/createShip'
 
 // Config
 import { gameConfig } from '../config/gameConfig'
+
+// Rendering
+import { ParticleManager } from '../rendering/ParticleManager'
+import { Starfield } from '../rendering/Starfield'
+
+// Utils
+import { EventEmitter } from '../utils/EventEmitter'
+
+// Audio
+import { AudioManager } from '../audio/AudioManager'
+import { AudioSystem } from '../systems/AudioSystem'
+
+// Types for game events
+import type {
+  AsteroidDestroyedEventData,
+  PowerUpCollectedEventData,
+  ShipThrustEventData,
+  WeaponFiredEventData,
+  PlayerDiedEventData,
+  WaveStartedEventData,
+  BossSpawnedEventData,
+  BossDefeatedEventData
+} from '../types/events'
+import type { GameFlowState } from '../types/game'
+
+/**
+ * Game event types for particle and audio systems.
+ */
+interface GameEvents extends Record<string, unknown> {
+  asteroidDestroyed: AsteroidDestroyedEventData
+  shipThrust: ShipThrustEventData
+  weaponFired: WeaponFiredEventData
+  powerUpCollected: PowerUpCollectedEventData
+  playerDied: PlayerDiedEventData
+  waveStarted: WaveStartedEventData
+  bossSpawned: BossSpawnedEventData
+  bossDefeated: BossDefeatedEventData
+  gameStateChanged: { state: GameFlowState }
+}
 
 /**
  * Main game orchestrator class.
@@ -83,6 +123,22 @@ export class Game {
   private scoreSystem: ScoreSystem | null = null
   private respawnSystem: RespawnSystem | null = null
   private powerUpSystem: PowerUpSystem | null = null
+  private shipControlSystem: ShipControlSystem | null = null
+  private weaponSystem: WeaponSystem | null = null
+  private ufoSpawnSystem: UFOSpawnSystem | null = null
+
+  // Particle systems
+  private particleManager: ParticleManager | null = null
+  private particleEmitterSystem: ParticleEmitterSystem | null = null
+  private particleRenderSystem: ParticleRenderSystem | null = null
+  private eventEmitter: EventEmitter<GameEvents> | null = null
+
+  // Background
+  private starfield: Starfield | null = null
+
+  // Audio
+  private audioManager: AudioManager | null = null
+  private audioSystem: AudioSystem | null = null
 
   // Game state
   private shipEntityId: number | null = null
@@ -102,6 +158,10 @@ export class Game {
     // Initialize SceneManager (async for WebGPU)
     await this.sceneManager.init()
 
+    // Initialize AudioManager
+    this.audioManager = AudioManager.getInstance()
+    await this.audioManager.init()
+
     // Register game states
     this.fsm.registerState('loading', new LoadingState())
     this.fsm.registerState('mainMenu', new MainMenuState())
@@ -114,6 +174,9 @@ export class Game {
 
     // Set up keyboard listeners for state transitions
     this.setupInputHandlers()
+
+    // Create starfield background (persists across game sessions)
+    this.starfield = new Starfield(this.sceneManager.getScene(), this.sceneManager.getCamera())
   }
 
   /**
@@ -161,6 +224,20 @@ export class Game {
     }
 
     const scene = this.sceneManager.getScene()
+    const camera = this.sceneManager.getCamera()
+
+    // Create event emitter for inter-system communication
+    this.eventEmitter = new EventEmitter<GameEvents>()
+
+    // Create particle infrastructure
+    this.particleManager = new ParticleManager(500)
+    this.particleEmitterSystem = new ParticleEmitterSystem(this.particleManager, this.eventEmitter)
+    this.particleRenderSystem = new ParticleRenderSystem(this.particleManager, scene, camera)
+
+    // Create audio system (AudioManager is already initialized)
+    if (this.audioManager) {
+      this.audioSystem = new AudioSystem(this.audioManager, this.eventEmitter)
+    }
 
     // Create and register systems
     this.inputSystem = new InputSystem()
@@ -173,12 +250,16 @@ export class Game {
     this.scoreSystem = new ScoreSystem()
     this.respawnSystem = new RespawnSystem()
 
+    // Create systems that emit events
+    this.shipControlSystem = new ShipControlSystem(this.inputSystem, this.eventEmitter)
+    this.weaponSystem = new WeaponSystem(this.inputSystem)
+
     // Register all systems with the world (order matters!)
-    this.world.registerSystem(new ShipControlSystem(this.inputSystem))
+    this.world.registerSystem(this.shipControlSystem)
     this.world.registerSystem(new PhysicsSystem())
     this.world.registerSystem(this.collisionSystem)
     this.world.registerSystem(new DamageSystem(this.collisionSystem))
-    this.world.registerSystem(new WeaponSystem(this.inputSystem))
+    this.world.registerSystem(this.weaponSystem)
     this.world.registerSystem(new ProjectileSystem())
     this.world.registerSystem(this.waveSystem)
     this.world.registerSystem(this.asteroidDestructionSystem)
@@ -186,7 +267,11 @@ export class Game {
     this.world.registerSystem(this.respawnSystem)
     this.powerUpSystem = new PowerUpSystem()
     this.world.registerSystem(this.powerUpSystem)
+    this.ufoSpawnSystem = new UFOSpawnSystem()
+    this.world.registerSystem(this.ufoSpawnSystem)
+    this.world.registerSystem(this.particleEmitterSystem)
     this.world.registerSystem(this.renderSystem)
+    // Note: ParticleRenderSystem is not an ECS system, it's called manually
 
     // Create the player ship
     this.shipEntityId = createShip(this.world)
@@ -200,6 +285,11 @@ export class Game {
    * Clears all entities, meshes, and system state.
    */
   private resetGameplay(): void {
+    // Dispose particle render system before clearing scene
+    if (this.particleRenderSystem) {
+      this.particleRenderSystem.dispose()
+    }
+
     // Clear all meshes from the scene
     this.sceneManager.clearGameObjects()
 
@@ -215,6 +305,21 @@ export class Game {
     this.scoreSystem = null
     this.respawnSystem = null
     this.powerUpSystem = null
+    this.shipControlSystem = null
+    this.weaponSystem = null
+    this.ufoSpawnSystem = null
+
+    // Clear particle systems
+    this.particleManager = null
+    this.particleEmitterSystem = null
+    this.particleRenderSystem = null
+
+    // Clean up audio system
+    if (this.audioSystem) {
+      this.audioSystem.destroy()
+      this.audioSystem = null
+    }
+    this.eventEmitter = null
 
     // Reset game state
     this.shipEntityId = null
@@ -262,6 +367,9 @@ export class Game {
     this.gameOverScreen?.hide()
     this.hud?.hide()
 
+    // Emit game state change event for audio system
+    this.eventEmitter?.emit('gameStateChanged', { state: newState as GameFlowState })
+
     // Show appropriate UI for new state
     switch (newState) {
       case 'mainMenu':
@@ -270,6 +378,8 @@ export class Game {
       case 'playing':
         // Initialize or reset gameplay for new game
         this.initializeGameplay()
+        // Emit state change again after eventEmitter is created
+        this.eventEmitter?.emit('gameStateChanged', { state: 'playing' as GameFlowState })
         this.hud?.show()
         // Reset HUD to initial values
         this.hud?.updateScore(0)
@@ -393,11 +503,29 @@ export class Game {
     // Update all registered systems through the ECS World
     this.world.update(deltaTimeMs)
 
+    // Update particle physics (position based on velocity, lifetime)
+    if (this.particleManager) {
+      this.particleManager.updateParticles(deltaTimeMs)
+    }
+
+    // Update particle rendering (sync mesh instances with active particles)
+    if (this.particleRenderSystem) {
+      this.particleRenderSystem.update(this.world, deltaTimeMs)
+    }
+
+    // Update starfield parallax
+    if (this.starfield) {
+      this.starfield.update(deltaTimeMs)
+    }
+
     // Handle game over from respawn system
     this.handleRespawnEvents()
 
     // Handle score updates for HUD
     this.handleScoreEvents()
+
+    // Handle wave progression for HUD
+    this.handleWaveEvents()
   }
 
   /**
@@ -405,16 +533,43 @@ export class Game {
    * Called before world.update() to propagate events from previous frame.
    */
   private passSystemEvents(): void {
-    // Pass asteroid destroyed events to score system
+    // Pass asteroid destroyed events to score system, wave system, and particle emitter
     if (this.asteroidDestructionSystem && this.scoreSystem) {
       const asteroidEvents = this.asteroidDestructionSystem.getEvents()
       this.scoreSystem.setAsteroidDestroyedEvents(asteroidEvents)
+
+      // Notify wave system of asteroid destructions for wave progression
+      if (this.waveSystem) {
+        for (const _event of asteroidEvents) {
+          this.waveSystem.recordAsteroidDestruction()
+        }
+      }
+
+      // Also emit to particle system via EventEmitter
+      if (this.eventEmitter) {
+        for (const event of asteroidEvents) {
+          this.eventEmitter.emit('asteroidDestroyed', event.data)
+        }
+      }
     }
 
     // Pass collision events to power-up system
     if (this.collisionSystem && this.powerUpSystem) {
       const collisions = this.collisionSystem.getCollisions()
       this.powerUpSystem.setCollisions(collisions)
+    }
+
+    // Pass weapon fired events to particle system
+    if (this.weaponSystem && this.eventEmitter) {
+      const weaponEvents = this.weaponSystem.getEvents()
+      for (const event of weaponEvents) {
+        this.eventEmitter.emit('weaponFired', {
+          entityId: 0 as EntityId, // WeaponFiredEvent doesn't include entityId in the event
+          weaponType: event.weaponType as 'single' | 'spread' | 'laser' | 'homing' | 'boss',
+          position: event.position,
+          direction: event.direction
+        })
+      }
     }
   }
 
@@ -447,6 +602,19 @@ export class Game {
     for (const event of events) {
       // Update HUD score display
       this.hud?.updateScore(event.data.newScore)
+    }
+  }
+
+  /**
+   * Handle events from wave system (HUD wave display).
+   */
+  private handleWaveEvents(): void {
+    if (!this.waveSystem) return
+
+    const events = this.waveSystem.getEvents()
+    for (const event of events) {
+      // Update HUD wave display
+      this.hud?.updateWave(event.data.newWave)
     }
   }
 }

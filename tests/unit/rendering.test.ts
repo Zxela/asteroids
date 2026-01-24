@@ -56,7 +56,31 @@ vi.mock('three', () => ({
       domElement: document.createElement('canvas'),
       info: { render: { calls: 0 } }
     }
-  })
+  }),
+  BufferGeometry: vi.fn().mockImplementation(function () {
+    return {
+      setAttribute: vi.fn(),
+      getAttribute: vi.fn().mockReturnValue({ array: new Float32Array(0), needsUpdate: false }),
+      dispose: vi.fn()
+    }
+  }),
+  Float32BufferAttribute: vi.fn().mockImplementation(function () {
+    return { needsUpdate: false }
+  }),
+  PointsMaterial: vi.fn().mockImplementation(function () {
+    return { dispose: vi.fn() }
+  }),
+  Points: vi.fn().mockImplementation(function () {
+    return {
+      geometry: { attributes: { position: { array: new Float32Array(0), needsUpdate: false } } },
+      material: {},
+      position: { x: 0, y: 0, z: 0 }
+    }
+  }),
+  BufferAttribute: vi.fn().mockImplementation(function () {
+    return { needsUpdate: false }
+  }),
+  AdditiveBlending: 2
 }))
 
 // Mock GameStateMachine to return 'playing' state for tests
@@ -116,6 +140,33 @@ vi.mock('../../src/utils/LeaderboardStorage', () => ({
     saveScore: vi.fn(),
     loadScores: vi.fn().mockReturnValue([]),
     getTopScores: vi.fn().mockReturnValue([])
+  }))
+}))
+
+// Mock AudioManager
+vi.mock('../../src/audio/AudioManager', () => ({
+  AudioManager: {
+    getInstance: vi.fn().mockReturnValue({
+      init: vi.fn().mockResolvedValue(undefined),
+      playSound: vi.fn(),
+      playMusic: vi.fn(),
+      stopMusic: vi.fn(),
+      stopAllSounds: vi.fn(),
+      setVolume: vi.fn(),
+      getVolume: vi.fn().mockReturnValue(1),
+      mute: vi.fn(),
+      isMuted: vi.fn().mockReturnValue(false),
+      destroy: vi.fn()
+    })
+  }
+}))
+
+// Mock AudioSystem
+vi.mock('../../src/systems/AudioSystem', () => ({
+  AudioSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    destroy: vi.fn(),
+    systemType: 'audio'
   }))
 }))
 

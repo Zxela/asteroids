@@ -26,27 +26,27 @@ import { Vector3 } from 'three'
 import { EventEmitter } from '../../src/utils/EventEmitter'
 import type { AudioManager } from '../../src/audio/AudioManager'
 import type {
-  WeaponFiredEvent,
-  AsteroidDestroyedEvent,
-  PowerUpCollectedEvent,
-  ShipThrustEvent,
-  PlayerDiedEvent,
-  WaveStartedEvent,
-  BossSpawnedEvent,
-  BossDefeatedEvent
+  WeaponFiredEventData,
+  AsteroidDestroyedEventData,
+  PowerUpCollectedEventData,
+  ShipThrustEventData,
+  PlayerDiedEventData,
+  WaveStartedEventData,
+  BossSpawnedEventData,
+  BossDefeatedEventData
 } from '../../src/types/events'
 import type { GameFlowState } from '../../src/types/game'
 
-// Event map type for EventEmitter
+// Event map type for EventEmitter (uses EventData types, not full Event types)
 interface AudioEventMap {
-  weaponFired: WeaponFiredEvent
-  asteroidDestroyed: AsteroidDestroyedEvent
-  powerUpCollected: PowerUpCollectedEvent
-  shipThrust: ShipThrustEvent
-  playerDied: PlayerDiedEvent
-  waveStarted: WaveStartedEvent
-  bossSpawned: BossSpawnedEvent
-  bossDefeated: BossDefeatedEvent
+  weaponFired: WeaponFiredEventData
+  asteroidDestroyed: AsteroidDestroyedEventData
+  powerUpCollected: PowerUpCollectedEventData
+  shipThrust: ShipThrustEventData
+  playerDied: PlayerDiedEventData
+  waveStarted: WaveStartedEventData
+  bossSpawned: BossSpawnedEventData
+  bossDefeated: BossDefeatedEventData
   gameStateChanged: { state: GameFlowState }
 }
 
@@ -66,110 +66,78 @@ function createMockAudioManager(): AudioManager {
   } as unknown as AudioManager
 }
 
-// Helper to create typed event data
-function createWeaponFiredEvent(weaponType = 'single'): WeaponFiredEvent {
+// Helper to create typed event data (returns EventData, not full Event)
+function createWeaponFiredEvent(weaponType = 'single'): WeaponFiredEventData {
   return {
-    type: 'weaponFired',
-    timestamp: Date.now(),
-    data: {
-      entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
-      weaponType: weaponType as import('../../src/types/components').WeaponType,
-      position: new Vector3(0, 0, 0),
-      direction: new Vector3(1, 0, 0)
-    }
+    entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
+    weaponType: weaponType as import('../../src/types/components').WeaponType,
+    position: new Vector3(0, 0, 0),
+    direction: new Vector3(1, 0, 0)
   }
 }
 
 function createAsteroidDestroyedEvent(
   size: 'large' | 'medium' | 'small' = 'medium',
   points = 50
-): AsteroidDestroyedEvent {
+): AsteroidDestroyedEventData {
   return {
-    type: 'asteroidDestroyed',
-    timestamp: Date.now(),
-    data: {
-      entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
-      position: new Vector3(0, 0, 0),
-      size,
-      points,
-      spawnChildren: size !== 'small'
-    }
+    entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
+    position: new Vector3(0, 0, 0),
+    size,
+    points,
+    spawnChildren: size !== 'small'
   }
 }
 
-function createPowerUpCollectedEvent(): PowerUpCollectedEvent {
+function createPowerUpCollectedEvent(): PowerUpCollectedEventData {
   return {
-    type: 'powerUpCollected',
-    timestamp: Date.now(),
-    data: {
-      entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
-      powerUpEntityId: 2 as unknown as import('../../src/types/ecs').EntityId,
-      powerUpType: 'shield',
-      position: new Vector3(0, 0, 0)
-    }
+    entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
+    powerUpEntityId: 2 as unknown as import('../../src/types/ecs').EntityId,
+    powerUpType: 'shield',
+    position: new Vector3(0, 0, 0)
   }
 }
 
-function createShipThrustEvent(active: boolean): ShipThrustEvent {
+function createShipThrustEvent(active: boolean): ShipThrustEventData {
   return {
-    type: 'shipThrust',
-    timestamp: Date.now(),
-    data: {
-      entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
-      position: new Vector3(0, 0, 0),
-      direction: new Vector3(0, 1, 0),
-      active
-    }
+    entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
+    position: new Vector3(0, 0, 0),
+    direction: new Vector3(0, 1, 0),
+    active
   }
 }
 
-function createPlayerDiedEvent(): PlayerDiedEvent {
+function createPlayerDiedEvent(): PlayerDiedEventData {
   return {
-    type: 'playerDied',
-    timestamp: Date.now(),
-    data: {
-      finalScore: 1000,
-      waveReached: 5
-    }
+    finalScore: 1000,
+    waveReached: 5
   }
 }
 
-function createWaveStartedEvent(wave = 1): WaveStartedEvent {
+function createWaveStartedEvent(wave = 1): WaveStartedEventData {
   return {
-    type: 'waveStarted',
-    timestamp: Date.now(),
-    data: {
-      wave,
-      asteroidCount: 3 + (wave - 1) * 2,
-      speedMultiplier: Math.min(1 + (wave - 1) * 0.05, 2.0),
-      isBossWave: wave % 5 === 0
-    }
+    wave,
+    asteroidCount: 3 + (wave - 1) * 2,
+    speedMultiplier: Math.min(1 + (wave - 1) * 0.05, 2.0),
+    isBossWave: wave % 5 === 0
   }
 }
 
-function createBossSpawnedEvent(): BossSpawnedEvent {
+function createBossSpawnedEvent(): BossSpawnedEventData {
   return {
-    type: 'bossSpawned',
-    timestamp: Date.now(),
-    data: {
-      entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
-      bossType: 'destroyer',
-      health: 100,
-      wave: 5
-    }
+    entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
+    bossType: 'destroyer',
+    health: 100,
+    wave: 5
   }
 }
 
-function createBossDefeatedEvent(): BossDefeatedEvent {
+function createBossDefeatedEvent(): BossDefeatedEventData {
   return {
-    type: 'bossDefeated',
-    timestamp: Date.now(),
-    data: {
-      entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
-      bossType: 'destroyer',
-      wave: 5,
-      bonusScore: 5000
-    }
+    entityId: 1 as unknown as import('../../src/types/ecs').EntityId,
+    bossType: 'destroyer',
+    wave: 5,
+    bonusScore: 5000
   }
 }
 

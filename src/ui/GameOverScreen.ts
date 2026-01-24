@@ -306,6 +306,7 @@ export class GameOverScreen {
     // Validate name length (3-20 characters)
     if (name.length < 3) {
       // Invalid name, don't submit
+      this.nameInput.style.borderColor = '#ff4444'
       return
     }
 
@@ -319,6 +320,14 @@ export class GameOverScreen {
 
     // Save to leaderboard
     this.leaderboardStorage.saveScore(entry)
+
+    // Show success feedback and disable form
+    this.submitButton.textContent = 'Saved!'
+    this.submitButton.disabled = true
+    this.submitButton.style.borderColor = '#00ff00'
+    this.submitButton.style.color = '#00ff00'
+    this.nameInput.disabled = true
+    this.nameInput.style.borderColor = '#00ff00'
   }
 
   /**
@@ -351,8 +360,14 @@ export class GameOverScreen {
     this.scoreElement.textContent = `Final Score: ${finalScore}`
     this.waveElement.textContent = `Wave Reached: ${waveReached}`
 
-    // Reset name input
+    // Reset name input and submit button
     this.nameInput.value = ''
+    this.nameInput.disabled = false
+    this.nameInput.style.borderColor = '#00ffff'
+    this.submitButton.textContent = 'Submit'
+    this.submitButton.disabled = false
+    this.submitButton.style.borderColor = '#00ff00'
+    this.submitButton.style.color = '#00ff00'
 
     // Show container
     this.container.style.display = 'flex'
