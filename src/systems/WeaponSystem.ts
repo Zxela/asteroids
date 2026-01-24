@@ -527,11 +527,11 @@ export class WeaponSystem implements System {
   /**
    * Get the ship's forward direction from Z rotation.
    *
-   * Ship rotation convention:
+   * Ship rotation convention (positive rotation = counter-clockwise):
    * - rotation.z = 0 -> facing +Y (up)
-   * - rotation.z = PI/2 -> facing +X (right)
+   * - rotation.z = PI/2 -> facing -X (left, after turning left 90°)
    * - rotation.z = PI -> facing -Y (down)
-   * - rotation.z = -PI/2 -> facing -X (left)
+   * - rotation.z = -PI/2 -> facing +X (right, after turning right 90°)
    *
    * This matches the ShipControlSystem rotation convention.
    *
@@ -540,9 +540,9 @@ export class WeaponSystem implements System {
    */
   private getShipForwardDirection(rotationZ: number): Vector3 {
     // Convert rotation to direction using sine/cosine
-    // At rotation=0, ship faces +Y (up), so:
-    // x = sin(rotation), y = cos(rotation)
-    const x = Math.sin(rotationZ)
+    // At rotation=0, ship faces +Y (up)
+    // Negative sin ensures CCW rotation gives correct direction
+    const x = -Math.sin(rotationZ)
     const y = Math.cos(rotationZ)
     return new Vector3(x, y, 0).normalize()
   }

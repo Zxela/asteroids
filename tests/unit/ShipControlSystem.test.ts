@@ -235,8 +235,8 @@ describe('ShipControlSystem', () => {
       expect(Math.abs(velocity!.linear.x)).toBeLessThan(0.001)
     })
 
-    it('should accelerate in ship facing direction (rotation = PI/2 means +X)', () => {
-      // Ship facing right (rotation = PI/2)
+    it('should accelerate in ship facing direction (rotation = PI/2 means -X)', () => {
+      // Ship facing left (rotation = PI/2 = CCW 90°)
       const transform = world.getComponent(shipId, Transform)
       transform!.rotation.z = Math.PI / 2
 
@@ -246,8 +246,8 @@ describe('ShipControlSystem', () => {
 
       const velocity = world.getComponent(shipId, Velocity)
 
-      // Facing right, so X velocity should be primary
-      expect(velocity!.linear.x).toBeGreaterThan(0)
+      // Facing left (CCW 90°), so X velocity should be negative
+      expect(velocity!.linear.x).toBeLessThan(0)
       expect(Math.abs(velocity!.linear.y)).toBeLessThan(0.01) // Small tolerance for cos(PI/2)
     })
 
@@ -430,7 +430,7 @@ describe('ShipControlSystem', () => {
       expect(velocity!.linear.y).toBeGreaterThan(0)
     })
 
-    it('should calculate forward as (1, 0) when rotation is PI/2', () => {
+    it('should calculate forward as (-1, 0) when rotation is PI/2', () => {
       const transform = world.getComponent(shipId, Transform)
       transform!.rotation.z = Math.PI / 2
 
@@ -438,8 +438,8 @@ describe('ShipControlSystem', () => {
       shipControlSystem.update(world, 100)
 
       const velocity = world.getComponent(shipId, Velocity)
-      // Forward direction at rotation PI/2 should be +X
-      expect(velocity!.linear.x).toBeGreaterThan(0)
+      // Forward direction at rotation PI/2 (CCW 90°) should be -X (left)
+      expect(velocity!.linear.x).toBeLessThan(0)
       expect(Math.abs(velocity!.linear.y)).toBeLessThan(0.01)
     })
 
@@ -456,7 +456,7 @@ describe('ShipControlSystem', () => {
       expect(velocity!.linear.y).toBeLessThan(0)
     })
 
-    it('should calculate forward as (-1, 0) when rotation is -PI/2', () => {
+    it('should calculate forward as (1, 0) when rotation is -PI/2', () => {
       const transform = world.getComponent(shipId, Transform)
       transform!.rotation.z = -Math.PI / 2
 
@@ -464,8 +464,8 @@ describe('ShipControlSystem', () => {
       shipControlSystem.update(world, 100)
 
       const velocity = world.getComponent(shipId, Velocity)
-      // Forward direction at rotation -PI/2 should be -X
-      expect(velocity!.linear.x).toBeLessThan(0)
+      // Forward direction at rotation -PI/2 (CW 90°) should be +X (right)
+      expect(velocity!.linear.x).toBeGreaterThan(0)
       expect(Math.abs(velocity!.linear.y)).toBeLessThan(0.01)
     })
   })

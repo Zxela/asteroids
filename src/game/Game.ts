@@ -31,6 +31,8 @@ import { CollisionSystem } from '../systems/CollisionSystem'
 import { DamageSystem } from '../systems/DamageSystem'
 // Systems
 import { InputSystem } from '../systems/InputSystem'
+// Note: ParticleEmitterSystem and ParticleRenderSystem exist but require
+// EventEmitter and ParticleManager infrastructure to be wired up
 import { PhysicsSystem } from '../systems/PhysicsSystem'
 import { PowerUpSystem } from '../systems/PowerUpSystem'
 import { ProjectileSystem } from '../systems/ProjectileSystem'

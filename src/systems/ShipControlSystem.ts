@@ -103,21 +103,21 @@ export class ShipControlSystem implements System {
    * Calculate the forward direction vector from a Z rotation angle.
    *
    * The forward direction is calculated using trigonometry:
-   * - x = sin(rotation) - gives horizontal component
+   * - x = -sin(rotation) - gives horizontal component (negative for correct CCW rotation)
    * - y = cos(rotation) - gives vertical component
    *
-   * This means:
+   * This means (with positive rotation = counter-clockwise):
    * - rotation = 0: forward = (0, 1) = up
-   * - rotation = PI/2: forward = (1, 0) = right
+   * - rotation = PI/2: forward = (-1, 0) = left (after turning left 90°)
    * - rotation = PI: forward = (0, -1) = down
-   * - rotation = -PI/2: forward = (-1, 0) = left
+   * - rotation = -PI/2: forward = (1, 0) = right (after turning right 90°)
    *
    * @param rotationZ - The Z rotation angle in radians
    * @returns Object with x and y components of the forward direction (unit vector)
    */
   private getForwardDirection(rotationZ: number): { x: number; y: number } {
     return {
-      x: Math.sin(rotationZ),
+      x: -Math.sin(rotationZ),
       y: Math.cos(rotationZ)
     }
   }

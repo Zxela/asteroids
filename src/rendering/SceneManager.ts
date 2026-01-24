@@ -45,8 +45,10 @@ export class SceneManager {
   private resizeHandler: () => void
 
   constructor() {
-    this.width = window.innerWidth
-    this.height = window.innerHeight
+    // Get initial dimensions from container or window
+    const container = document.getElementById('game-container')
+    this.width = container?.clientWidth ?? window.innerWidth
+    this.height = container?.clientHeight ?? window.innerHeight
 
     // Create scene with black background
     this.scene = new THREE.Scene()
@@ -108,10 +110,12 @@ export class SceneManager {
   /**
    * Handle window resize events.
    * Updates viewport, camera aspect ratio, and renderer size.
+   * Uses game-container dimensions to enforce minimum size.
    */
   private onWindowResize(): void {
-    this.width = window.innerWidth
-    this.height = window.innerHeight
+    const container = document.getElementById('game-container')
+    this.width = container?.clientWidth ?? window.innerWidth
+    this.height = container?.clientHeight ?? window.innerHeight
 
     this.camera.aspect = this.width / this.height
     this.camera.updateProjectionMatrix()
