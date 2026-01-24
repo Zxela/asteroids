@@ -58,6 +58,8 @@ export interface GameplayConfig {
   readonly waveTransitionDelay: number
   /** Score values for destroyed entities */
   readonly scoring: ScoringConfig
+  /** Maximum player projectiles on screen at once (classic Asteroids: 4) */
+  readonly maxPlayerProjectiles: number
 }
 
 /**
@@ -255,7 +257,7 @@ export interface GameConfig {
  *
  * Physics values from Design Doc:
  * - Ship rotation: 180 degrees/second (PI rad/s)
- * - Ship acceleration: 0.5 units/s^2
+ * - Ship acceleration: 500 units/s^2 (arcade-style snappy response)
  * - Max speed: 300 units/s
  * - Damping: 0.99 per frame
  *
@@ -290,7 +292,7 @@ export interface GameConfig {
  */
 export const gameConfig: GameConfig = {
   physics: {
-    shipAcceleration: 0.5,
+    shipAcceleration: 500, // units/s^2 - reaches max speed in ~0.6 seconds
     shipMaxSpeed: 300,
     shipRotationSpeed: Math.PI,
     damping: 0.99,
@@ -309,7 +311,8 @@ export const gameConfig: GameConfig = {
       mediumAsteroid: 50,
       smallAsteroid: 100,
       bossMultiplier: 1000
-    }
+    },
+    maxPlayerProjectiles: 4
   },
   wave: {
     baseAsteroidCount: 3,

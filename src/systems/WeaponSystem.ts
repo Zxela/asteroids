@@ -22,7 +22,7 @@
  */
 
 import { Vector3 } from 'three'
-import { Asteroid, Transform, Weapon } from '../components'
+import { Asteroid, Projectile, Transform, Weapon } from '../components'
 import { gameConfig } from '../config'
 import { WEAPON_CONFIGS, getNextWeapon, getPreviousWeapon } from '../config/weaponConfig'
 import type { ComponentClass, EntityId, World as IWorld, System } from '../ecs/types'
@@ -34,6 +34,7 @@ import type { InputSystem } from './InputSystem'
 const TransformClass = Transform as unknown as ComponentClass<Transform>
 const WeaponClass = Weapon as unknown as ComponentClass<Weapon>
 const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
+const ProjectileClass = Projectile as unknown as ComponentClass<Projectile>
 
 /**
  * Event emitted when a weapon fires.
@@ -277,6 +278,15 @@ export class WeaponSystem implements System {
       }
     }
 
+    // Check max player projectiles limit (classic Asteroids: 4)
+    const currentProjectiles = this.countPlayerProjectiles(world, entityId)
+    const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
+    const projectilesToFire = weapon.currentWeapon === 'spread' ? 3 : 1
+
+    if (currentProjectiles + projectilesToFire > maxProjectiles) {
+      return // Cannot fire, would exceed max projectiles
+    }
+
     // Fire based on weapon type
     if (weapon.currentWeapon === 'spread') {
       this.fireSpreadShot(world, entityId, transform, weapon)
@@ -291,6 +301,27 @@ export class WeaponSystem implements System {
 
     // Emit event for audio/visual feedback
     this.emitWeaponFiredEvent(weapon, transform)
+  }
+
+  /**
+   * Count the number of projectiles currently owned by an entity.
+   *
+   * @param world - The ECS world
+   * @param ownerId - EntityId of the owner to count projectiles for
+   * @returns Number of projectiles owned by the entity
+   */
+  private countPlayerProjectiles(world: IWorld, ownerId: EntityId): number {
+    const projectiles = world.query(ProjectileClass)
+    let count = 0
+
+    for (const projectileId of projectiles) {
+      const projectile = world.getComponent(projectileId, ProjectileClass)
+      if (projectile && projectile.owner === ownerId) {
+        count++
+      }
+    }
+
+    return count
   }
 
   /**
@@ -498,9 +529,9 @@ export class WeaponSystem implements System {
    *
    * Ship rotation convention:
    * - rotation.z = 0 -> facing +Y (up)
-   * - rotation.z = PI/2 -> facing -X (left)
+   * - rotation.z = PI/2 -> facing +X (right)
    * - rotation.z = PI -> facing -Y (down)
-   * - rotation.z = 3*PI/2 -> facing +X (right)
+   * - rotation.z = -PI/2 -> facing -X (left)
    *
    * This matches the ShipControlSystem rotation convention.
    *
@@ -510,8 +541,8 @@ export class WeaponSystem implements System {
   private getShipForwardDirection(rotationZ: number): Vector3 {
     // Convert rotation to direction using sine/cosine
     // At rotation=0, ship faces +Y (up), so:
-    // x = -sin(rotation), y = cos(rotation)
-    const x = -Math.sin(rotationZ)
+    // x = sin(rotation), y = cos(rotation)
+    const x = Math.sin(rotationZ)
     const y = Math.cos(rotationZ)
     return new Vector3(x, y, 0).normalize()
   }

@@ -16,7 +16,7 @@
  */
 
 import { Vector3 } from 'three'
-import { Collider, Renderable, Transform, Velocity } from '../components'
+import { Collider, Physics, Renderable, Transform, Velocity } from '../components'
 import { Projectile } from '../components/Projectile'
 import { gameConfig } from '../config'
 import type { EntityId, World } from '../ecs/types'
@@ -111,6 +111,10 @@ export function createProjectile(world: World, config: ProjectileConfig): Entity
   // Velocity: Direction * speed, no angular velocity
   const linearVelocity = normalizedDirection.multiplyScalar(speed)
   world.addComponent(projectileId, new Velocity(linearVelocity, new Vector3(0, 0, 0)))
+
+  // Physics: No damping (projectiles maintain speed), high max speed, screen wrapping
+  // damping = 1.0 means no velocity decay
+  world.addComponent(projectileId, new Physics(1, 1.0, speed * 2, true))
 
   // Collider: Configure based on projectile type
   // Boss projectiles use "bossProjectile" layer and only collide with "player"

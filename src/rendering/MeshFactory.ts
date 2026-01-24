@@ -87,21 +87,71 @@ function createGeometry(meshType: MeshType, material: THREE.Material): THREE.Obj
 }
 
 /**
- * Create ship mesh - cone pointing forward.
+ * Create ship mesh - classic Asteroids triangle with thruster notch.
+ * Uses BufferGeometry for a classic vector-style ship silhouette.
  */
-function createShip(material: THREE.Material): THREE.Mesh {
-  const geometry = new THREE.ConeGeometry(5, 20, 8)
+function createShip(material: THREE.Material): THREE.Object3D {
+  // Classic Asteroids ship shape: triangle with notch at back
+  // Points arranged for a ship facing +Y direction
+  const shape = new THREE.Shape()
+
+  // Ship dimensions (roughly 20 units tall, 16 units wide)
+  const tipY = 12       // Front tip
+  const backY = -8      // Back corners
+  const notchY = -4     // Thruster notch depth
+  const wingX = 8       // Wing width
+  const notchX = 3      // Notch width
+
+  // Draw ship outline: start at front tip, go clockwise
+  shape.moveTo(0, tipY)              // Front tip
+  shape.lineTo(wingX, backY)         // Right wing
+  shape.lineTo(notchX, notchY)       // Right notch
+  shape.lineTo(0, backY + 2)         // Center back
+  shape.lineTo(-notchX, notchY)      // Left notch
+  shape.lineTo(-wingX, backY)        // Left wing
+  shape.closePath()                   // Back to front tip
+
+  // Extrude for 3D depth
+  const extrudeSettings = {
+    depth: 4,
+    bevelEnabled: false
+  }
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+
+  // Center the geometry
+  geometry.center()
+
   const mesh = new THREE.Mesh(geometry, material)
-  // Rotate so cone points in positive X direction (forward)
-  mesh.rotation.z = -Math.PI / 2
+  // No rotation needed - ship faces +Y which matches forward direction
   return mesh
 }
 
 /**
- * Create asteroid mesh - icosahedron with specified radius.
+ * Create asteroid mesh - jagged irregular polygon like classic Asteroids.
+ * Uses random vertex displacement on a low-poly sphere for rocky appearance.
  */
 function createAsteroid(radius: number, material: THREE.Material): THREE.Mesh {
-  const geometry = new THREE.IcosahedronGeometry(radius, 1)
+  // Use low-poly icosahedron (detail=0) for angular look
+  const geometry = new THREE.IcosahedronGeometry(radius, 0)
+
+  // Displace vertices randomly for irregular rocky shape
+  const positionAttribute = geometry.getAttribute('position')
+  const vertex = new THREE.Vector3()
+
+  // Use radius as seed for consistent randomization per size
+  const seed = radius * 7
+  for (let i = 0; i < positionAttribute.count; i++) {
+    vertex.fromBufferAttribute(positionAttribute, i)
+
+    // Pseudo-random displacement based on vertex position and seed
+    const noise = Math.sin(vertex.x * seed) * Math.cos(vertex.y * seed) * Math.sin(vertex.z * seed)
+    const displacement = 1 + noise * 0.3 // +/- 30% variation
+
+    vertex.normalize().multiplyScalar(radius * displacement)
+    positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z)
+  }
+
+  geometry.computeVertexNormals()
   return new THREE.Mesh(geometry, material)
 }
 
@@ -188,14 +238,14 @@ function createMeshTypeMaterial(meshType: MeshType, materialType: MaterialType):
     })
   }
 
-  // Ship material: White with blue emissive
+  // Ship material: Bright white/cyan with strong emissive for vector look
   if (meshType === 'ship') {
     return new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      emissive: palette.primary, // Blue
-      emissiveIntensity: emissiveIntensity.medium, // 0.5
-      roughness: 0.5,
-      metalness: 0.5
+      color: 0x00ffff, // Cyan
+      emissive: 0x00ffff, // Cyan emissive
+      emissiveIntensity: 0.8,
+      roughness: 0.3,
+      metalness: 0.7
     })
   }
 

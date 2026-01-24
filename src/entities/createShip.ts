@@ -13,10 +13,20 @@
  * - Health: 1 HP per life (depleted = lose life)
  * - Player: Initial lives from config, score starts at 0
  * - Renderable: Ship mesh type, standard material, visible
+ * - Weapon: Single shot weapon with cooldown from config
  */
 
 import { Vector3 } from 'three'
-import { Collider, Health, Physics, Player, Renderable, Transform, Velocity } from '../components'
+import {
+  Collider,
+  Health,
+  Physics,
+  Player,
+  Renderable,
+  Transform,
+  Velocity,
+  Weapon
+} from '../components'
 import { gameConfig } from '../config'
 import type { EntityId, World } from '../ecs/types'
 
@@ -29,8 +39,8 @@ const SCREEN_CENTER_Y = 0
 /** Screen center Z coordinate in world space */
 const SCREEN_CENTER_Z = 0
 
-/** Ship collider radius (matches visible ship size) */
-const SHIP_COLLIDER_RADIUS = 20
+/** Ship collider radius (slightly smaller than visual for fair gameplay) */
+const SHIP_COLLIDER_RADIUS = 12
 
 /** Ship mass (baseline value, other entities may differ) */
 const SHIP_MASS = 1
@@ -106,6 +116,9 @@ export function createShip(world: World): EntityId {
 
   // Renderable: Ship mesh with standard material, visible by default
   world.addComponent(shipId, new Renderable('ship', 'standard', true))
+
+  // Weapon: Single shot weapon with default cooldown
+  world.addComponent(shipId, new Weapon('single', gameConfig.weapons.single.cooldown))
 
   return shipId
 }

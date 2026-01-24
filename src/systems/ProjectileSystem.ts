@@ -49,6 +49,12 @@ export class ProjectileSystem implements System {
       // Update elapsed time
       projectile.updateElapsed(deltaTime)
 
+      // Destroy expired projectiles to prevent memory leaks
+      if (projectile.isExpired()) {
+        world.destroyEntity(projectileId)
+        continue
+      }
+
       // Handle homing projectiles
       if (projectile.projectileType === 'homing' && projectile.homingTarget !== undefined) {
         this.applyHomingForce(world, projectileId, projectile, transform, velocity, deltaTime)

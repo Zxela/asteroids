@@ -151,7 +151,7 @@ describe('MeshFactory', () => {
       // Per Task 7.4: Ship uses MeshStandardMaterial with emissive
       expect(mesh.material).toBeInstanceOf(THREE.MeshStandardMaterial)
       const material = mesh.material as THREE.MeshStandardMaterial
-      expect(material.emissiveIntensity).toBe(0.5) // Medium intensity
+      expect(material.emissiveIntensity).toBe(0.8) // High intensity for vector look
     })
 
     it('should create mesh with MeshStandardMaterial for projectile (per Task 7.4)', () => {

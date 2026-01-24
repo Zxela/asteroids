@@ -128,11 +128,11 @@ describe('createShip', () => {
       expect(collider?.shape).toBe('sphere')
     })
 
-    it('should have radius of 20', () => {
+    it('should have radius of 12 (smaller for fair gameplay)', () => {
       const shipId = createShip(world)
       const collider = world.getComponent<Collider>(shipId, Collider)
 
-      expect(collider?.radius).toBe(20)
+      expect(collider?.radius).toBe(12)
     })
 
     it('should be on player layer', () => {

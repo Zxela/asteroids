@@ -38,17 +38,37 @@ describe('ProjectileSystem', () => {
       expect(projectile?.elapsed).toBe(100)
     })
 
-    it('should mark expired projectiles for destruction', () => {
+    it('should destroy expired projectiles', () => {
       const projectileId = world.createEntity()
       world.addComponent(projectileId, new Transform())
       world.addComponent(projectileId, new Velocity(new Vector3(100, 0, 0), new Vector3()))
       world.addComponent(projectileId, new Projectile(10, 1 as EntityId, 100, 'single'))
 
+      // Verify entity exists before expiration
+      expect(world.isEntityAlive(projectileId)).toBe(true)
+
       // Update past lifetime
       projectileSystem.update(world, 150)
 
+      // Entity should be destroyed
+      expect(world.isEntityAlive(projectileId)).toBe(false)
+    })
+
+    it('should not destroy projectiles that have not expired', () => {
+      const projectileId = world.createEntity()
+      world.addComponent(projectileId, new Transform())
+      world.addComponent(projectileId, new Velocity(new Vector3(100, 0, 0), new Vector3()))
+      world.addComponent(projectileId, new Projectile(10, 1 as EntityId, 1000, 'single'))
+
+      // Update but not past lifetime
+      projectileSystem.update(world, 500)
+
+      // Entity should still exist
+      expect(world.isEntityAlive(projectileId)).toBe(true)
+
       const projectile = world.getComponent(projectileId, Projectile)
-      expect(projectile?.isExpired()).toBe(true)
+      expect(projectile?.elapsed).toBe(500)
+      expect(projectile?.isExpired()).toBe(false)
     })
   })
 

@@ -691,9 +691,16 @@ describe('WeaponSystem', () => {
       weaponSystem.update(world, 300)
       expect(getEntityCount(world)).toBe(countAfterFirst)
 
-      // Fire after 400ms cooldown
+      // Destroy existing projectiles to allow second spread shot
+      // (maxPlayerProjectiles limit of 4 would block firing 3+3=6)
+      const projectiles = findAllProjectileEntities(world, shipId)
+      for (const projId of projectiles) {
+        world.destroyEntity(projId as any)
+      }
+
+      // Fire after 400ms cooldown (now that we have room for more projectiles)
       weaponSystem.update(world, 150) // 450ms total
-      expect(getEntityCount(world)).toBe(countAfterFirst + 3)
+      expect(getEntityCount(world)).toBe(1 + 3) // ship + 3 new projectiles
     })
   })
 
@@ -1168,5 +1175,157 @@ describe('Homing Missile Weapon', () => {
       expect(weapon!.ammo).toBe(0) // Still 0, no projectile
       expect(getEntityCount(world)).toBe(4) // ship + 3 projectiles
     })
+  })
+})
+
+describe('Max Player Projectiles Limit', () => {
+  let world: World
+  let weaponSystem: WeaponSystem
+  let inputSystem: InputSystem
+  let mockTarget: MockEventTarget
+  let shipId: number
+
+  beforeEach(() => {
+    world = new World()
+    mockTarget = new MockEventTarget()
+    inputSystem = new InputSystem(mockTarget)
+    weaponSystem = new WeaponSystem(inputSystem)
+
+    // Create a test ship with weapon and transform
+    shipId = world.createEntity() as unknown as number
+    world.addComponent(shipId as any, new Transform())
+    world.addComponent(shipId as any, new Weapon('single', 250))
+  })
+
+  afterEach(() => {
+    inputSystem.destroy()
+  })
+
+  it('should not fire when player has max projectiles on screen', () => {
+    // Config has maxPlayerProjectiles: 4 (classic Asteroids limit)
+    const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
+
+    mockTarget.simulateKeyDown(' ')
+
+    // Fire max projectiles (waiting for cooldown each time)
+    for (let i = 0; i < maxProjectiles; i++) {
+      weaponSystem.update(world, 16)
+      if (i < maxProjectiles - 1) {
+        weaponSystem.update(world, 250) // Wait for cooldown
+      }
+    }
+
+    const countAtMax = getEntityCount(world)
+    expect(countAtMax).toBe(1 + maxProjectiles) // ship + maxProjectiles
+
+    // Try to fire one more after cooldown - should be blocked
+    weaponSystem.update(world, 250) // Wait for cooldown
+    const countAfterAttempt = getEntityCount(world)
+
+    expect(countAfterAttempt).toBe(countAtMax) // No new projectile
+  })
+
+  it('should allow firing when projectile count drops below max', () => {
+    const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
+
+    mockTarget.simulateKeyDown(' ')
+
+    // Fire max projectiles
+    for (let i = 0; i < maxProjectiles; i++) {
+      weaponSystem.update(world, 16)
+      if (i < maxProjectiles - 1) {
+        weaponSystem.update(world, 250)
+      }
+    }
+
+    const countAtMax = getEntityCount(world)
+
+    // Simulate one projectile being destroyed (expired or hit something)
+    const projectileId = findProjectileEntity(world, shipId)
+    if (projectileId) {
+      world.destroyEntity(projectileId as any)
+    }
+
+    // Wait for cooldown and try to fire again
+    weaponSystem.update(world, 250)
+
+    // Should be able to fire now
+    const countAfterDestroy = getEntityCount(world)
+    expect(countAfterDestroy).toBe(countAtMax) // back to max (one destroyed, one created)
+  })
+
+  it('should only count projectiles owned by the player', () => {
+    const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
+
+    // Create enemy projectiles (different owner ID)
+    const enemyId = world.createEntity() as unknown as number
+    for (let i = 0; i < 10; i++) {
+      const projId = world.createEntity()
+      world.addComponent(projId, new Projectile(10, enemyId as any, 3000, 'single'))
+      world.addComponent(projId, new Transform())
+    }
+
+    mockTarget.simulateKeyDown(' ')
+
+    // Player should still be able to fire up to their max
+    for (let i = 0; i < maxProjectiles; i++) {
+      weaponSystem.update(world, 16)
+      if (i < maxProjectiles - 1) {
+        weaponSystem.update(world, 250)
+      }
+    }
+
+    // Count player projectiles
+    const playerProjectiles = findAllProjectileEntities(world, shipId)
+    expect(playerProjectiles.length).toBe(maxProjectiles)
+  })
+
+  it('should count spread shot projectiles correctly (3 per shot)', () => {
+    const weapon = world.getComponent(shipId as any, Weapon)
+    weapon!.currentWeapon = 'spread'
+    weapon!.cooldown = 400
+
+    const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
+
+    mockTarget.simulateKeyDown(' ')
+
+    // Fire spread shot (creates 3 projectiles)
+    weaponSystem.update(world, 16)
+
+    const playerProjectiles = findAllProjectileEntities(world, shipId)
+
+    // With max of 4, one spread shot creates 3 projectiles
+    // Next shot would create 3 more (total 6) which exceeds 4
+    // So second spread shot should be blocked
+    weaponSystem.update(world, 450) // Wait for cooldown
+
+    const projectilesAfterSecondAttempt = findAllProjectileEntities(world, shipId)
+    expect(projectilesAfterSecondAttempt.length).toBe(playerProjectiles.length) // Should not increase
+  })
+
+  it('should have maxPlayerProjectiles config set to 4 (classic Asteroids)', () => {
+    expect(gameConfig.gameplay.maxPlayerProjectiles).toBe(4)
+  })
+
+  it('should allow firing when at max-1 projectiles', () => {
+    const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
+
+    mockTarget.simulateKeyDown(' ')
+
+    // Fire max-1 projectiles
+    for (let i = 0; i < maxProjectiles - 1; i++) {
+      weaponSystem.update(world, 16)
+      if (i < maxProjectiles - 2) {
+        weaponSystem.update(world, 250)
+      }
+    }
+
+    const countBelowMax = getEntityCount(world)
+    expect(countBelowMax).toBe(1 + maxProjectiles - 1)
+
+    // Should be able to fire one more
+    weaponSystem.update(world, 250)
+    const countAfterFire = getEntityCount(world)
+    expect(countAfterFire).toBe(1 + maxProjectiles)
   })
 })
