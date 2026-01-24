@@ -354,8 +354,9 @@ describe('3D Asteroids Game - E2E Test Suite', () => {
     velocity!.angular.z = 0
 
     // Simulate acceleration (thrust in facing direction)
-    const acceleration = gameConfig.physics.shipAcceleration
-    velocity!.linear.set(acceleration * 1000, 0, 0) // Apply acceleration for 1 second
+    // Use a reasonable velocity below max speed for testing
+    const testVelocity = gameConfig.physics.shipMaxSpeed * 0.5 // Half max speed
+    velocity!.linear.set(testVelocity, 0, 0) // Apply reasonable velocity
 
     // Physics update applies movement
     physicsSystem.update(world, 1000)

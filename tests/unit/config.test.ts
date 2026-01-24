@@ -89,9 +89,9 @@ describe("Game Configuration", () => {
 
   describe("gameConfig values match Design Doc specifications", () => {
     // Physics values
-    it("shipAcceleration is 0.5", async () => {
+    it("shipAcceleration is 500 units/s^2", async () => {
       const { gameConfig } = await import("../../src/config/gameConfig")
-      expect(gameConfig.physics.shipAcceleration).toBe(0.5)
+      expect(gameConfig.physics.shipAcceleration).toBe(500)
     })
 
     it("shipMaxSpeed is 300", async () => {

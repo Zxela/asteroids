@@ -59,6 +59,201 @@ vi.mock('three', () => ({
   })
 }))
 
+// Mock GameStateMachine to return 'playing' state for tests
+vi.mock('../../src/state/GameStateMachine', () => ({
+  GameStateMachine: vi.fn().mockImplementation(() => ({
+    start: vi.fn(),
+    transition: vi.fn(),
+    getCurrentStateName: vi.fn().mockReturnValue('playing'),
+    registerState: vi.fn()
+  }))
+}))
+
+// Mock UI components
+vi.mock('../../src/ui/MainMenu', () => ({
+  MainMenu: vi.fn().mockImplementation(() => ({
+    mount: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    handleKeyDown: vi.fn(),
+    onStartGame: vi.fn()
+  }))
+}))
+
+vi.mock('../../src/ui/PauseMenu', () => ({
+  PauseMenu: vi.fn().mockImplementation(() => ({
+    mount: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    handleKeyDown: vi.fn(),
+    onResume: vi.fn(),
+    onQuit: vi.fn()
+  }))
+}))
+
+vi.mock('../../src/ui/GameOverScreen', () => ({
+  GameOverScreen: vi.fn().mockImplementation(() => ({
+    mount: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    onRestart: vi.fn(),
+    onMainMenu: vi.fn()
+  }))
+}))
+
+vi.mock('../../src/ui/HUD', () => ({
+  HUD: vi.fn().mockImplementation(() => ({
+    mount: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    update: vi.fn()
+  }))
+}))
+
+// Mock LeaderboardStorage
+vi.mock('../../src/utils/LeaderboardStorage', () => ({
+  LeaderboardStorage: vi.fn().mockImplementation(() => ({
+    saveScore: vi.fn(),
+    loadScores: vi.fn().mockReturnValue([]),
+    getTopScores: vi.fn().mockReturnValue([])
+  }))
+}))
+
+// Mock state classes
+vi.mock('../../src/state/states/LoadingState', () => ({
+  LoadingState: vi.fn().mockImplementation(() => ({ enter: vi.fn(), exit: vi.fn() }))
+}))
+
+vi.mock('../../src/state/states/MainMenuState', () => ({
+  MainMenuState: vi.fn().mockImplementation(() => ({ enter: vi.fn(), exit: vi.fn() }))
+}))
+
+vi.mock('../../src/state/states/PlayingState', () => ({
+  PlayingState: vi.fn().mockImplementation(() => ({ enter: vi.fn(), exit: vi.fn() }))
+}))
+
+vi.mock('../../src/state/states/PausedState', () => ({
+  PausedState: vi.fn().mockImplementation(() => ({ enter: vi.fn(), exit: vi.fn() }))
+}))
+
+vi.mock('../../src/state/states/GameOverState', () => ({
+  GameOverState: vi.fn().mockImplementation(() => ({ enter: vi.fn(), exit: vi.fn() }))
+}))
+
+// Mock createShip
+vi.mock('../../src/entities/createShip', () => ({
+  createShip: vi.fn().mockReturnValue(1)
+}))
+
+// Mock all systems
+vi.mock('../../src/systems/InputSystem', () => ({
+  InputSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'input',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/PhysicsSystem', () => ({
+  PhysicsSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'physics',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/CollisionSystem', () => ({
+  CollisionSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'collision',
+    requiredComponents: [],
+    getCollisions: vi.fn().mockReturnValue([])
+  }))
+}))
+
+vi.mock('../../src/systems/DamageSystem', () => ({
+  DamageSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'damage',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/ShipControlSystem', () => ({
+  ShipControlSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'shipControl',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/WeaponSystem', () => ({
+  WeaponSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'weapon',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/ProjectileSystem', () => ({
+  ProjectileSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'projectile',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/AsteroidDestructionSystem', () => ({
+  AsteroidDestructionSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'asteroidDestruction',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/RespawnSystem', () => ({
+  RespawnSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'respawn',
+    requiredComponents: [],
+    getEvents: vi.fn().mockReturnValue([])
+  }))
+}))
+
+vi.mock('../../src/systems/ScoreSystem', () => ({
+  ScoreSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'score',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/WaveSystem', () => ({
+  WaveSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'wave',
+    requiredComponents: [],
+    getCurrentWave: vi.fn().mockReturnValue(1),
+    getEvents: vi.fn().mockReturnValue([])
+  }))
+}))
+
+vi.mock('../../src/systems/PowerUpSystem', () => ({
+  PowerUpSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'powerUp',
+    requiredComponents: []
+  }))
+}))
+
+vi.mock('../../src/systems/RenderSystem', () => ({
+  RenderSystem: vi.fn().mockImplementation(() => ({
+    update: vi.fn(),
+    systemType: 'render',
+    requiredComponents: []
+  }))
+}))
+
 // Import modules after mocks are set up
 import { SceneManager } from '../../src/rendering/SceneManager'
 import { Game } from '../../src/game/Game'
