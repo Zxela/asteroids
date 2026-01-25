@@ -35,6 +35,7 @@ export type GameEventType =
   | 'shipThrust'
   | 'asteroidDestroyed'
   | 'playerDied'
+  | 'hyperspaceActivated'
 
 /**
  * Base game event interface.
@@ -386,6 +387,27 @@ export interface PlayerDiedEvent extends GameEvent<'playerDied'> {
 }
 
 // ============================================
+// Hyperspace Events
+// ============================================
+
+/**
+ * Hyperspace activated event data.
+ */
+export interface HyperspaceActivatedEventData {
+  entityId: EntityId
+  fromPosition: { x: number; y: number }
+  toPosition: { x: number; y: number }
+  success: boolean
+}
+
+/**
+ * Hyperspace activated event type.
+ */
+export interface HyperspaceActivatedEvent extends GameEvent<'hyperspaceActivated'> {
+  data: HyperspaceActivatedEventData
+}
+
+// ============================================
 // Event Union Type
 // ============================================
 
@@ -411,6 +433,7 @@ export type AnyGameEvent =
   | ShipDamagedEvent
   | ShipThrustEvent
   | PlayerDiedEvent
+  | HyperspaceActivatedEvent
 
 // ============================================
 // Event Handler Types

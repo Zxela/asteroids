@@ -51,4 +51,11 @@ export class Player implements PlayerComponent {
   loseLife(): void {
     this.lives = Math.max(0, this.lives - 1)
   }
+
+  /**
+   * Add a bonus life to the player.
+   */
+  addLife(): void {
+    this.lives += 1
+  }
 }

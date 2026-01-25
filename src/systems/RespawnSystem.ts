@@ -18,6 +18,7 @@ import { Player } from '../components/Player'
 import { Transform } from '../components/Transform'
 import { Velocity } from '../components/Velocity'
 import { gameConfig } from '../config/gameConfig'
+import { createShipDebris } from '../entities/createShipDebris'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
 
 // Type assertions for component classes to work with ECS type system
@@ -154,6 +155,9 @@ export class RespawnSystem implements System {
     player: Player,
     transform: Transform
   ): void {
+    // Spawn ship debris at death location (classic Asteroids effect)
+    createShipDebris(world, transform.position.clone(), transform.rotation.z)
+
     // Reduce lives
     player.loseLife()
 

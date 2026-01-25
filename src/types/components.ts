@@ -102,6 +102,7 @@ export interface HealthComponent extends Component {
  */
 export type MeshType =
   | 'ship'
+  | 'ship_debris'
   | 'asteroid_large'
   | 'asteroid_medium'
   | 'asteroid_small'

@@ -43,6 +43,9 @@ import { ScoreSystem } from '../systems/ScoreSystem'
 import { ShipControlSystem } from '../systems/ShipControlSystem'
 import { WaveSystem } from '../systems/WaveSystem'
 import { WeaponSystem } from '../systems/WeaponSystem'
+import { HyperspaceSystem } from '../systems/HyperspaceSystem'
+import { TensionSystem } from '../systems/TensionSystem'
+import { AttractModeSystem, createPressStartOverlay } from '../systems/AttractModeSystem'
 
 // Entities
 import { createShip } from '../entities/createShip'
@@ -70,7 +73,8 @@ import type {
   PlayerDiedEventData,
   WaveStartedEventData,
   BossSpawnedEventData,
-  BossDefeatedEventData
+  BossDefeatedEventData,
+  HyperspaceActivatedEventData
 } from '../types/events'
 import type { GameFlowState } from '../types/game'
 
@@ -87,6 +91,7 @@ interface GameEvents extends Record<string, unknown> {
   bossSpawned: BossSpawnedEventData
   bossDefeated: BossDefeatedEventData
   gameStateChanged: { state: GameFlowState }
+  hyperspaceActivated: HyperspaceActivatedEventData
 }
 
 /**
@@ -126,6 +131,11 @@ export class Game {
   private shipControlSystem: ShipControlSystem | null = null
   private weaponSystem: WeaponSystem | null = null
   private ufoSpawnSystem: UFOSpawnSystem | null = null
+  private hyperspaceSystem: HyperspaceSystem | null = null
+  private tensionSystem: TensionSystem | null = null
+  private attractModeSystem: AttractModeSystem | null = null
+  private pressStartOverlay: HTMLElement | null = null
+  private attractModeActive = false
 
   // Particle systems
   private particleManager: ParticleManager | null = null
@@ -177,6 +187,11 @@ export class Game {
 
     // Create starfield background (persists across game sessions)
     this.starfield = new Starfield(this.sceneManager.getScene(), this.sceneManager.getCamera())
+
+    // Initialize attract mode system
+    this.attractModeSystem = new AttractModeSystem()
+    this.attractModeSystem.onStart(() => this.startAttractMode())
+    this.attractModeSystem.onExit(() => this.exitAttractMode())
   }
 
   /**
@@ -211,6 +226,11 @@ export class Game {
     this.pauseMenu.mount(document.body)
     this.gameOverScreen.mount(document.body)
     this.hud.mount(document.body)
+
+    // Wire up main menu interaction callback to reset attract mode idle timer
+    this.mainMenu.onInteraction(() => {
+      this.attractModeSystem?.resetIdleTimer()
+    })
   }
 
   /**
@@ -253,9 +273,11 @@ export class Game {
     // Create systems that emit events
     this.shipControlSystem = new ShipControlSystem(this.inputSystem, this.eventEmitter)
     this.weaponSystem = new WeaponSystem(this.inputSystem)
+    this.hyperspaceSystem = new HyperspaceSystem(this.inputSystem, this.eventEmitter)
 
     // Register all systems with the world (order matters!)
     this.world.registerSystem(this.shipControlSystem)
+    this.world.registerSystem(this.hyperspaceSystem)
     this.world.registerSystem(new PhysicsSystem())
     this.world.registerSystem(this.collisionSystem)
     this.world.registerSystem(new DamageSystem(this.collisionSystem))
@@ -267,8 +289,10 @@ export class Game {
     this.world.registerSystem(this.respawnSystem)
     this.powerUpSystem = new PowerUpSystem()
     this.world.registerSystem(this.powerUpSystem)
-    this.ufoSpawnSystem = new UFOSpawnSystem()
+    this.ufoSpawnSystem = new UFOSpawnSystem(this.audioManager)
     this.world.registerSystem(this.ufoSpawnSystem)
+    this.tensionSystem = new TensionSystem(this.audioManager)
+    this.world.registerSystem(this.tensionSystem)
     this.world.registerSystem(this.particleEmitterSystem)
     this.world.registerSystem(this.renderSystem)
     // Note: ParticleRenderSystem is not an ECS system, it's called manually
@@ -308,6 +332,8 @@ export class Game {
     this.shipControlSystem = null
     this.weaponSystem = null
     this.ufoSpawnSystem = null
+    this.hyperspaceSystem = null
+    this.tensionSystem = null
 
     // Clear particle systems
     this.particleManager = null
@@ -394,6 +420,110 @@ export class Game {
         // Show game over screen with final score and wave
         this.gameOverScreen?.show(data?.score ?? 0, data?.wave ?? 1)
         break
+    }
+  }
+
+  /**
+   * Start attract mode (demo gameplay).
+   */
+  private startAttractMode(): void {
+    if (this.attractModeActive) return
+
+    this.attractModeActive = true
+
+    // Initialize gameplay for demo
+    this.initializeGameplay()
+
+    // Create and show press start overlay
+    this.pressStartOverlay = createPressStartOverlay()
+    document.body.appendChild(this.pressStartOverlay)
+
+    // Activate attract mode AI
+    this.attractModeSystem?.activate()
+
+    // Hide main menu but keep title visible would require changes
+    // For now, just hide the main menu
+    this.mainMenu?.hide()
+  }
+
+  /**
+   * Exit attract mode and return to menu.
+   */
+  private exitAttractMode(): void {
+    if (!this.attractModeActive) return
+
+    this.attractModeActive = false
+
+    // Deactivate attract mode
+    this.attractModeSystem?.deactivate()
+
+    // Remove press start overlay
+    if (this.pressStartOverlay?.parentElement) {
+      this.pressStartOverlay.parentElement.removeChild(this.pressStartOverlay)
+    }
+    this.pressStartOverlay = null
+
+    // Reset gameplay state
+    this.resetGameplay()
+
+    // Show main menu
+    this.mainMenu?.show()
+
+    // Reset idle timer
+    this.attractModeSystem?.resetIdleTimer()
+  }
+
+  /**
+   * Update attract mode gameplay with AI control.
+   * @param deltaTimeMs - Time step in milliseconds
+   */
+  private updateAttractMode(deltaTimeMs: number): void {
+    if (!this.attractModeSystem) return
+
+    // Get AI input from attract mode system
+    const aiInput = this.attractModeSystem.update(this.world, deltaTimeMs)
+
+    // Apply AI input to ship control system
+    if (this.shipControlSystem && this.inputSystem) {
+      // Override input system with AI input
+      this.inputSystem.setOverrideInput({
+        movement: aiInput.movement,
+        shoot: aiInput.shoot
+      })
+    }
+
+    // Pass events between systems
+    this.passSystemEvents()
+
+    // Update all registered systems
+    this.world.update(deltaTimeMs)
+
+    // Update particle physics
+    if (this.particleManager) {
+      this.particleManager.updateParticles(deltaTimeMs)
+    }
+
+    // Update particle rendering
+    if (this.particleRenderSystem) {
+      this.particleRenderSystem.update(this.world, deltaTimeMs)
+    }
+
+    // Update starfield parallax
+    if (this.starfield) {
+      this.starfield.update(deltaTimeMs)
+    }
+
+    // In attract mode, if player dies, just respawn immediately
+    // without game over - it's a demo
+    if (this.respawnSystem) {
+      const events = this.respawnSystem.getEvents()
+      for (const event of events) {
+        if (event.type === 'playerDied') {
+          // Just restart attract mode with fresh gameplay
+          this.resetGameplay()
+          this.initializeGameplay()
+        }
+      }
     }
   }
 
@@ -488,14 +618,27 @@ export class Game {
    * @param deltaTime - Fixed time step in seconds
    */
   private update(deltaTime: number): void {
-    // Only update gameplay systems when in playing state
     const currentState = this.fsm.getCurrentStateName()
-    if (currentState !== 'playing') {
+    const deltaTimeMs = deltaTime * 1000
+
+    // Handle attract mode idle timer on main menu
+    if (currentState === 'mainMenu' && !this.attractModeActive) {
+      if (this.attractModeSystem?.updateIdleTimer(deltaTimeMs)) {
+        this.startAttractMode()
+      }
       return
     }
 
-    // Convert deltaTime to milliseconds (systems expect ms)
-    const deltaTimeMs = deltaTime * 1000
+    // Handle attract mode gameplay
+    if (this.attractModeActive) {
+      this.updateAttractMode(deltaTimeMs)
+      return
+    }
+
+    // Only update gameplay systems when in playing state
+    if (currentState !== 'playing') {
+      return
+    }
 
     // Pass events between systems BEFORE update (uses events from previous frame)
     this.passSystemEvents()
@@ -603,6 +746,13 @@ export class Game {
       // Update HUD score display
       this.hud?.updateScore(event.data.newScore)
     }
+
+    // Handle bonus life events (update lives on HUD)
+    const livesEvents = this.scoreSystem.getLivesEvents()
+    for (const event of livesEvents) {
+      // Update HUD lives display for bonus life
+      this.hud?.updateLives(event.data.newLives)
+    }
   }
 
   /**
@@ -615,6 +765,9 @@ export class Game {
     for (const event of events) {
       // Update HUD wave display
       this.hud?.updateWave(event.data.newWave)
+
+      // Trigger screen flash for wave start (classic arcade effect)
+      this.hud?.triggerWaveFlash()
     }
   }
 }

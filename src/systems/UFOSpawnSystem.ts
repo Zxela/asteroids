@@ -18,6 +18,7 @@
 
 import { Player } from '../components'
 import { UFO } from '../components/UFO'
+import type { AudioManager } from '../audio/AudioManager'
 import type { ComponentClass, System, World } from '../ecs/types'
 import { createUFO, getUFOSizeForScore } from '../entities/createUFO'
 
@@ -36,6 +37,15 @@ const INITIAL_SPAWN_DELAY_MIN = 15000 // 15 seconds
 
 /** Initial delay before first UFO spawn (milliseconds) */
 const INITIAL_SPAWN_DELAY_MAX = 20000 // 20 seconds
+
+/** Warning sound starts this many ms before UFO spawns */
+const WARNING_LEAD_TIME = 2000 // 2 seconds before spawn
+
+/** Initial warning beat interval (slowest) */
+const WARNING_INITIAL_INTERVAL = 600 // ms
+
+/** Final warning beat interval (fastest, just before spawn) */
+const WARNING_FINAL_INTERVAL = 150 // ms
 
 /**
  * UFO spawned event.
@@ -64,10 +74,24 @@ export interface UFOSpawnedEvent {
 export class UFOSpawnSystem implements System {
   private events: UFOSpawnedEvent[] = []
   private spawnTimer: number
+  private audioManager: AudioManager | null = null
 
-  constructor() {
+  /** Warning state tracking */
+  private warningActive = false
+  private warningSoundTimer = 0
+  private warningElapsed = 0
+
+  constructor(audioManager?: AudioManager | null) {
     // Set initial spawn delay
     this.spawnTimer = this.getInitialDelay()
+    this.audioManager = audioManager ?? null
+  }
+
+  /**
+   * Set the audio manager for warning sounds.
+   */
+  setAudioManager(audioManager: AudioManager): void {
+    this.audioManager = audioManager
   }
 
   /**
@@ -80,14 +104,34 @@ export class UFOSpawnSystem implements System {
     // Check if a UFO already exists
     const existingUFOs = world.query(UFOClass)
     if (existingUFOs.length > 0) {
-      // Reset timer while UFO is active
+      // Reset warning state while UFO is active
+      this.warningActive = false
+      this.warningElapsed = 0
       return
     }
 
     // Update spawn timer
     this.spawnTimer -= deltaTime
 
+    // Check if we should start warning sounds
+    if (this.spawnTimer <= WARNING_LEAD_TIME && !this.warningActive) {
+      this.warningActive = true
+      this.warningElapsed = 0
+      this.warningSoundTimer = 0
+      // Play first warning immediately
+      this.playWarningSound()
+    }
+
+    // Update warning sounds if active
+    if (this.warningActive) {
+      this.updateWarning(deltaTime)
+    }
+
     if (this.spawnTimer <= 0) {
+      // Stop warning sounds
+      this.warningActive = false
+      this.warningElapsed = 0
+
       // Get player score for UFO size selection
       const playerScore = this.getPlayerScore(world)
 
@@ -106,6 +150,35 @@ export class UFOSpawnSystem implements System {
 
       // Reset timer for next spawn
       this.spawnTimer = this.getSpawnInterval()
+    }
+  }
+
+  /**
+   * Update warning sound timing.
+   * Beat interval decreases as UFO spawn approaches.
+   */
+  private updateWarning(deltaTime: number): void {
+    this.warningElapsed += deltaTime
+    this.warningSoundTimer += deltaTime
+
+    // Calculate current interval (interpolate from slow to fast)
+    const progress = Math.min(this.warningElapsed / WARNING_LEAD_TIME, 1)
+    const currentInterval =
+      WARNING_INITIAL_INTERVAL + (WARNING_FINAL_INTERVAL - WARNING_INITIAL_INTERVAL) * progress
+
+    // Play warning sound at current interval
+    if (this.warningSoundTimer >= currentInterval) {
+      this.playWarningSound()
+      this.warningSoundTimer = 0
+    }
+  }
+
+  /**
+   * Play the UFO warning sound.
+   */
+  private playWarningSound(): void {
+    if (this.audioManager) {
+      this.audioManager.playSound('ufoWarning', { volume: 0.6 })
     }
   }
 
@@ -144,6 +217,9 @@ export class UFOSpawnSystem implements System {
   reset(): void {
     this.spawnTimer = this.getInitialDelay()
     this.events = []
+    this.warningActive = false
+    this.warningElapsed = 0
+    this.warningSoundTimer = 0
   }
 
   /**

@@ -21,6 +21,7 @@ import { Vector2 } from 'three'
 export type GameAction =
   | 'shoot'
   | 'pause'
+  | 'hyperspace'
   | 'switchWeapon1'
   | 'switchWeapon2'
   | 'switchWeapon3'
@@ -62,6 +63,9 @@ export class InputSystem {
 
   /** Event target for keyboard events (injected for testability) */
   private readonly eventTarget: KeyboardEventTarget
+
+  /** Override input for AI/attract mode */
+  private overrideInput: { movement: { x: number; y: number }; shoot: boolean } | null = null
 
   /**
    * Creates a new InputSystem instance and registers keyboard event listeners.
@@ -111,6 +115,9 @@ export class InputSystem {
     if (key === 'escape') {
       this.currentActions.add('pause')
     }
+    if (key === 'shift' || key === 'h') {
+      this.currentActions.add('hyperspace')
+    }
     if (key === '1') {
       this.currentActions.add('switchWeapon1')
     }
@@ -148,6 +155,9 @@ export class InputSystem {
     if (key === 'escape') {
       this.currentActions.delete('pause')
     }
+    if (key === 'shift' || key === 'h') {
+      this.currentActions.delete('hyperspace')
+    }
     if (key === '1') {
       this.currentActions.delete('switchWeapon1')
     }
@@ -169,6 +179,22 @@ export class InputSystem {
   }
 
   /**
+   * Sets override input for AI/attract mode.
+   * When set, this input takes priority over keyboard input.
+   * @param input - Override input or null to clear
+   */
+  public setOverrideInput(input: { movement: { x: number; y: number }; shoot: boolean } | null): void {
+    this.overrideInput = input
+  }
+
+  /**
+   * Clears any override input.
+   */
+  public clearOverrideInput(): void {
+    this.overrideInput = null
+  }
+
+  /**
    * Gets the current movement input as a normalized Vector2.
    *
    * X-axis: -1 (left) to 1 (right)
@@ -179,6 +205,12 @@ export class InputSystem {
    * @returns A clone of the movement input vector (normalized to unit circle)
    */
   public getMovementInput(): Vector2 {
+    // Use override input if set (for AI/attract mode)
+    if (this.overrideInput) {
+      this.movementInput.set(this.overrideInput.movement.x, this.overrideInput.movement.y)
+      return this.movementInput.clone()
+    }
+
     // Reset movement vector
     this.movementInput.set(0, 0)
 
@@ -224,6 +256,10 @@ export class InputSystem {
    * @returns True if the action is currently active
    */
   public hasAction(action: GameAction): boolean {
+    // Check override input for shoot action
+    if (this.overrideInput && action === 'shoot') {
+      return this.overrideInput.shoot
+    }
     return this.currentActions.has(action)
   }
 
@@ -248,5 +284,6 @@ export class InputSystem {
     this.keysPressed.clear()
     this.currentActions.clear()
     this.movementInput.set(0, 0)
+    this.overrideInput = null
   }
 }

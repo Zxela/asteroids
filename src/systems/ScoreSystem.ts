@@ -11,11 +11,13 @@
  */
 
 import { Player } from '../components/Player'
+import { gameConfig } from '../config/gameConfig'
 import type { ComponentClass, System, World } from '../ecs/types'
 import type {
   AsteroidDestroyedEvent,
   AsteroidSize,
   BossDefeatedEvent,
+  LivesChangedEvent,
   ScoreChangedEvent
 } from '../types'
 
@@ -41,18 +43,44 @@ const PlayerClass = Player as unknown as ComponentClass<Player>
  * const events = scoreSystem.getEvents()
  * ```
  */
+/**
+ * Event type for bonus life awarded.
+ */
+export interface BonusLifeEvent {
+  type: 'bonusLife'
+  newLives: number
+  scoreThreshold: number
+}
+
 export class ScoreSystem implements System {
   /** System type identifier */
   readonly systemType = 'score' as const
 
-  /** Events emitted during the current frame */
+  /** Score change events emitted during the current frame */
   private events: ScoreChangedEvent[] = []
+
+  /** Lives change events emitted during the current frame */
+  private livesEvents: LivesChangedEvent[] = []
+
+  /** Bonus life events emitted during the current frame */
+  private bonusLifeEvents: BonusLifeEvent[] = []
 
   /** Asteroid destroyed events to process this frame */
   private asteroidDestroyedEvents: AsteroidDestroyedEvent[] = []
 
   /** Boss defeated events to process this frame */
   private bossDefeatedEvents: BossDefeatedEvent[] = []
+
+  /** Next score threshold for bonus life */
+  private nextBonusLifeThreshold: number
+
+  /**
+   * Create a new ScoreSystem.
+   * Initializes bonus life threshold from config.
+   */
+  constructor() {
+    this.nextBonusLifeThreshold = gameConfig.gameplay.bonusLife.firstThreshold
+  }
 
   /**
    * Set asteroid destroyed events from AsteroidDestructionSystem.
@@ -86,6 +114,8 @@ export class ScoreSystem implements System {
   update(world: World, _deltaTime: number): void {
     // Clear events from previous frame
     this.events = []
+    this.livesEvents = []
+    this.bonusLifeEvents = []
 
     // Query for player entity
     const playerEntities = world.query(PlayerClass)
@@ -122,6 +152,9 @@ export class ScoreSystem implements System {
       // Update player score
       player.addScore(pointsAwarded)
 
+      // Check for bonus life threshold crossing
+      this.checkBonusLife(player, previousScore)
+
       // Emit scoreChanged event
       const scoreEvent: ScoreChangedEvent = {
         type: 'scoreChanged',
@@ -143,6 +176,9 @@ export class ScoreSystem implements System {
 
       // Update player score
       player.addScore(bonusScore)
+
+      // Check for bonus life threshold crossing
+      this.checkBonusLife(player, previousScore)
 
       // Emit scoreChanged event with 'boss' reason
       const scoreEvent: ScoreChangedEvent = {
@@ -183,7 +219,51 @@ export class ScoreSystem implements System {
   }
 
   /**
-   * Get events emitted during the current frame.
+   * Check if player has crossed a bonus life threshold.
+   * Awards a life and advances to next threshold if crossed.
+   *
+   * @param player - The player component
+   * @param previousScore - Score before this update
+   */
+  private checkBonusLife(player: Player, _previousScore: number): void {
+    // Check if we crossed the threshold
+    while (player.score >= this.nextBonusLifeThreshold) {
+      const previousLives = player.lives
+      player.addLife()
+
+      // Emit bonus life event
+      const bonusEvent: BonusLifeEvent = {
+        type: 'bonusLife',
+        newLives: player.lives,
+        scoreThreshold: this.nextBonusLifeThreshold
+      }
+      this.bonusLifeEvents.push(bonusEvent)
+
+      // Emit lives changed event
+      const livesEvent: LivesChangedEvent = {
+        type: 'livesChanged',
+        timestamp: Date.now(),
+        data: {
+          previousLives,
+          newLives: player.lives,
+          delta: 1,
+          reason: 'extraLife'
+        }
+      }
+      this.livesEvents.push(livesEvent)
+
+      // Calculate next threshold
+      // After first threshold, subsequent thresholds are spaced by subsequentInterval
+      if (this.nextBonusLifeThreshold === gameConfig.gameplay.bonusLife.firstThreshold) {
+        this.nextBonusLifeThreshold += gameConfig.gameplay.bonusLife.subsequentInterval
+      } else {
+        this.nextBonusLifeThreshold += gameConfig.gameplay.bonusLife.subsequentInterval
+      }
+    }
+  }
+
+  /**
+   * Get score change events emitted during the current frame.
    *
    * Events are cleared at the start of each update cycle.
    *
@@ -191,5 +271,30 @@ export class ScoreSystem implements System {
    */
   getEvents(): ScoreChangedEvent[] {
     return this.events
+  }
+
+  /**
+   * Get lives change events emitted during the current frame.
+   *
+   * @returns Array of lives change events
+   */
+  getLivesEvents(): LivesChangedEvent[] {
+    return this.livesEvents
+  }
+
+  /**
+   * Get bonus life events emitted during the current frame.
+   *
+   * @returns Array of bonus life events
+   */
+  getBonusLifeEvents(): BonusLifeEvent[] {
+    return this.bonusLifeEvents
+  }
+
+  /**
+   * Reset the bonus life threshold (for new game).
+   */
+  resetBonusLifeThreshold(): void {
+    this.nextBonusLifeThreshold = gameConfig.gameplay.bonusLife.firstThreshold
   }
 }

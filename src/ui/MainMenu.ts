@@ -44,6 +44,9 @@ export class MainMenu {
   private instructionsOverlay: HTMLElement | null = null
   private readonly gameStateMachine: GameStateMachineLike
 
+  /** Callback when user interacts with menu (for idle timer reset) */
+  private onInteractionCallback: (() => void) | null = null
+
   constructor(gameStateMachine: GameStateMachineLike) {
     this.gameStateMachine = gameStateMachine
     this.container = this.createContainer()
@@ -51,6 +54,24 @@ export class MainMenu {
 
     this.assembleMenu()
     this.setupEventListeners()
+  }
+
+  /**
+   * Sets callback for when user interacts with the menu.
+   * Used to reset attract mode idle timer.
+   * @param callback - The callback function
+   */
+  onInteraction(callback: () => void): void {
+    this.onInteractionCallback = callback
+  }
+
+  /**
+   * Triggers the interaction callback if set.
+   */
+  private notifyInteraction(): void {
+    if (this.onInteractionCallback) {
+      this.onInteractionCallback()
+    }
   }
 
   /**
@@ -395,6 +416,9 @@ export class MainMenu {
    * @param event - The keyboard event
    */
   handleKeyDown(event: KeyboardEvent): void {
+    // Notify interaction for idle timer reset
+    this.notifyInteraction()
+
     switch (event.key) {
       case 'ArrowUp':
         this.focusedIndex = this.focusedIndex <= 0 ? this.buttons.length - 1 : this.focusedIndex - 1

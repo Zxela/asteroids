@@ -58,16 +58,18 @@ const EXPLOSION_CONFIG = {
 
 /**
  * Thrust particle configuration.
+ * Classic arcade style: fewer, larger, flickering particles.
  */
 const THRUST_CONFIG = {
-  rate: 50, // particles per second
-  minSpeed: 50,
-  maxSpeed: 100,
-  minSize: 2,
-  maxSize: 4,
-  minLifetime: 200,
-  maxLifetime: 400,
-  shipRearOffset: 10 // distance behind ship center
+  rate: 15, // particles per second (fewer for staccato effect)
+  minSpeed: 30,
+  maxSpeed: 60,
+  minSize: 4, // Larger particles
+  maxSize: 8,
+  minLifetime: 80, // Shorter lifetime for staccato
+  maxLifetime: 150,
+  shipRearOffset: 12, // distance behind ship center
+  flickerChance: 0.5 // 50% chance to skip spawn for flicker effect
 }
 
 /**
@@ -293,6 +295,7 @@ export class ParticleEmitterSystem implements System {
 
   /**
    * Emit thrust particles based on time accumulator.
+   * Uses classic arcade-style flickering (random skip) for authentic feel.
    *
    * @param deltaTime - Time since last update in milliseconds
    */
@@ -308,7 +311,10 @@ export class ParticleEmitterSystem implements System {
       this.thrustAccumulator -= particlesToEmit * particleInterval
 
       for (let i = 0; i < particlesToEmit; i++) {
-        this.spawnThrustParticle()
+        // Classic arcade flicker: randomly skip particles for binary on/off effect
+        if (Math.random() > THRUST_CONFIG.flickerChance) {
+          this.spawnThrustParticle()
+        }
       }
     }
   }

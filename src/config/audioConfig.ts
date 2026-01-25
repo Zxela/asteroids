@@ -43,6 +43,10 @@ export interface SfxConfig {
   readonly powerup: AudioDefinition
   /** Ship thrust/engine sound */
   readonly thrust: AudioDefinition
+  /** Heartbeat/tension beat sound */
+  readonly beat: AudioDefinition
+  /** UFO warning sound (whomp whomp) */
+  readonly ufoWarning: AudioDefinition
 }
 
 /**
@@ -119,6 +123,18 @@ export const audioConfig: AudioConfig = {
       id: 'thrust',
       path: '/assets/audio/thrust.mp3',
       volume: 0.4,
+      preload: true
+    },
+    beat: {
+      id: 'beat',
+      path: '/assets/audio/beat.mp3',
+      volume: 0.5,
+      preload: true
+    },
+    ufoWarning: {
+      id: 'ufoWarning',
+      path: '/assets/audio/ufo_warning.mp3',
+      volume: 0.6,
       preload: true
     }
   },

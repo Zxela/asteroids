@@ -49,6 +49,7 @@ export class HUD {
   private ammoDisplayContainer: HTMLElement
   private ammoDisplayValue: HTMLElement
   private powerUpDisplayContainer: HTMLElement
+  private flashOverlay: HTMLElement
   private activeIcons: Map<PowerUpType, PowerUpIconElement> = new Map()
   private parentElement: HTMLElement | null = null
 
@@ -73,6 +74,7 @@ export class HUD {
     this.ammoDisplayContainer = ammoDisplay.container
     this.ammoDisplayValue = ammoDisplay.value
     this.powerUpDisplayContainer = this.createPowerUpDisplay()
+    this.flashOverlay = this.createFlashOverlay()
 
     // Add elements to container
     this.container.appendChild(this.scoreElement)
@@ -82,6 +84,7 @@ export class HUD {
     this.container.appendChild(this.energyBarContainer)
     this.container.appendChild(this.ammoDisplayContainer)
     this.container.appendChild(this.powerUpDisplayContainer)
+    this.container.appendChild(this.flashOverlay)
 
     // Initialize with default values
     this.updateScore(0)
@@ -616,5 +619,41 @@ export class HUD {
    */
   getContainer(): HTMLElement {
     return this.container
+  }
+
+  /**
+   * Creates the flash overlay element for wave start effects.
+   * Hidden by default, triggered by triggerWaveFlash().
+   *
+   * @returns The flash overlay HTMLElement
+   */
+  private createFlashOverlay(): HTMLElement {
+    const overlay = document.createElement('div')
+    overlay.style.position = 'fixed'
+    overlay.style.top = '0'
+    overlay.style.left = '0'
+    overlay.style.width = '100%'
+    overlay.style.height = '100%'
+    overlay.style.backgroundColor = 'white'
+    overlay.style.opacity = '0'
+    overlay.style.pointerEvents = 'none'
+    overlay.style.transition = 'opacity 200ms ease-out'
+    overlay.style.zIndex = '999'
+    return overlay
+  }
+
+  /**
+   * Triggers a white screen flash effect for wave transitions.
+   * Classic arcade visual feedback when a new wave begins.
+   * Flashes from 30% opacity to 0 over 200ms.
+   */
+  triggerWaveFlash(): void {
+    // Set initial flash opacity
+    this.flashOverlay.style.opacity = '0.3'
+
+    // Fade out after a brief moment
+    requestAnimationFrame(() => {
+      this.flashOverlay.style.opacity = '0'
+    })
   }
 }

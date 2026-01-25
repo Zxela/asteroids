@@ -49,6 +49,28 @@ export interface ScoringConfig {
 /**
  * Gameplay configuration - lives, timing, and scoring.
  */
+/**
+ * Hyperspace teleport configuration.
+ */
+export interface HyperspaceConfig {
+  /** Cooldown between hyperspace uses (milliseconds) */
+  readonly cooldown: number
+  /** Invulnerability duration after successful warp (milliseconds) */
+  readonly invulnerabilityDuration: number
+  /** Risk of explosion on re-entry (0-1) */
+  readonly explosionRisk: number
+}
+
+/**
+ * Bonus life configuration.
+ */
+export interface BonusLifeConfig {
+  /** Score threshold for first bonus life */
+  readonly firstThreshold: number
+  /** Score interval for subsequent bonus lives */
+  readonly subsequentInterval: number
+}
+
 export interface GameplayConfig {
   /** Starting lives for new game */
   readonly initialLives: number
@@ -60,6 +82,10 @@ export interface GameplayConfig {
   readonly scoring: ScoringConfig
   /** Maximum player projectiles on screen at once (classic Asteroids: 4) */
   readonly maxPlayerProjectiles: number
+  /** Hyperspace teleport settings */
+  readonly hyperspace: HyperspaceConfig
+  /** Bonus life score thresholds */
+  readonly bonusLife: BonusLifeConfig
 }
 
 /**
@@ -294,7 +320,7 @@ export const gameConfig: GameConfig = {
   physics: {
     shipAcceleration: 500, // units/s^2 - reaches max speed in ~0.6 seconds
     shipMaxSpeed: 300,
-    shipRotationSpeed: Math.PI,
+    shipRotationSpeed: Math.PI * 1.5, // 270°/s - snappier classic arcade feel
     damping: 0.98, // Linear damping - ship retains 98% velocity per second (classic drift)
     asteroidSpeeds: {
       large: 50,
@@ -312,7 +338,16 @@ export const gameConfig: GameConfig = {
       smallAsteroid: 100,
       bossMultiplier: 1000
     },
-    maxPlayerProjectiles: 4
+    maxPlayerProjectiles: 4,
+    hyperspace: {
+      cooldown: 3000, // 3 second cooldown
+      invulnerabilityDuration: 500, // 500ms invulnerability on success
+      explosionRisk: 0.15 // 15% chance of explosion on re-entry
+    },
+    bonusLife: {
+      firstThreshold: 10000, // First bonus life at 10,000 points
+      subsequentInterval: 50000 // Additional lives every 50,000 points after
+    }
   },
   wave: {
     baseAsteroidCount: 3,

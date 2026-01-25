@@ -94,12 +94,13 @@ export class ShipControlSystem implements System {
         continue
       }
 
-      // Apply rotation based on horizontal input (left/right)
+      // Apply rotation directly to transform for classic instant-response feel
       // Left input (negative x) = positive rotation (counter-clockwise)
       // Right input (positive x) = negative rotation (clockwise)
+      // Classic Asteroids: Direct rotation - no angular velocity, immediate response
       if (Math.abs(movement.x) > 0.001) {
         const rotationAmount = -movement.x * gameConfig.physics.shipRotationSpeed * dt
-        velocity.angular.z += rotationAmount
+        transform.rotation.z += rotationAmount
       }
 
       // Apply acceleration based on vertical input (up only, not down)

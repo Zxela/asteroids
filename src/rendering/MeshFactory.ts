@@ -122,6 +122,9 @@ function createGeometry(meshType: MeshType, material: THREE.Material): THREE.Obj
     case 'ship':
       return useModern ? createModernShip(material) : createShip(material)
 
+    case 'ship_debris':
+      return createShipDebris(material)
+
     case 'asteroid_large':
       return useModern
         ? createModernAsteroid(ASTEROID_LARGE_RADIUS, material)
@@ -210,6 +213,58 @@ function createShip(material: THREE.Material): THREE.Object3D {
 
   const mesh = new THREE.Mesh(geometry, material)
   // No rotation needed - ship faces +Y which matches forward direction
+  return mesh
+}
+
+/**
+ * Create ship debris mesh - tumbling line segment/wedge piece.
+ * Classic Asteroids ship breaks into vector-style line segments.
+ * Each debris piece is a simple line or small wedge shape.
+ */
+function createShipDebris(material: THREE.Material): THREE.Object3D {
+  // Create a simple line/wedge shape for vector-style debris
+  // Randomly choose between a few debris shapes for variety
+  const shapeType = Math.floor(Math.random() * 3)
+
+  const shape = new THREE.Shape()
+
+  switch (shapeType) {
+    case 0:
+      // Wing fragment - triangular piece
+      shape.moveTo(0, 6)
+      shape.lineTo(4, -3)
+      shape.lineTo(-1, -2)
+      shape.closePath()
+      break
+    case 1:
+      // Nose fragment - elongated triangle
+      shape.moveTo(0, 8)
+      shape.lineTo(2, -2)
+      shape.lineTo(-2, -2)
+      shape.closePath()
+      break
+    case 2:
+    default:
+      // Body fragment - quadrilateral
+      shape.moveTo(-2, 4)
+      shape.lineTo(3, 2)
+      shape.lineTo(2, -3)
+      shape.lineTo(-3, -2)
+      shape.closePath()
+      break
+  }
+
+  const extrudeSettings = {
+    depth: 2,
+    bevelEnabled: false
+  }
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+  geometry.center()
+
+  // Scale down to appropriate debris size
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.scale.setScalar(0.6)
+
   return mesh
 }
 
@@ -568,6 +623,19 @@ function createMeshTypeMaterial(meshType: MeshType, materialType: MaterialType):
       emissiveIntensity: emissive.ship,
       roughness: materials.roughness,
       metalness: materials.metalness
+    })
+  }
+
+  // Ship debris material: Same as ship but with transparency for fade-out
+  if (meshType === 'ship_debris') {
+    return new THREE.MeshStandardMaterial({
+      color: palette.ship,
+      emissive: palette.shipEmissive,
+      emissiveIntensity: emissive.ship,
+      roughness: materials.roughness,
+      metalness: materials.metalness,
+      transparent: true,
+      opacity: 1.0
     })
   }
 

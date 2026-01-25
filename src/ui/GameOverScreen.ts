@@ -16,6 +16,7 @@
  */
 
 import type { LeaderboardEntry } from '../types/game'
+import { ArcadeInitials } from './ArcadeInitials'
 
 /**
  * Interface for LeaderboardStorage to save scores.
@@ -51,7 +52,8 @@ export class GameOverScreen {
   private scoreElement: HTMLElement
   private waveElement: HTMLElement
   private nameLabelElement: HTMLElement
-  private nameInput: HTMLInputElement
+  private arcadeInitials: ArcadeInitials
+  private initialsContainer: HTMLElement
   private submitButton: HTMLButtonElement
   private tryAgainButton: HTMLButtonElement
   private mainMenuButton: HTMLButtonElement
@@ -61,6 +63,7 @@ export class GameOverScreen {
   private currentWave = 0
   private isVisible = false
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null
+  private hasSubmitted = false
 
   private readonly gameStateMachine: GameStateMachineInterface
   private readonly leaderboardStorage: LeaderboardStorage
@@ -74,7 +77,9 @@ export class GameOverScreen {
     this.scoreElement = this.createScoreDisplay()
     this.waveElement = this.createWaveDisplay()
     this.nameLabelElement = this.createNameLabel()
-    this.nameInput = this.createNameInput()
+    this.initialsContainer = this.createInitialsContainer()
+    this.arcadeInitials = new ArcadeInitials((initials) => this.handleInitialsConfirmed(initials))
+    this.arcadeInitials.mount(this.initialsContainer)
     this.submitButton = this.createSubmitButton()
     this.tryAgainButton = this.createTryAgainButton()
     this.mainMenuButton = this.createMainMenuButton()
@@ -87,7 +92,8 @@ export class GameOverScreen {
     contentWrapper.appendChild(this.scoreElement)
     contentWrapper.appendChild(this.waveElement)
     contentWrapper.appendChild(this.nameLabelElement)
-    contentWrapper.appendChild(this.nameInput)
+    contentWrapper.appendChild(this.createInstructionsLabel())
+    contentWrapper.appendChild(this.initialsContainer)
     contentWrapper.appendChild(this.createButtonContainer())
 
     // Add content wrapper to container
@@ -180,31 +186,43 @@ export class GameOverScreen {
   private createNameLabel(): HTMLElement {
     const label = document.createElement('label')
     label.setAttribute('data-testid', 'name-label')
-    label.textContent = 'Enter your name:'
-    label.style.fontSize = '18px'
-    label.style.color = '#ffffff'
-    label.style.marginTop = '10px'
+    label.textContent = 'ENTER YOUR INITIALS'
+    label.style.fontSize = '20px'
+    label.style.color = '#ffff00'
+    label.style.marginTop = '20px'
+    label.style.letterSpacing = '3px'
     return label
   }
 
   /**
-   * Creates the name input field.
+   * Creates the instructions label.
    */
-  private createNameInput(): HTMLInputElement {
-    const input = document.createElement('input')
-    input.type = 'text'
-    input.placeholder = 'Player'
-    input.maxLength = 20
-    input.style.padding = '10px 20px'
-    input.style.fontSize = '18px'
-    input.style.width = '200px'
-    input.style.textAlign = 'center'
-    input.style.border = '2px solid #00ffff'
-    input.style.borderRadius = '5px'
-    input.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
-    input.style.color = '#ffffff'
-    input.style.outline = 'none'
-    return input
+  private createInstructionsLabel(): HTMLElement {
+    const label = document.createElement('div')
+    label.textContent = 'Use arrow keys to change letters'
+    label.style.fontSize = '12px'
+    label.style.color = '#888888'
+    label.style.marginBottom = '10px'
+    return label
+  }
+
+  /**
+   * Creates the container for the arcade initials component.
+   */
+  private createInitialsContainer(): HTMLElement {
+    const container = document.createElement('div')
+    container.style.marginTop = '10px'
+    container.style.marginBottom = '20px'
+    return container
+  }
+
+  /**
+   * Handles when initials are confirmed (Enter pressed).
+   */
+  private handleInitialsConfirmed(_initials: string): void {
+    if (!this.hasSubmitted) {
+      this.handleSubmit()
+    }
   }
 
   /**
@@ -281,13 +299,6 @@ export class GameOverScreen {
       this.handleMainMenu()
     })
 
-    // Enter key in name input
-    this.nameInput.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        this.handleSubmit()
-      }
-    })
-
     // Global keyboard handler for ESC key
     this.keydownHandler = (e: KeyboardEvent) => {
       if (this.isVisible && e.key === 'Escape') {
@@ -298,17 +309,12 @@ export class GameOverScreen {
 
   /**
    * Handles the submit action.
-   * Validates name length and saves to leaderboard.
+   * Gets initials from arcade input and saves to leaderboard.
    */
   private handleSubmit(): void {
-    const name = this.nameInput.value.trim()
+    if (this.hasSubmitted) return
 
-    // Validate name length (3-20 characters)
-    if (name.length < 3) {
-      // Invalid name, don't submit
-      this.nameInput.style.borderColor = '#ff4444'
-      return
-    }
+    const name = this.arcadeInitials.getInitials()
 
     // Create leaderboard entry
     const entry: LeaderboardEntry = {
@@ -321,13 +327,17 @@ export class GameOverScreen {
     // Save to leaderboard
     this.leaderboardStorage.saveScore(entry)
 
+    // Mark as submitted
+    this.hasSubmitted = true
+
+    // Deactivate initials input
+    this.arcadeInitials.deactivate()
+
     // Show success feedback and disable form
     this.submitButton.textContent = 'Saved!'
     this.submitButton.disabled = true
     this.submitButton.style.borderColor = '#00ff00'
     this.submitButton.style.color = '#00ff00'
-    this.nameInput.disabled = true
-    this.nameInput.style.borderColor = '#00ff00'
   }
 
   /**
@@ -355,15 +365,14 @@ export class GameOverScreen {
   show(finalScore: number, waveReached: number): void {
     this.currentScore = finalScore
     this.currentWave = waveReached
+    this.hasSubmitted = false
 
     // Update displays
-    this.scoreElement.textContent = `Final Score: ${finalScore}`
+    this.scoreElement.textContent = `Final Score: ${finalScore.toLocaleString()}`
     this.waveElement.textContent = `Wave Reached: ${waveReached}`
 
-    // Reset name input and submit button
-    this.nameInput.value = ''
-    this.nameInput.disabled = false
-    this.nameInput.style.borderColor = '#00ffff'
+    // Reset arcade initials and submit button
+    this.arcadeInitials.reset()
     this.submitButton.textContent = 'Submit'
     this.submitButton.disabled = false
     this.submitButton.style.borderColor = '#00ff00'
@@ -378,8 +387,8 @@ export class GameOverScreen {
       document.addEventListener('keydown', this.keydownHandler)
     }
 
-    // Focus name input
-    setTimeout(() => this.nameInput.focus(), 100)
+    // Activate arcade initials input
+    setTimeout(() => this.arcadeInitials.activate(), 100)
   }
 
   /**
@@ -388,6 +397,9 @@ export class GameOverScreen {
   hide(): void {
     this.container.style.display = 'none'
     this.isVisible = false
+
+    // Deactivate arcade initials
+    this.arcadeInitials.deactivate()
 
     // Remove global keyboard listener
     if (this.keydownHandler) {
