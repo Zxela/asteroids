@@ -1,12 +1,16 @@
 /**
  * Settings Panel Component
  *
- * Provides volume controls (SFX and Music sliders 0-100)
- * with localStorage persistence. Designed to be reused by
- * both MainMenu and PauseMenu.
+ * Provides volume controls (SFX and Music sliders 0-100),
+ * visual theme selection (classic, neon, retro),
+ * and mesh quality toggle (classic vs modern) with localStorage persistence.
+ * Designed to be reused by both MainMenu and PauseMenu.
  *
  * @module ui/SettingsPanel
  */
+
+import { MeshFactory, type MeshQuality } from '../rendering/MeshFactory'
+import { THEME_IDS, type ThemeId, ThemeManager } from '../themes'
 
 /** Storage keys for settings persistence */
 const STORAGE_KEYS = {
@@ -14,8 +18,15 @@ const STORAGE_KEYS = {
   MUSIC_VOLUME: 'asteroids-music-volume'
 } as const
 
+/** Theme display names for UI */
+const THEME_DISPLAY_NAMES: Record<ThemeId, string> = {
+  classic: 'Classic Vector',
+  neon: 'Neon Glow',
+  retro: 'Retro CRT'
+}
+
 /**
- * SettingsPanel - Modal settings panel with volume controls.
+ * SettingsPanel - Modal settings panel with volume controls and theme selection.
  *
  * @example
  * ```typescript
@@ -30,6 +41,10 @@ export class SettingsPanel {
   private musicSlider: HTMLInputElement
   private sfxValueDisplay: HTMLElement
   private musicValueDisplay: HTMLElement
+  private themeSelect: HTMLSelectElement
+  private themeDescription: HTMLElement
+  private meshQualityToggle: HTMLButtonElement
+  private meshQualityLabel: HTMLElement
   private backButton: HTMLButtonElement
   private onCloseCallback: (() => void) | null = null
   private parentElement: HTMLElement | null = null
@@ -40,6 +55,10 @@ export class SettingsPanel {
     this.musicSlider = this.createSlider('music')
     this.sfxValueDisplay = this.createValueDisplay('sfx')
     this.musicValueDisplay = this.createValueDisplay('music')
+    this.themeSelect = this.createThemeSelect()
+    this.themeDescription = this.createThemeDescription()
+    this.meshQualityToggle = this.createMeshQualityToggle()
+    this.meshQualityLabel = this.createMeshQualityLabel()
     this.backButton = this.createBackButton()
 
     this.assemblePanel()
@@ -99,6 +118,76 @@ export class SettingsPanel {
   }
 
   /**
+   * Creates the theme select dropdown.
+   */
+  private createThemeSelect(): HTMLSelectElement {
+    const select = document.createElement('select')
+    select.setAttribute('data-settings', 'theme-select')
+    select.style.padding = '8px 16px'
+    select.style.fontSize = '14px'
+    select.style.cursor = 'pointer'
+    select.style.backgroundColor = '#001428'
+    select.style.border = '2px solid #00ffff'
+    select.style.color = '#00ffff'
+    select.style.fontFamily = 'monospace'
+    select.style.minWidth = '160px'
+    select.style.borderRadius = '4px'
+
+    // Add options for each theme
+    for (const themeId of THEME_IDS) {
+      const option = document.createElement('option')
+      option.value = themeId
+      option.textContent = THEME_DISPLAY_NAMES[themeId]
+      option.style.backgroundColor = '#001428'
+      option.style.color = '#00ffff'
+      select.appendChild(option)
+    }
+
+    return select
+  }
+
+  /**
+   * Creates the theme description element.
+   */
+  private createThemeDescription(): HTMLElement {
+    const description = document.createElement('span')
+    description.setAttribute('data-settings', 'theme-description')
+    description.style.marginLeft = '10px'
+    description.style.fontSize = '14px'
+    description.style.color = '#888888'
+    return description
+  }
+
+  /**
+   * Creates the mesh quality toggle button.
+   */
+  private createMeshQualityToggle(): HTMLButtonElement {
+    const button = document.createElement('button')
+    button.setAttribute('data-settings', 'mesh-quality-toggle')
+    button.style.padding = '8px 20px'
+    button.style.fontSize = '14px'
+    button.style.cursor = 'pointer'
+    button.style.backgroundColor = 'transparent'
+    button.style.border = '2px solid #00ffff'
+    button.style.color = '#00ffff'
+    button.style.fontFamily = 'monospace'
+    button.style.minWidth = '100px'
+    return button
+  }
+
+  /**
+   * Creates the mesh quality label element.
+   */
+  private createMeshQualityLabel(): HTMLElement {
+    const label = document.createElement('span')
+    label.setAttribute('data-settings', 'mesh-quality-label')
+    label.style.marginLeft = '10px'
+    label.style.fontSize = '14px'
+    label.style.color = '#888888'
+    return label
+  }
+
+  /**
    * Creates the back button.
    */
   private createBackButton(): HTMLButtonElement {
@@ -126,7 +215,7 @@ export class SettingsPanel {
     panelContent.style.borderRadius = '10px'
     panelContent.style.border = '2px solid #00ffff'
     panelContent.style.textAlign = 'center'
-    panelContent.style.minWidth = '300px'
+    panelContent.style.minWidth = '350px'
 
     // Title
     const title = document.createElement('h2')
@@ -150,6 +239,14 @@ export class SettingsPanel {
       this.musicValueDisplay
     )
     panelContent.appendChild(musicRow)
+
+    // Visual Theme
+    const themeRow = this.createThemeRow()
+    panelContent.appendChild(themeRow)
+
+    // Mesh Quality
+    const meshQualityRow = this.createMeshQualityRow()
+    panelContent.appendChild(meshQualityRow)
 
     // Back button
     panelContent.appendChild(this.backButton)
@@ -190,6 +287,61 @@ export class SettingsPanel {
   }
 
   /**
+   * Creates the visual theme selection row.
+   */
+  private createThemeRow(): HTMLElement {
+    const row = document.createElement('div')
+    row.style.marginBottom = '20px'
+    row.style.textAlign = 'left'
+
+    const label = document.createElement('label')
+    label.setAttribute('data-settings', 'theme-label')
+    label.textContent = 'Visual Theme'
+    label.style.display = 'block'
+    label.style.marginBottom = '8px'
+    label.style.fontSize = '16px'
+
+    const selectContainer = document.createElement('div')
+    selectContainer.style.display = 'flex'
+    selectContainer.style.alignItems = 'center'
+    selectContainer.style.flexWrap = 'wrap'
+    selectContainer.appendChild(this.themeSelect)
+    selectContainer.appendChild(this.themeDescription)
+
+    row.appendChild(label)
+    row.appendChild(selectContainer)
+
+    return row
+  }
+
+  /**
+   * Creates the mesh quality toggle row.
+   */
+  private createMeshQualityRow(): HTMLElement {
+    const row = document.createElement('div')
+    row.style.marginBottom = '20px'
+    row.style.textAlign = 'left'
+
+    const label = document.createElement('label')
+    label.setAttribute('data-settings', 'mesh-quality-row-label')
+    label.textContent = 'Mesh Quality'
+    label.style.display = 'block'
+    label.style.marginBottom = '8px'
+    label.style.fontSize = '16px'
+
+    const toggleContainer = document.createElement('div')
+    toggleContainer.style.display = 'flex'
+    toggleContainer.style.alignItems = 'center'
+    toggleContainer.appendChild(this.meshQualityToggle)
+    toggleContainer.appendChild(this.meshQualityLabel)
+
+    row.appendChild(label)
+    row.appendChild(toggleContainer)
+
+    return row
+  }
+
+  /**
    * Sets up event listeners for sliders and buttons.
    */
   private setupEventListeners(): void {
@@ -211,6 +363,16 @@ export class SettingsPanel {
       this.saveSettings()
     })
 
+    // Theme select
+    this.themeSelect.addEventListener('change', () => {
+      this.handleThemeChange()
+    })
+
+    // Mesh quality toggle
+    this.meshQualityToggle.addEventListener('click', () => {
+      this.toggleMeshQuality()
+    })
+
     // Back button
     this.backButton.addEventListener('click', () => {
       this.hide()
@@ -218,6 +380,46 @@ export class SettingsPanel {
         this.onCloseCallback()
       }
     })
+  }
+
+  /**
+   * Handles theme selection change.
+   */
+  private handleThemeChange(): void {
+    const selectedTheme = this.themeSelect.value as ThemeId
+    ThemeManager.getInstance().setTheme(selectedTheme)
+    this.updateThemeDescription(selectedTheme)
+  }
+
+  /**
+   * Updates the theme description based on selected theme.
+   */
+  private updateThemeDescription(themeId: ThemeId): void {
+    const theme = ThemeManager.getInstance().getThemeById(themeId)
+    if (theme) {
+      this.themeDescription.textContent = theme.description
+    }
+  }
+
+  /**
+   * Toggles mesh quality between classic and modern.
+   */
+  private toggleMeshQuality(): void {
+    const currentQuality = MeshFactory.getMeshQuality()
+    const newQuality: MeshQuality = currentQuality === 'classic' ? 'modern' : 'classic'
+    MeshFactory.setMeshQuality(newQuality)
+    this.updateMeshQualityDisplay(newQuality)
+  }
+
+  /**
+   * Updates the mesh quality toggle display.
+   */
+  private updateMeshQualityDisplay(quality: MeshQuality): void {
+    const isModern = quality === 'modern'
+    this.meshQualityToggle.textContent = isModern ? 'MODERN' : 'CLASSIC'
+    this.meshQualityLabel.textContent = isModern
+      ? 'High-poly detailed meshes'
+      : 'Low-poly retro style'
   }
 
   /**
@@ -236,8 +438,19 @@ export class SettingsPanel {
         this.musicSlider.value = musicVolume
         this.musicValueDisplay.textContent = musicVolume
       }
+
+      // Load theme from ThemeManager (which loads from localStorage)
+      const currentThemeId = ThemeManager.getInstance().getThemeId()
+      this.themeSelect.value = currentThemeId
+      this.updateThemeDescription(currentThemeId)
+
+      // Load mesh quality from MeshFactory (which loads from localStorage)
+      const meshQuality = MeshFactory.getMeshQuality()
+      this.updateMeshQualityDisplay(meshQuality)
     } catch {
       // localStorage not available, use defaults
+      this.updateMeshQualityDisplay('classic')
+      this.updateThemeDescription('neon')
     }
   }
 
@@ -330,5 +543,21 @@ export class SettingsPanel {
    */
   getMusicVolume(): number {
     return Number.parseInt(this.musicSlider.value, 10)
+  }
+
+  /**
+   * Gets the current mesh quality setting.
+   * @returns The mesh quality ('classic' or 'modern')
+   */
+  getMeshQuality(): MeshQuality {
+    return MeshFactory.getMeshQuality()
+  }
+
+  /**
+   * Gets the currently selected theme ID.
+   * @returns The theme ID
+   */
+  getSelectedTheme(): ThemeId {
+    return this.themeSelect.value as ThemeId
   }
 }

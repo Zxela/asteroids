@@ -9,13 +9,22 @@
  * - Edge cases and constraints
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Vector3 } from 'three'
 import { World } from '../../src/ecs/World'
 import { ShipControlSystem } from '../../src/systems/ShipControlSystem'
 import { InputSystem } from '../../src/systems/InputSystem'
 import { Transform, Velocity, Physics, Player } from '../../src/components'
 import { gameConfig } from '../../src/config'
+import { EventEmitter } from '../../src/utils/EventEmitter'
+import type { ShipThrustEventData } from '../../src/types/events'
+
+/**
+ * Event types for ship control tests.
+ */
+interface ShipControlEvents extends Record<string, unknown> {
+  shipThrust: ShipThrustEventData
+}
 
 /**
  * Mock event target for InputSystem testing.
@@ -467,6 +476,94 @@ describe('ShipControlSystem', () => {
       // Forward direction at rotation -PI/2 (CW 90°) should be +X (right)
       expect(velocity!.linear.x).toBeGreaterThan(0)
       expect(Math.abs(velocity!.linear.y)).toBeLessThan(0.01)
+    })
+  })
+
+  describe('Thrust Event Emission', () => {
+    let eventEmitter: EventEmitter<ShipControlEvents>
+    let thrustEvents: ShipThrustEventData[]
+
+    beforeEach(() => {
+      eventEmitter = new EventEmitter<ShipControlEvents>()
+      thrustEvents = []
+      eventEmitter.on('shipThrust', (data) => {
+        thrustEvents.push(data)
+      })
+      shipControlSystem = new ShipControlSystem(inputSystem, eventEmitter)
+    })
+
+    it('should emit shipThrust event when thrusting', () => {
+      mockTarget.simulateKeyDown('ArrowUp')
+      shipControlSystem.update(world, 100)
+
+      expect(thrustEvents.length).toBe(1)
+      expect(thrustEvents[0].active).toBe(true)
+    })
+
+    it('should include ship position in thrust event', () => {
+      const transform = world.getComponent(shipId, Transform)
+      transform!.position.set(100, 200, 0)
+
+      mockTarget.simulateKeyDown('ArrowUp')
+      shipControlSystem.update(world, 100)
+
+      expect(thrustEvents[0].position.x).toBe(100)
+      expect(thrustEvents[0].position.y).toBe(200)
+    })
+
+    it('should include forward direction in thrust event', () => {
+      const transform = world.getComponent(shipId, Transform)
+      transform!.rotation.z = 0 // Facing up
+
+      mockTarget.simulateKeyDown('ArrowUp')
+      shipControlSystem.update(world, 100)
+
+      // Facing up, direction should be (0, 1)
+      expect(thrustEvents[0].direction.x).toBeCloseTo(0, 1)
+      expect(thrustEvents[0].direction.y).toBeCloseTo(1, 1)
+    })
+
+    it('should emit deactivation event when thrust stops', () => {
+      // Start thrusting
+      mockTarget.simulateKeyDown('ArrowUp')
+      shipControlSystem.update(world, 100)
+
+      // Stop thrusting
+      mockTarget.simulateKeyUp('ArrowUp')
+      shipControlSystem.update(world, 100)
+
+      expect(thrustEvents.length).toBe(2)
+      expect(thrustEvents[1].active).toBe(false)
+    })
+
+    it('should not emit events without event emitter', () => {
+      // Create system without event emitter
+      const systemWithoutEmitter = new ShipControlSystem(inputSystem)
+
+      mockTarget.simulateKeyDown('ArrowUp')
+
+      // Should not throw
+      expect(() => {
+        systemWithoutEmitter.update(world, 100)
+      }).not.toThrow()
+    })
+
+    it('should emit continuous thrust events while thrusting', () => {
+      mockTarget.simulateKeyDown('ArrowUp')
+
+      shipControlSystem.update(world, 100)
+      shipControlSystem.update(world, 100)
+      shipControlSystem.update(world, 100)
+
+      expect(thrustEvents.length).toBe(3)
+      expect(thrustEvents.every((e) => e.active)).toBe(true)
+    })
+
+    it('should not emit event when only rotating without thrusting', () => {
+      mockTarget.simulateKeyDown('ArrowLeft')
+      shipControlSystem.update(world, 100)
+
+      expect(thrustEvents.length).toBe(0)
     })
   })
 })

@@ -12,13 +12,25 @@
  * - rotation.z = PI: forward = (0, -1) = -Y (down)
  * - rotation.z = -PI/2: forward = (-1, 0) = -X (left)
  *
+ * Emits 'shipThrust' events when player is accelerating for particle effects.
+ *
  * Following ADR-0002: Custom arcade physics for game entity movement.
  */
 
+import { Vector3 } from 'three'
 import { Physics, Player, Transform, Velocity } from '../components'
 import { gameConfig } from '../config'
 import type { ComponentClass, World as IWorld, System } from '../ecs/types'
+import type { ShipThrustEventData } from '../types/events'
+import type { EventEmitter } from '../utils/EventEmitter'
 import type { InputSystem } from './InputSystem'
+
+/**
+ * Event types for ship control system.
+ */
+interface ShipControlEvents extends Record<string, unknown> {
+  shipThrust: ShipThrustEventData
+}
 
 // Type assertions for component classes to work with ECS type system
 const TransformClass = Transform as unknown as ComponentClass<Transform>
@@ -36,14 +48,20 @@ const PlayerClass = Player as unknown as ComponentClass<Player>
  */
 export class ShipControlSystem implements System {
   private readonly inputSystem: InputSystem
+  private readonly eventEmitter: EventEmitter<ShipControlEvents> | null
+
+  /** Track previous thrust state to detect state changes */
+  private wasThrusting = false
 
   /**
    * Creates a new ShipControlSystem.
    *
    * @param inputSystem - The InputSystem instance to read movement input from
+   * @param eventEmitter - Optional EventEmitter for thrust particle effects
    */
-  constructor(inputSystem: InputSystem) {
+  constructor(inputSystem: InputSystem, eventEmitter?: EventEmitter<ShipControlEvents>) {
     this.inputSystem = inputSystem
+    this.eventEmitter = eventEmitter ?? null
   }
 
   /**
@@ -86,7 +104,8 @@ export class ShipControlSystem implements System {
 
       // Apply acceleration based on vertical input (up only, not down)
       // Only accelerate when forward input is positive
-      if (movement.y > 0.001) {
+      const isThrusting = movement.y > 0.001
+      if (isThrusting) {
         // Get ship's forward direction from Z rotation
         const forward = this.getForwardDirection(transform.rotation.z)
 
@@ -95,7 +114,28 @@ export class ShipControlSystem implements System {
         const acceleration = gameConfig.physics.shipAcceleration * movement.y * dt
         velocity.linear.x += forward.x * acceleration
         velocity.linear.y += forward.y * acceleration
+
+        // Emit shipThrust event for particle effects
+        if (this.eventEmitter) {
+          this.eventEmitter.emit('shipThrust', {
+            entityId: entityId,
+            position: new Vector3(transform.position.x, transform.position.y, transform.position.z),
+            direction: new Vector3(forward.x, forward.y, 0),
+            active: true
+          })
+        }
+      } else if (this.wasThrusting && this.eventEmitter) {
+        // Emit thrust deactivation event
+        const forward = this.getForwardDirection(transform.rotation.z)
+        this.eventEmitter.emit('shipThrust', {
+          entityId: entityId,
+          position: new Vector3(transform.position.x, transform.position.y, transform.position.z),
+          direction: new Vector3(forward.x, forward.y, 0),
+          active: false
+        })
       }
+
+      this.wasThrusting = isThrusting
     }
   }
 

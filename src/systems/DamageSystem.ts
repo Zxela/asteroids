@@ -3,8 +3,8 @@
  *
  * Bridges collision detection with damage application by:
  * - Querying CollisionSystem.getCollisions() each frame
- * - Applying projectile damage to asteroids
- * - Applying damage to player ship on asteroid collision
+ * - Applying projectile damage to asteroids and UFOs
+ * - Applying damage to player ship on asteroid/UFO collision
  * - Destroying projectiles after they deal damage
  *
  * Following ADR-0001: ECS architecture for game entity management.
@@ -63,7 +63,10 @@ export class DamageSystem implements System {
    *
    * Iterates through all collisions detected this frame and handles:
    * - Projectile-asteroid collisions: apply projectile damage to asteroid, destroy projectile
+   * - Projectile-UFO collisions: apply projectile damage to UFO, destroy projectile
    * - Asteroid-player collisions: apply instant kill damage to player if not invulnerable
+   * - UFO-player collisions: apply instant kill damage to player if not invulnerable
+   * - UFO projectile-player collisions: apply instant kill damage to player
    *
    * @param world - The ECS world containing entities
    * @param _deltaTime - Time since last frame in milliseconds (unused)
@@ -82,7 +85,19 @@ export class DamageSystem implements System {
         const projectileId = layer1 === 'projectile' ? entity1 : entity2
         const asteroidId = layer1 === 'asteroid' ? entity1 : entity2
 
-        this.handleProjectileAsteroidCollision(world, projectileId, asteroidId)
+        this.handleProjectileTargetCollision(world, projectileId, asteroidId)
+        continue
+      }
+
+      // Handle projectile-UFO collisions
+      if (
+        (layer1 === 'projectile' && layer2 === 'ufo') ||
+        (layer1 === 'ufo' && layer2 === 'projectile')
+      ) {
+        const projectileId = layer1 === 'projectile' ? entity1 : entity2
+        const ufoId = layer1 === 'ufo' ? entity1 : entity2
+
+        this.handleProjectileTargetCollision(world, projectileId, ufoId)
         continue
       }
 
@@ -92,40 +107,61 @@ export class DamageSystem implements System {
         (layer1 === 'player' && layer2 === 'asteroid')
       ) {
         const playerId = layer1 === 'player' ? entity1 : entity2
+        const asteroidId = layer1 === 'asteroid' ? entity1 : entity2
 
-        this.handleAsteroidPlayerCollision(world, playerId)
+        this.handleAsteroidPlayerCollision(world, playerId, asteroidId)
+        continue
+      }
+
+      // Handle UFO-player collisions
+      if ((layer1 === 'ufo' && layer2 === 'player') || (layer1 === 'player' && layer2 === 'ufo')) {
+        const playerId = layer1 === 'player' ? entity1 : entity2
+
+        this.handleEnemyPlayerCollision(world, playerId)
+        continue
+      }
+
+      // Handle UFO projectile-player collisions
+      if (
+        (layer1 === 'ufoProjectile' && layer2 === 'player') ||
+        (layer1 === 'player' && layer2 === 'ufoProjectile')
+      ) {
+        const playerId = layer1 === 'player' ? entity1 : entity2
+        const projectileId = layer1 === 'ufoProjectile' ? entity1 : entity2
+
+        this.handleEnemyProjectilePlayerCollision(world, playerId, projectileId)
       }
     }
   }
 
   /**
-   * Handle projectile-asteroid collision.
+   * Handle projectile-target collision (asteroid or UFO).
    *
-   * Applies projectile damage to asteroid's health and destroys the projectile.
+   * Applies projectile damage to target's health and destroys the projectile.
    *
    * @param world - The ECS world
    * @param projectileId - The projectile entity ID
-   * @param asteroidId - The asteroid entity ID
+   * @param targetId - The target entity ID (asteroid or UFO)
    */
-  private handleProjectileAsteroidCollision(
+  private handleProjectileTargetCollision(
     world: World,
     projectileId: EntityId,
-    asteroidId: EntityId
+    targetId: EntityId
   ): void {
     // Verify entities are still alive (may have been destroyed by another collision)
-    if (!world.isEntityAlive(projectileId) || !world.isEntityAlive(asteroidId)) {
+    if (!world.isEntityAlive(projectileId) || !world.isEntityAlive(targetId)) {
       return
     }
 
     const projectile = world.getComponent(projectileId, ProjectileClass)
-    const asteroidHealth = world.getComponent(asteroidId, HealthClass)
+    const targetHealth = world.getComponent(targetId, HealthClass)
 
-    if (!projectile || !asteroidHealth) {
+    if (!projectile || !targetHealth) {
       return
     }
 
-    // Apply damage to asteroid
-    asteroidHealth.takeDamage(projectile.damage)
+    // Apply damage to target
+    targetHealth.takeDamage(projectile.damage)
 
     // Destroy the projectile
     world.destroyEntity(projectileId)
@@ -134,13 +170,46 @@ export class DamageSystem implements System {
   /**
    * Handle asteroid-player collision.
    *
+   * Both entities take fatal damage:
+   * - Player dies (if not invulnerable)
+   * - Asteroid is destroyed (large/medium will split via AsteroidDestructionSystem)
+   *
+   * @param world - The ECS world
+   * @param playerId - The player entity ID
+   * @param asteroidId - The asteroid entity ID
+   */
+  private handleAsteroidPlayerCollision(
+    world: World,
+    playerId: EntityId,
+    asteroidId: EntityId
+  ): void {
+    // Handle player damage
+    if (world.isEntityAlive(playerId)) {
+      const playerHealth = world.getComponent(playerId, HealthClass)
+      if (playerHealth && !playerHealth.invulnerable) {
+        playerHealth.current = 0
+      }
+    }
+
+    // Handle asteroid damage - set health to 0 to trigger destruction/splitting
+    if (world.isEntityAlive(asteroidId)) {
+      const asteroidHealth = world.getComponent(asteroidId, HealthClass)
+      if (asteroidHealth) {
+        asteroidHealth.current = 0
+      }
+    }
+  }
+
+  /**
+   * Handle enemy-player collision (UFO).
+   *
    * Applies instant kill damage to player (sets health to 0) if not invulnerable.
    * The RespawnSystem will handle the actual death/respawn logic.
    *
    * @param world - The ECS world
    * @param playerId - The player entity ID
    */
-  private handleAsteroidPlayerCollision(world: World, playerId: EntityId): void {
+  private handleEnemyPlayerCollision(world: World, playerId: EntityId): void {
     // Verify entity is still alive
     if (!world.isEntityAlive(playerId)) {
       return
@@ -158,5 +227,39 @@ export class DamageSystem implements System {
     if (!playerHealth.invulnerable) {
       playerHealth.current = 0
     }
+  }
+
+  /**
+   * Handle enemy projectile-player collision (UFO projectile).
+   *
+   * Applies instant kill damage to player and destroys the projectile.
+   *
+   * @param world - The ECS world
+   * @param playerId - The player entity ID
+   * @param projectileId - The UFO projectile entity ID
+   */
+  private handleEnemyProjectilePlayerCollision(
+    world: World,
+    playerId: EntityId,
+    projectileId: EntityId
+  ): void {
+    // Verify entities are still alive
+    if (!world.isEntityAlive(playerId) || !world.isEntityAlive(projectileId)) {
+      return
+    }
+
+    const playerHealth = world.getComponent(playerId, HealthClass)
+
+    if (!playerHealth) {
+      return
+    }
+
+    // Apply instant kill damage if not invulnerable
+    if (!playerHealth.invulnerable) {
+      playerHealth.current = 0
+    }
+
+    // Destroy the UFO projectile
+    world.destroyEntity(projectileId)
   }
 }

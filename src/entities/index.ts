@@ -31,3 +31,8 @@ export {
   getBossTypeForWave,
   BOSS_CONFIG
 } from './createBoss'
+export {
+  createUFO,
+  getUFOSizeForScore,
+  type CreateUFOOptions
+} from './createUFO'

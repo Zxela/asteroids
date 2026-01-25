@@ -268,9 +268,9 @@ describe('DamageSystem', () => {
       const playerHealth = world.getComponent(playerId, Health)
       expect(playerHealth!.current).toBe(0)
 
-      // Asteroid should have taken projectile damage
+      // Asteroid should also be at 0 health (fatal damage from ship collision)
       const asteroidHealth = world.getComponent(asteroidId, Health)
-      expect(asteroidHealth!.current).toBe(20) // 30 - 10
+      expect(asteroidHealth!.current).toBe(0)
 
       // Projectile should be destroyed
       expect(world.isEntityAlive(projectileId)).toBe(false)

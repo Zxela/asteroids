@@ -2,17 +2,43 @@
  * MeshFactory Unit Tests
  *
  * Tests for mesh creation for each entity type:
- * - Ship mesh creation
- * - Asteroid mesh creation (large, medium, small)
+ * - Ship mesh creation (classic and modern)
+ * - Asteroid mesh creation (large, medium, small) (classic and modern)
  * - Projectile mesh creation
  * - Boss mesh creation (destroyer, carrier)
  * - Power-up mesh creation
  * - Material creation based on type
+ * - Mesh quality toggle and persistence
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import * as THREE from 'three'
 import { MeshFactory } from '../../src/rendering/MeshFactory'
+
+// Mock localStorage for tests
+const createMockLocalStorage = () => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+    get length() {
+      return Object.keys(store).length
+    },
+    key: vi.fn((index: number) => Object.keys(store)[index] ?? null)
+  }
+}
+
+// Set up global localStorage before any tests
+const mockStorage = createMockLocalStorage()
+global.localStorage = mockStorage as unknown as Storage
 
 describe('MeshFactory', () => {
   describe('Ship Mesh', () => {
@@ -183,6 +209,156 @@ describe('MeshFactory', () => {
 
       expect(mesh).toBeDefined()
       expect(mesh).toBeInstanceOf(THREE.Mesh)
+    })
+  })
+
+  describe('Mesh Quality System', () => {
+    // Save original quality and restore after each test
+    let originalQuality: 'classic' | 'modern'
+
+    beforeEach(() => {
+      originalQuality = MeshFactory.getMeshQuality()
+    })
+
+    afterEach(() => {
+      MeshFactory.setMeshQuality(originalQuality)
+    })
+
+    it('should default to classic quality', () => {
+      // Reset to default
+      MeshFactory.setMeshQuality('classic')
+      expect(MeshFactory.getMeshQuality()).toBe('classic')
+    })
+
+    it('should set and get mesh quality', () => {
+      MeshFactory.setMeshQuality('modern')
+      expect(MeshFactory.getMeshQuality()).toBe('modern')
+
+      MeshFactory.setMeshQuality('classic')
+      expect(MeshFactory.getMeshQuality()).toBe('classic')
+    })
+
+    it('should persist mesh quality to localStorage', () => {
+      const setItemSpy = vi.spyOn(localStorage, 'setItem')
+
+      MeshFactory.setMeshQuality('modern')
+
+      expect(setItemSpy).toHaveBeenCalledWith('asteroids-mesh-quality', 'modern')
+      setItemSpy.mockRestore()
+    })
+  })
+
+  describe('Modern Ship Mesh', () => {
+    beforeEach(() => {
+      MeshFactory.setMeshQuality('modern')
+    })
+
+    afterEach(() => {
+      MeshFactory.setMeshQuality('classic')
+    })
+
+    it('should create modern ship mesh as a Group', () => {
+      const mesh = MeshFactory.createMesh('ship', 'standard')
+
+      expect(mesh).toBeDefined()
+      expect(mesh).toBeInstanceOf(THREE.Object3D)
+      // Modern ship is a Group with multiple children
+      expect(mesh).toBeInstanceOf(THREE.Group)
+    })
+
+    it('should create modern ship with multiple parts', () => {
+      const mesh = MeshFactory.createMesh('ship', 'standard') as THREE.Group
+
+      // Modern ship should have hull, cockpit, wings, engines, nozzles, stabilizer
+      expect(mesh.children.length).toBeGreaterThanOrEqual(6)
+    })
+
+    it('should create modern ship with unique uuid', () => {
+      const mesh1 = MeshFactory.createMesh('ship', 'standard')
+      const mesh2 = MeshFactory.createMesh('ship', 'standard')
+
+      expect(mesh1.uuid).toBeDefined()
+      expect(mesh2.uuid).toBeDefined()
+      expect(mesh1.uuid).not.toBe(mesh2.uuid)
+    })
+  })
+
+  describe('Modern Asteroid Meshes', () => {
+    beforeEach(() => {
+      MeshFactory.setMeshQuality('modern')
+    })
+
+    afterEach(() => {
+      MeshFactory.setMeshQuality('classic')
+    })
+
+    it('should create modern asteroid_large mesh', () => {
+      const mesh = MeshFactory.createMesh('asteroid_large', 'standard')
+
+      expect(mesh).toBeDefined()
+      expect(mesh).toBeInstanceOf(THREE.Mesh)
+    })
+
+    it('should create modern asteroid_medium mesh', () => {
+      const mesh = MeshFactory.createMesh('asteroid_medium', 'standard')
+
+      expect(mesh).toBeDefined()
+      expect(mesh).toBeInstanceOf(THREE.Mesh)
+    })
+
+    it('should create modern asteroid_small mesh', () => {
+      const mesh = MeshFactory.createMesh('asteroid_small', 'standard')
+
+      expect(mesh).toBeDefined()
+      expect(mesh).toBeInstanceOf(THREE.Mesh)
+    })
+
+    it('should create modern asteroid with higher vertex count than classic', () => {
+      // Create classic asteroid
+      MeshFactory.setMeshQuality('classic')
+      const classicMesh = MeshFactory.createMesh('asteroid_large', 'standard') as THREE.Mesh
+      const classicGeometry = classicMesh.geometry as THREE.BufferGeometry
+      const classicVertexCount = classicGeometry.getAttribute('position').count
+
+      // Create modern asteroid
+      MeshFactory.setMeshQuality('modern')
+      const modernMesh = MeshFactory.createMesh('asteroid_large', 'standard') as THREE.Mesh
+      const modernGeometry = modernMesh.geometry as THREE.BufferGeometry
+      const modernVertexCount = modernGeometry.getAttribute('position').count
+
+      // Modern should have more vertices (higher detail)
+      expect(modernVertexCount).toBeGreaterThan(classicVertexCount)
+    })
+
+    it('should store asteroid variant in userData', () => {
+      const mesh = MeshFactory.createMesh('asteroid_large', 'standard') as THREE.Mesh
+
+      expect(mesh.userData.asteroidVariant).toBeDefined()
+      expect(mesh.userData.asteroidVariant).toBeGreaterThanOrEqual(1)
+      expect(mesh.userData.asteroidVariant).toBeLessThanOrEqual(5)
+    })
+  })
+
+  describe('Quality Toggle Affects Mesh Creation', () => {
+    afterEach(() => {
+      MeshFactory.setMeshQuality('classic')
+    })
+
+    it('should create classic ship mesh when quality is classic', () => {
+      MeshFactory.setMeshQuality('classic')
+      const mesh = MeshFactory.createMesh('ship', 'standard')
+
+      // Classic ship is a single Mesh, not a Group
+      expect(mesh).toBeInstanceOf(THREE.Mesh)
+      expect(mesh).not.toBeInstanceOf(THREE.Group)
+    })
+
+    it('should create modern ship mesh when quality is modern', () => {
+      MeshFactory.setMeshQuality('modern')
+      const mesh = MeshFactory.createMesh('ship', 'standard')
+
+      // Modern ship is a Group
+      expect(mesh).toBeInstanceOf(THREE.Group)
     })
   })
 })

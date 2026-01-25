@@ -6,12 +6,15 @@
  * - Scene with proper lighting setup
  * - PerspectiveCamera positioned for 2.5D gameplay
  * - Viewport management and resize handling
+ * - Theme-aware background and lighting (subscribes to ThemeManager)
  *
  * Following ADR-0003: Rendering Strategy - Use Three.js WebGPURenderer with auto-fallback.
  */
 
 import * as THREE from 'three'
 import { WebGPURenderer } from 'three/webgpu'
+import { ThemeManager } from '../themes'
+import type { ThemeConfig } from '../themes'
 
 /**
  * Renderer type returned by SceneManager.
@@ -43,6 +46,9 @@ export class SceneManager {
   private width: number
   private height: number
   private resizeHandler: () => void
+  private themeUnsubscribe: (() => void) | null = null
+  private directionalLight: THREE.DirectionalLight | null = null
+  private ambientLight: THREE.AmbientLight | null = null
 
   constructor() {
     // Get initial dimensions from container or window
@@ -50,17 +56,25 @@ export class SceneManager {
     this.width = container?.clientWidth ?? window.innerWidth
     this.height = container?.clientHeight ?? window.innerHeight
 
-    // Create scene with black background
+    // Create scene
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x000000)
+
+    // Apply initial theme
+    const theme = ThemeManager.getInstance().getTheme()
+    this.applyTheme(theme)
 
     // Create camera for 2.5D perspective gameplay
     const aspect = this.width / this.height
     this.camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 10000)
     this.camera.position.z = 750 // Position for 2.5D view
 
-    // Setup lighting
-    this.setupLighting()
+    // Setup lighting with theme colors
+    this.setupLighting(theme)
+
+    // Subscribe to theme changes
+    this.themeUnsubscribe = ThemeManager.getInstance().subscribe((newTheme) => {
+      this.applyTheme(newTheme)
+    })
 
     // Bind resize handler
     this.resizeHandler = this.onWindowResize.bind(this)
@@ -90,21 +104,46 @@ export class SceneManager {
   }
 
   /**
-   * Setup scene lighting.
-   * Per Task 7.4: Visual Polish Pass
-   * - DirectionalLight: white, intensity 1.0, position (5, 10, 5)
-   * - AmbientLight: dark blue (#222244), intensity 0.4
-   * Creates cyberpunk/neon atmosphere while ensuring mesh visibility.
+   * Apply visual theme to scene background and lighting.
+   * Called on construction and when theme changes.
    */
-  private setupLighting(): void {
-    // Main directional light - white, positioned for good coverage
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
-    directionalLight.position.set(5, 10, 5)
-    this.scene.add(directionalLight)
+  private applyTheme(theme: ThemeConfig): void {
+    // Update background color
+    this.scene.background = new THREE.Color(theme.background.color)
 
-    // Ambient light - dark blue for cyberpunk atmosphere
-    const ambientLight = new THREE.AmbientLight(0x222244, 0.4)
-    this.scene.add(ambientLight)
+    // Update lighting if already created
+    if (this.directionalLight) {
+      this.directionalLight.color.setHex(theme.background.directionalLight)
+      this.directionalLight.intensity = theme.background.directionalIntensity
+    }
+
+    if (this.ambientLight) {
+      this.ambientLight.color.setHex(theme.background.ambientLight)
+      this.ambientLight.intensity = theme.background.ambientIntensity
+    }
+  }
+
+  /**
+   * Setup scene lighting.
+   * Uses theme configuration for colors and intensities.
+   * Per Task 7.4: Visual Polish Pass
+   * Creates atmosphere while ensuring mesh visibility.
+   */
+  private setupLighting(theme: ThemeConfig): void {
+    // Main directional light - positioned for good coverage
+    this.directionalLight = new THREE.DirectionalLight(
+      theme.background.directionalLight,
+      theme.background.directionalIntensity
+    )
+    this.directionalLight.position.set(5, 10, 5)
+    this.scene.add(this.directionalLight)
+
+    // Ambient light - for atmospheric fill
+    this.ambientLight = new THREE.AmbientLight(
+      theme.background.ambientLight,
+      theme.background.ambientIntensity
+    )
+    this.scene.add(this.ambientLight)
   }
 
   /**
@@ -193,7 +232,9 @@ export class SceneManager {
       if (obj instanceof THREE.Mesh) {
         obj.geometry?.dispose()
         if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => m.dispose())
+          for (const m of obj.material) {
+            m.dispose()
+          }
         } else if (obj.material) {
           obj.material.dispose()
         }
@@ -206,6 +247,10 @@ export class SceneManager {
    */
   dispose(): void {
     window.removeEventListener('resize', this.resizeHandler)
+    if (this.themeUnsubscribe) {
+      this.themeUnsubscribe()
+      this.themeUnsubscribe = null
+    }
     this.renderer = null
   }
 }

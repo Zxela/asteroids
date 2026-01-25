@@ -8,3 +8,4 @@
 export { SceneManager } from './SceneManager'
 export { MeshFactory } from './MeshFactory'
 export { ParticleManager, type Particle } from './ParticleManager'
+export { Starfield } from './Starfield'

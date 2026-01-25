@@ -25,6 +25,13 @@ export { AudioSystem } from './AudioSystem'
 export { PowerUpSystem } from './PowerUpSystem'
 export { BossHealthSystem, type BossHealthEvent } from './BossHealthSystem'
 export { BossSystem, type BossSystemEvent, type BossPatternChangedEvent } from './BossSystem'
+export {
+  UFOSystem,
+  type UFOSystemEvent,
+  type UFOProjectileFiredEvent,
+  type UFODestroyedEvent
+} from './UFOSystem'
+export { UFOSpawnSystem, type UFOSpawnedEvent } from './UFOSpawnSystem'
 export { CameraEffectSystem, type CameraShake, type ScreenShakeConfig } from './CameraEffectSystem'
 export { ParticleEmitterSystem } from './ParticleEmitterSystem'
 export { ParticleRenderSystem } from './ParticleRenderSystem'

@@ -5,11 +5,9 @@
  * These types define the contracts for entities, components, systems, and the world.
  */
 
-/**
- * Unique identifier for an entity.
- * Uses a branded type pattern for type safety - prevents accidental use of regular numbers.
- */
-export type EntityId = number & { readonly __entityId: unique symbol }
+// Import and re-export EntityId from the main ECS module to ensure a single source of truth
+import type { EntityId as EcsEntityId } from '../ecs/types'
+export type EntityId = EcsEntityId
 
 /**
  * Component type identifier string.

@@ -58,6 +58,8 @@ export type CollisionLayer =
   | 'powerup'
   | 'boss'
   | 'bossProjectile'
+  | 'ufo'
+  | 'ufoProjectile'
 
 /**
  * Collider shape type.
@@ -108,12 +110,15 @@ export type MeshType =
   | 'projectile_laser'
   | 'projectile_missile'
   | 'projectile_boss'
+  | 'projectile_ufo'
   | 'powerup_shield'
   | 'powerup_rapidfire'
   | 'powerup_multishot'
   | 'powerup_extralife'
   | 'boss_destroyer'
   | 'boss_carrier'
+  | 'ufo_large'
+  | 'ufo_small'
 
 /**
  * Material type identifiers.
@@ -238,6 +243,25 @@ export interface BossComponent extends Component {
 }
 
 // ============================================
+// UFO Components
+// ============================================
+
+/**
+ * UFO size type identifiers.
+ */
+export type UFOSizeType = 'large' | 'small'
+
+/**
+ * UFO component - UFO-specific properties and AI state.
+ */
+export interface UFOComponent extends Component {
+  readonly type: 'ufo'
+  ufoSize: UFOSizeType
+  shootTimer: number // Time until next shot
+  points: number // Score awarded on destruction
+}
+
+// ============================================
 // Power-up Components
 // ============================================
 
@@ -322,6 +346,7 @@ export type GameComponent =
   | PlayerComponent
   | AsteroidComponent
   | BossComponent
+  | UFOComponent
   | PowerUpComponent
   | PowerUpEffectComponent
   | ParticleEmitterComponent
