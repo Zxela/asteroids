@@ -2,8 +2,8 @@
  * AsteroidDestructionSystem - Handles asteroid destruction and splitting
  *
  * Monitors asteroids for destruction (health <= 0) and handles:
- * - Large asteroids splitting into 2-3 medium asteroids
- * - Medium asteroids splitting into 2-3 small asteroids
+ * - Large asteroids splitting into 2 medium asteroids (classic behavior)
+ * - Medium asteroids splitting into 2 small asteroids
  * - Small asteroids being removed (no children)
  * - Power-up spawning with 10% probability on destruction
  * - Event emission for scoring and particle effects
@@ -182,16 +182,16 @@ export class AsteroidDestructionSystem implements System {
   /**
    * Spawn child asteroids around the destruction position.
    *
-   * Spawns 2-3 child asteroids (random) positioned radially
-   * around the parent's position to prevent overlap.
+   * Spawns exactly 2 child asteroids (classic Asteroids behavior)
+   * positioned radially around the parent's position to prevent overlap.
    *
    * @param world - The ECS world
    * @param position - Parent asteroid position
    * @param childSize - Size of child asteroids to spawn
    */
   private spawnChildAsteroids(world: World, position: Vector3, childSize: AsteroidSize): void {
-    // Randomize count: 2 or 3 children (50/50 split)
-    const count = Math.random() < 0.5 ? 2 : 3
+    // Classic Asteroids always splits into exactly 2 children
+    const count = 2
 
     for (let i = 0; i < count; i++) {
       // Calculate radial offset angle
