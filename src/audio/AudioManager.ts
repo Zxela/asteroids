@@ -328,7 +328,7 @@ export class AudioManager {
   /**
    * Load a single sound.
    * @param def - Audio definition
-   * @returns Promise that resolves when loaded
+   * @returns Promise that resolves when loaded (or on error to prevent blocking)
    */
   private loadSound(def: AudioDefinition): Promise<void> {
     return new Promise((resolve) => {
@@ -336,7 +336,12 @@ export class AudioManager {
         src: [def.path],
         volume: def.volume,
         preload: def.preload,
-        onload: () => resolve()
+        onload: () => resolve(),
+        onloaderror: (_id, error) => {
+          console.warn(`Failed to load audio "${def.id}" from ${def.path}:`, error)
+          // Resolve anyway to prevent blocking game startup
+          resolve()
+        }
       })
 
       this.sounds.set(def.id, howl)
