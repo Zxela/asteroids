@@ -1,0 +1,23 @@
+{
+  "session_id": "background-music-32b81d24",
+  "branch": "feature/background-music",
+  "worktree": "/home/zxela/worktrees/create/background-music",
+  "feature": "background-music",
+  "created_at": "2026-01-30T15:05:00Z",
+  "phase": "discovery",
+  "tasks": {},
+  "current_task": null,
+  "config": {
+    "auto_mode": false,
+    "retries": {
+      "same_agent": 2,
+      "fresh_agent": 1
+    }
+  },
+  "discovery": {
+    "style": "synthwave",
+    "approach": "variations-of-theme",
+    "sourcing": "royalty-free",
+    "track_length": "no-preference"
+  }
+}
