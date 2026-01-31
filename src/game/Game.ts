@@ -27,11 +27,12 @@ import { PauseMenu } from '../ui/PauseMenu'
 import { LeaderboardStorage } from '../utils/LeaderboardStorage'
 
 import { AsteroidDestructionSystem } from '../systems/AsteroidDestructionSystem'
+import { AttractModeSystem, createPressStartOverlay } from '../systems/AttractModeSystem'
 import { CollisionSystem } from '../systems/CollisionSystem'
 import { DamageSystem } from '../systems/DamageSystem'
+import { HyperspaceSystem } from '../systems/HyperspaceSystem'
 // Systems
 import { InputSystem } from '../systems/InputSystem'
-import { UFOSpawnSystem } from '../systems/UFOSpawnSystem'
 import { ParticleEmitterSystem } from '../systems/ParticleEmitterSystem'
 import { ParticleRenderSystem } from '../systems/ParticleRenderSystem'
 import { PhysicsSystem } from '../systems/PhysicsSystem'
@@ -41,11 +42,10 @@ import { RenderSystem } from '../systems/RenderSystem'
 import { RespawnSystem } from '../systems/RespawnSystem'
 import { ScoreSystem } from '../systems/ScoreSystem'
 import { ShipControlSystem } from '../systems/ShipControlSystem'
+import { TensionSystem } from '../systems/TensionSystem'
+import { UFOSpawnSystem } from '../systems/UFOSpawnSystem'
 import { WaveSystem } from '../systems/WaveSystem'
 import { WeaponSystem } from '../systems/WeaponSystem'
-import { HyperspaceSystem } from '../systems/HyperspaceSystem'
-import { TensionSystem } from '../systems/TensionSystem'
-import { AttractModeSystem, createPressStartOverlay } from '../systems/AttractModeSystem'
 
 // Entities
 import { createShip } from '../entities/createShip'
@@ -67,14 +67,14 @@ import { AudioSystem } from '../systems/AudioSystem'
 // Types for game events
 import type {
   AsteroidDestroyedEventData,
+  BossDefeatedEventData,
+  BossSpawnedEventData,
+  HyperspaceActivatedEventData,
+  PlayerDiedEventData,
   PowerUpCollectedEventData,
   ShipThrustEventData,
-  WeaponFiredEventData,
-  PlayerDiedEventData,
   WaveStartedEventData,
-  BossSpawnedEventData,
-  BossDefeatedEventData,
-  HyperspaceActivatedEventData
+  WeaponFiredEventData
 } from '../types/events'
 import type { GameFlowState } from '../types/game'
 
@@ -270,9 +270,12 @@ export class Game {
     this.scoreSystem = new ScoreSystem()
     this.respawnSystem = new RespawnSystem()
 
+    // Create PowerUpSystem first (needed by WeaponSystem for multiShot effect)
+    this.powerUpSystem = new PowerUpSystem()
+
     // Create systems that emit events
     this.shipControlSystem = new ShipControlSystem(this.inputSystem, this.eventEmitter)
-    this.weaponSystem = new WeaponSystem(this.inputSystem)
+    this.weaponSystem = new WeaponSystem(this.inputSystem, this.powerUpSystem)
     this.hyperspaceSystem = new HyperspaceSystem(this.inputSystem, this.eventEmitter)
 
     // Register all systems with the world (order matters!)
@@ -287,7 +290,6 @@ export class Game {
     this.world.registerSystem(this.asteroidDestructionSystem)
     this.world.registerSystem(this.scoreSystem)
     this.world.registerSystem(this.respawnSystem)
-    this.powerUpSystem = new PowerUpSystem()
     this.world.registerSystem(this.powerUpSystem)
     this.ufoSpawnSystem = new UFOSpawnSystem(this.audioManager)
     this.world.registerSystem(this.ufoSpawnSystem)

@@ -1178,6 +1178,205 @@ describe('Homing Missile Weapon', () => {
   })
 })
 
+describe('MultiShot PowerUp Integration', () => {
+  let world: World
+  let weaponSystem: WeaponSystem
+  let inputSystem: InputSystem
+  let mockTarget: MockEventTarget
+  let shipId: number
+  let mockPowerUpSystem: {
+    hasActiveEffect: (entityId: any, effectType: string) => boolean
+  }
+  let activeEffects: Map<string, Set<string>>
+
+  beforeEach(() => {
+    world = new World()
+    mockTarget = new MockEventTarget()
+    inputSystem = new InputSystem(mockTarget)
+
+    // Create mock PowerUpSystem
+    activeEffects = new Map()
+    mockPowerUpSystem = {
+      hasActiveEffect: (entityId: any, effectType: string) => {
+        const entityEffects = activeEffects.get(String(entityId))
+        return entityEffects?.has(effectType) ?? false
+      }
+    }
+
+    weaponSystem = new WeaponSystem(inputSystem, mockPowerUpSystem as any)
+
+    // Create a test ship with weapon and transform
+    shipId = world.createEntity() as unknown as number
+    world.addComponent(shipId as any, new Transform())
+    world.addComponent(shipId as any, new Weapon('single', 250))
+  })
+
+  afterEach(() => {
+    inputSystem.destroy()
+  })
+
+  // Helper to activate multiShot effect for an entity
+  function activateMultiShot(entityId: number): void {
+    const entityIdStr = String(entityId)
+    if (!activeEffects.has(entityIdStr)) {
+      activeEffects.set(entityIdStr, new Set())
+    }
+    activeEffects.get(entityIdStr)!.add('multiShot')
+  }
+
+  // Helper to deactivate multiShot effect for an entity
+  function deactivateMultiShot(entityId: number): void {
+    const entityIdStr = String(entityId)
+    activeEffects.get(entityIdStr)?.delete('multiShot')
+  }
+
+  describe('MultiShot effect causes spread firing', () => {
+    it('should fire 3 projectiles when multiShot is active and weapon is single', () => {
+      // Activate multiShot for the ship
+      activateMultiShot(shipId)
+
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      // Should fire 3 projectiles (spread pattern) instead of 1
+      expect(finalCount).toBe(initialCount + 3)
+    })
+
+    it('should fire spread pattern at center, -15, and +15 degrees when multiShot active', () => {
+      activateMultiShot(shipId)
+
+      const transform = world.getComponent(shipId as any, Transform)
+      transform!.rotation.z = 0 // Facing up
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      // Find all projectiles
+      const projectiles = findAllProjectileEntities(world, shipId)
+      expect(projectiles.length).toBe(3)
+    })
+
+    it('should fire single shot when multiShot is not active', () => {
+      // No multiShot activated
+
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      // Should fire 1 projectile
+      expect(finalCount).toBe(initialCount + 1)
+    })
+
+    it('should revert to single shot when multiShot expires', () => {
+      // Start with multiShot active
+      activateMultiShot(shipId)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const countAfterFirstShot = getEntityCount(world)
+      expect(countAfterFirstShot).toBe(1 + 3) // ship + 3 projectiles
+
+      // Destroy projectiles to allow more shots
+      const projectiles = findAllProjectileEntities(world, shipId)
+      for (const projId of projectiles) {
+        world.destroyEntity(projId as any)
+      }
+
+      // Deactivate multiShot (simulating expiration)
+      deactivateMultiShot(shipId)
+
+      // Wait for cooldown and fire again
+      weaponSystem.update(world, 300)
+
+      // Should fire single shot now
+      const finalCount = getEntityCount(world)
+      expect(finalCount).toBe(1 + 1) // ship + 1 projectile
+    })
+  })
+
+  describe('MultiShot stacks with RapidFire', () => {
+    it('should fire 3 projectiles with reduced cooldown when both effects active', () => {
+      activateMultiShot(shipId)
+
+      // Simulate rapidFire by halving the cooldown
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.cooldown = 125 // Half of 250ms (rapidFire effect)
+
+      mockTarget.simulateKeyDown(' ')
+
+      // First shot
+      weaponSystem.update(world, 16)
+      const countAfterFirst = getEntityCount(world)
+      expect(countAfterFirst).toBe(1 + 3) // ship + 3 projectiles
+
+      // Destroy projectiles to allow more shots
+      let projectiles = findAllProjectileEntities(world, shipId)
+      for (const projId of projectiles) {
+        world.destroyEntity(projId as any)
+      }
+
+      // Wait half the normal cooldown (rapidFire effect)
+      weaponSystem.update(world, 130)
+
+      // Should be able to fire again (rapidFire reduced cooldown)
+      const countAfterSecond = getEntityCount(world)
+      expect(countAfterSecond).toBe(1 + 3) // ship + 3 more projectiles
+    })
+  })
+
+  describe('PowerUpSystem is optional (null safe)', () => {
+    it('should work without PowerUpSystem (fires single shot)', () => {
+      // Create WeaponSystem without PowerUpSystem
+      const weaponSystemNoPowerUp = new WeaponSystem(inputSystem)
+
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystemNoPowerUp.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      // Should fire single shot (no powerup system to check)
+      expect(finalCount).toBe(initialCount + 1)
+    })
+
+    it('should handle null PowerUpSystem gracefully', () => {
+      const weaponSystemNoPowerUp = new WeaponSystem(inputSystem, undefined)
+
+      mockTarget.simulateKeyDown(' ')
+
+      expect(() => {
+        weaponSystemNoPowerUp.update(world, 16)
+      }).not.toThrow()
+    })
+  })
+
+  describe('MultiShot does not interfere with spread weapon', () => {
+    it('should fire spread shot when weapon is already spread (regardless of multiShot)', () => {
+      const weapon = world.getComponent(shipId as any, Weapon)
+      weapon!.currentWeapon = 'spread'
+      weapon!.cooldown = 400
+
+      // MultiShot active but weapon is already spread
+      activateMultiShot(shipId)
+
+      const initialCount = getEntityCount(world)
+
+      mockTarget.simulateKeyDown(' ')
+      weaponSystem.update(world, 16)
+
+      const finalCount = getEntityCount(world)
+      // Should fire 3 projectiles (spread pattern)
+      expect(finalCount).toBe(initialCount + 3)
+    })
+  })
+})
+
 describe('Max Player Projectiles Limit', () => {
   let world: World
   let weaponSystem: WeaponSystem

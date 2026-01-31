@@ -29,6 +29,7 @@ import type { ComponentClass, EntityId, World as IWorld, System } from '../ecs/t
 import { createProjectile } from '../entities/createProjectile'
 import type { WeaponType } from '../types/components'
 import type { InputSystem } from './InputSystem'
+import type { PowerUpSystem } from './PowerUpSystem'
 
 // Type assertions for component classes to work with ECS type system
 const TransformClass = Transform as unknown as ComponentClass<Transform>
@@ -78,6 +79,9 @@ export class WeaponSystem implements System {
   /** Input system reference for reading fire action */
   private inputSystem: InputSystem
 
+  /** Power-up system reference for checking active effects (optional) */
+  private powerUpSystem: PowerUpSystem | null
+
   /** Cumulative time in milliseconds for cooldown tracking */
   private currentTime = 0
 
@@ -97,9 +101,11 @@ export class WeaponSystem implements System {
    * Create a WeaponSystem instance.
    *
    * @param inputSystem - InputSystem for reading fire action state
+   * @param powerUpSystem - Optional PowerUpSystem for checking active effects
    */
-  constructor(inputSystem: InputSystem) {
+  constructor(inputSystem: InputSystem, powerUpSystem?: PowerUpSystem) {
     this.inputSystem = inputSystem
+    this.powerUpSystem = powerUpSystem ?? null
   }
 
   /**
@@ -278,17 +284,23 @@ export class WeaponSystem implements System {
       }
     }
 
+    // Check for multiShot powerup effect
+    const hasMultiShot = this.powerUpSystem?.hasActiveEffect(entityId, 'multiShot') ?? false
+
+    // Determine how many projectiles will be fired
+    const willFireSpread = hasMultiShot || weapon.currentWeapon === 'spread'
+    const projectilesToFire = willFireSpread ? 3 : 1
+
     // Check max player projectiles limit (classic Asteroids: 4)
     const currentProjectiles = this.countPlayerProjectiles(world, entityId)
     const maxProjectiles = gameConfig.gameplay.maxPlayerProjectiles
-    const projectilesToFire = weapon.currentWeapon === 'spread' ? 3 : 1
 
     if (currentProjectiles + projectilesToFire > maxProjectiles) {
       return // Cannot fire, would exceed max projectiles
     }
 
-    // Fire based on weapon type
-    if (weapon.currentWeapon === 'spread') {
+    // Fire based on weapon type and multiShot effect
+    if (hasMultiShot || weapon.currentWeapon === 'spread') {
       this.fireSpreadShot(world, entityId, transform, weapon)
     } else if (weapon.currentWeapon === 'homing') {
       this.fireHomingMissile(world, entityId, transform, weapon)
