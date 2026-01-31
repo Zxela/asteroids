@@ -270,10 +270,8 @@ export class Game {
     this.particleEmitterSystem = new ParticleEmitterSystem(this.particleManager, this.eventEmitter)
     this.particleRenderSystem = new ParticleRenderSystem(this.particleManager, scene, camera)
 
-    // Create audio system (AudioManager is already initialized)
-    if (this.audioManager) {
-      this.audioSystem = new AudioSystem(this.audioManager, this.eventEmitter)
-    }
+    // Note: AudioSystem is created in start() and persists across game sessions
+    // It subscribes to globalEventEmitter for state changes (mainMenu, playing, gameOver, etc.)
 
     // Create and register systems
     this.inputSystem = new InputSystem()
@@ -358,11 +356,8 @@ export class Game {
     this.particleEmitterSystem = null
     this.particleRenderSystem = null
 
-    // Clean up audio system
-    if (this.audioSystem) {
-      this.audioSystem.destroy()
-      this.audioSystem = null
-    }
+    // Note: AudioSystem is NOT destroyed here - it persists across game sessions
+    // and subscribes to globalEventEmitter for state-based music transitions
     this.eventEmitter = null
 
     // Reset game state
@@ -560,10 +555,18 @@ export class Game {
     this.lastTime = performance.now()
     this.accumulator = 0
 
+    // Create AudioSystem immediately after AudioManager is ready (from initialize())
+    // This must happen before any state transitions so it can listen for gameStateChanged events
+    // AudioSystem subscribes to globalEventEmitter and persists across game sessions
+    if (this.audioManager && !this.audioSystem) {
+      this.audioSystem = new AudioSystem(this.audioManager, this.globalEventEmitter)
+    }
+
     // Start FSM in loading state, then transition to menu
     this.fsm.start('loading')
     // Since we have no async assets, immediately go to main menu
     this.fsm.transition('loadComplete')
+    // Now the AudioSystem will receive this event and play menu music
     this.onStateChange('mainMenu')
 
     this.gameLoop()

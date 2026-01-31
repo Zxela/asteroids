@@ -49,6 +49,14 @@ interface AudioEventMap extends Record<string, unknown> {
 }
 
 /**
+ * Minimal event map for global events (state changes only).
+ * Used when AudioSystem subscribes to globalEventEmitter for music transitions.
+ */
+interface GlobalAudioEventMap extends Record<string, unknown> {
+  gameStateChanged: { state: GameFlowState }
+}
+
+/**
  * Volume multipliers for asteroid sizes
  */
 const ASTEROID_VOLUME_MULTIPLIERS: Record<string, number> = {
@@ -89,8 +97,8 @@ export class AudioSystem {
   /** Reference to AudioManager for sound playback */
   private audioManager: AudioManager | null
 
-  /** Reference to EventBus for event subscriptions */
-  private eventBus: EventEmitter<AudioEventMap> | null
+  /** Reference to EventBus for event subscriptions (accepts full or global-only event maps) */
+  private eventBus: EventEmitter<AudioEventMap> | EventEmitter<GlobalAudioEventMap> | null
 
   /** Flag indicating if thrust sound is currently playing */
   private thrustSoundPlaying = false
@@ -118,9 +126,14 @@ export class AudioSystem {
    * Create a new AudioSystem instance.
    *
    * @param audioManager - AudioManager instance for sound playback
-   * @param eventBus - EventEmitter for subscribing to game events
+   * @param eventBus - EventEmitter for subscribing to game events. Can be either:
+   *                   - Full AudioEventMap for gameplay sounds (session-scoped)
+   *                   - GlobalAudioEventMap for state changes only (persists across sessions)
    */
-  constructor(audioManager: AudioManager, eventBus: EventEmitter<AudioEventMap>) {
+  constructor(
+    audioManager: AudioManager,
+    eventBus: EventEmitter<AudioEventMap> | EventEmitter<GlobalAudioEventMap>
+  ) {
     this.audioManager = audioManager || null
     this.eventBus = eventBus || null
 
@@ -144,19 +157,27 @@ export class AudioSystem {
   /**
    * Subscribe to all game events.
    * Sets up listeners for audio triggers.
+   * Note: When using GlobalAudioEventMap, only gameStateChanged is subscribed.
+   * Other gameplay events are safely subscribed but won't fire on global emitter.
    */
   private subscribeToEvents(): void {
     if (!this.eventBus) return
 
-    this.eventBus.on('weaponFired', this.handlers.weaponFired)
-    this.eventBus.on('asteroidDestroyed', this.handlers.asteroidDestroyed)
-    this.eventBus.on('powerUpCollected', this.handlers.powerUpCollected)
-    this.eventBus.on('shipThrust', this.handlers.shipThrust)
-    this.eventBus.on('playerDied', this.handlers.playerDied)
-    this.eventBus.on('waveStarted', this.handlers.waveStarted)
-    this.eventBus.on('bossSpawned', this.handlers.bossSpawned)
-    this.eventBus.on('bossDefeated', this.handlers.bossDefeated)
-    this.eventBus.on('gameStateChanged', this.handlers.gameStateChanged)
+    // Cast to full AudioEventMap for subscription - this is safe because:
+    // 1. EventEmitter.on() just registers handlers in a Map
+    // 2. Events not emitted simply won't trigger their handlers
+    // 3. This allows AudioSystem to work with both full and global-only emitters
+    const bus = this.eventBus as EventEmitter<AudioEventMap>
+
+    bus.on('weaponFired', this.handlers.weaponFired)
+    bus.on('asteroidDestroyed', this.handlers.asteroidDestroyed)
+    bus.on('powerUpCollected', this.handlers.powerUpCollected)
+    bus.on('shipThrust', this.handlers.shipThrust)
+    bus.on('playerDied', this.handlers.playerDied)
+    bus.on('waveStarted', this.handlers.waveStarted)
+    bus.on('bossSpawned', this.handlers.bossSpawned)
+    bus.on('bossDefeated', this.handlers.bossDefeated)
+    bus.on('gameStateChanged', this.handlers.gameStateChanged)
   }
 
   /**
@@ -166,15 +187,18 @@ export class AudioSystem {
   private unsubscribeFromEvents(): void {
     if (!this.eventBus) return
 
-    this.eventBus.off('weaponFired', this.handlers.weaponFired)
-    this.eventBus.off('asteroidDestroyed', this.handlers.asteroidDestroyed)
-    this.eventBus.off('powerUpCollected', this.handlers.powerUpCollected)
-    this.eventBus.off('shipThrust', this.handlers.shipThrust)
-    this.eventBus.off('playerDied', this.handlers.playerDied)
-    this.eventBus.off('waveStarted', this.handlers.waveStarted)
-    this.eventBus.off('bossSpawned', this.handlers.bossSpawned)
-    this.eventBus.off('bossDefeated', this.handlers.bossDefeated)
-    this.eventBus.off('gameStateChanged', this.handlers.gameStateChanged)
+    // Cast to full AudioEventMap for unsubscription (mirrors subscribeToEvents)
+    const bus = this.eventBus as EventEmitter<AudioEventMap>
+
+    bus.off('weaponFired', this.handlers.weaponFired)
+    bus.off('asteroidDestroyed', this.handlers.asteroidDestroyed)
+    bus.off('powerUpCollected', this.handlers.powerUpCollected)
+    bus.off('shipThrust', this.handlers.shipThrust)
+    bus.off('playerDied', this.handlers.playerDied)
+    bus.off('waveStarted', this.handlers.waveStarted)
+    bus.off('bossSpawned', this.handlers.bossSpawned)
+    bus.off('bossDefeated', this.handlers.bossDefeated)
+    bus.off('gameStateChanged', this.handlers.gameStateChanged)
   }
 
   /**

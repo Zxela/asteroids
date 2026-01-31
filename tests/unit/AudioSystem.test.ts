@@ -158,6 +158,87 @@ describe('AudioSystem', () => {
     vi.clearAllMocks()
   })
 
+  describe('Global Event Emitter Integration', () => {
+    it('should receive gameStateChanged events from global emitter', () => {
+      // Simulate the global event emitter pattern used by Game.ts
+      const globalEmitter = new EventEmitter<AudioEventMap>()
+      const system = new AudioSystem(audioManager, globalEmitter)
+
+      // Emit mainMenu state change
+      globalEmitter.emit('gameStateChanged', { state: 'mainMenu' })
+
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
+      system.destroy()
+    })
+
+    it('should play menu music when mainMenu state is emitted', () => {
+      const globalEmitter = new EventEmitter<AudioEventMap>()
+      const system = new AudioSystem(audioManager, globalEmitter)
+
+      globalEmitter.emit('gameStateChanged', { state: 'mainMenu' })
+
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', { volume: 1.0 })
+      system.destroy()
+    })
+
+    it('should play background music when playing state is emitted', () => {
+      const globalEmitter = new EventEmitter<AudioEventMap>()
+      const system = new AudioSystem(audioManager, globalEmitter)
+
+      globalEmitter.emit('gameStateChanged', { state: 'playing' })
+
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_background', { volume: 1.0 })
+      system.destroy()
+    })
+
+    it('should stop music when gameOver state is emitted', () => {
+      const globalEmitter = new EventEmitter<AudioEventMap>()
+      const system = new AudioSystem(audioManager, globalEmitter)
+
+      globalEmitter.emit('gameStateChanged', { state: 'gameOver' })
+
+      expect(audioManager.stopMusic).toHaveBeenCalled()
+      system.destroy()
+    })
+
+    it('should persist across multiple state transitions without being recreated', () => {
+      const globalEmitter = new EventEmitter<AudioEventMap>()
+      const system = new AudioSystem(audioManager, globalEmitter)
+
+      // Simulate game lifecycle: mainMenu -> playing -> gameOver -> mainMenu
+      globalEmitter.emit('gameStateChanged', { state: 'mainMenu' })
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
+
+      globalEmitter.emit('gameStateChanged', { state: 'playing' })
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_background', expect.any(Object))
+
+      globalEmitter.emit('gameStateChanged', { state: 'gameOver' })
+      expect(audioManager.stopMusic).toHaveBeenCalled()
+
+      // Back to main menu (same AudioSystem instance)
+      vi.clearAllMocks()
+      globalEmitter.emit('gameStateChanged', { state: 'mainMenu' })
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
+
+      system.destroy()
+    })
+
+    it('should handle state transitions without errors when not destroyed', () => {
+      const globalEmitter = new EventEmitter<AudioEventMap>()
+      const system = new AudioSystem(audioManager, globalEmitter)
+
+      // All state transitions should work without throwing
+      expect(() => globalEmitter.emit('gameStateChanged', { state: 'loading' })).not.toThrow()
+      expect(() => globalEmitter.emit('gameStateChanged', { state: 'mainMenu' })).not.toThrow()
+      expect(() => globalEmitter.emit('gameStateChanged', { state: 'playing' })).not.toThrow()
+      expect(() => globalEmitter.emit('gameStateChanged', { state: 'paused' })).not.toThrow()
+      expect(() => globalEmitter.emit('gameStateChanged', { state: 'gameOver' })).not.toThrow()
+      expect(() => globalEmitter.emit('gameStateChanged', { state: 'victory' })).not.toThrow()
+
+      system.destroy()
+    })
+  })
+
   describe('Initialization', () => {
     it('should initialize with AudioManager and EventBus', () => {
       const system = new AudioSystem(audioManager, eventBus)
