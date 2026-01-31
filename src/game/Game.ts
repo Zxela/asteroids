@@ -79,7 +79,7 @@ import type {
 import type { GameFlowState } from '../types/game'
 
 /**
- * Game event types for particle and audio systems.
+ * Game event types for particle and audio systems (session-scoped).
  */
 interface GameEvents extends Record<string, unknown> {
   asteroidDestroyed: AsteroidDestroyedEventData
@@ -92,6 +92,15 @@ interface GameEvents extends Record<string, unknown> {
   bossDefeated: BossDefeatedEventData
   gameStateChanged: { state: GameFlowState }
   hyperspaceActivated: HyperspaceActivatedEventData
+}
+
+/**
+ * Global event types that persist across game sessions.
+ * Used for systems like AudioSystem that need to respond to state changes
+ * even before gameplay starts.
+ */
+interface GlobalGameEvents extends Record<string, unknown> {
+  gameStateChanged: { state: GameFlowState }
 }
 
 /**
@@ -143,6 +152,10 @@ export class Game {
   private particleRenderSystem: ParticleRenderSystem | null = null
   private eventEmitter: EventEmitter<GameEvents> | null = null
 
+  // Global event emitter - persists across game sessions for systems
+  // that need to respond to state changes before gameplay starts (e.g., AudioSystem)
+  private globalEventEmitter: EventEmitter<GlobalGameEvents>
+
   // Background
   private starfield: Starfield | null = null
 
@@ -158,6 +171,9 @@ export class Game {
     this.world = new World()
     this.sceneManager = new SceneManager()
     this.fsm = new GameStateMachine()
+    // Create global event emitter that persists across game sessions
+    // This allows systems like AudioSystem to subscribe before gameplay starts
+    this.globalEventEmitter = new EventEmitter<GlobalGameEvents>()
   }
 
   /**
@@ -395,7 +411,12 @@ export class Game {
     this.gameOverScreen?.hide()
     this.hud?.hide()
 
-    // Emit game state change event for audio system
+    // Emit game state change event on global emitter (persists across sessions)
+    // This allows systems like AudioSystem to respond to state changes
+    // even before gameplay starts (e.g., mainMenu state at game launch)
+    this.globalEventEmitter.emit('gameStateChanged', { state: newState as GameFlowState })
+
+    // Also emit on session-scoped emitter for backward compatibility
     this.eventEmitter?.emit('gameStateChanged', { state: newState as GameFlowState })
 
     // Show appropriate UI for new state
@@ -406,7 +427,7 @@ export class Game {
       case 'playing':
         // Initialize or reset gameplay for new game
         this.initializeGameplay()
-        // Emit state change again after eventEmitter is created
+        // Emit state change on session emitter after it's created
         this.eventEmitter?.emit('gameStateChanged', { state: 'playing' as GameFlowState })
         this.hud?.show()
         // Reset HUD to initial values
@@ -581,6 +602,16 @@ export class Game {
    */
   getFixedTimestep(): number {
     return this.fixedTimestep
+  }
+
+  /**
+   * Get the global event emitter.
+   * This emitter persists across game sessions and can be used
+   * by systems that need to respond to state changes before
+   * gameplay starts (e.g., AudioSystem for menu music).
+   */
+  getGlobalEventEmitter(): EventEmitter<GlobalGameEvents> {
+    return this.globalEventEmitter
   }
 
   /**
