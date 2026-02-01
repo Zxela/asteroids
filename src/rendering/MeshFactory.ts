@@ -516,24 +516,25 @@ function createBossCarrier(material: THREE.Material): THREE.Mesh {
 /**
  * Create large UFO mesh - classic flying saucer shape.
  * Ellipsoid body with dome on top.
+ * Scaled down to 60% of original size (12 unit radius body)
  */
 function createUFOLarge(material: THREE.Material): THREE.Object3D {
   const group = new THREE.Group()
 
-  // Main saucer body - flattened sphere
-  const bodyGeometry = new THREE.SphereGeometry(25, 16, 12)
+  // Main saucer body - flattened sphere (reduced from 25 to 12 units radius)
+  const bodyGeometry = new THREE.SphereGeometry(12, 16, 12)
   bodyGeometry.scale(1, 0.3, 1) // Flatten vertically
   const body = new THREE.Mesh(bodyGeometry, material)
   group.add(body)
 
-  // Top dome - smaller sphere
-  const domeGeometry = new THREE.SphereGeometry(10, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2)
+  // Top dome - smaller sphere (reduced from 10 to 5 units)
+  const domeGeometry = new THREE.SphereGeometry(5, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2)
   const dome = new THREE.Mesh(domeGeometry, material)
-  dome.position.y = 5
+  dome.position.y = 2.5
   group.add(dome)
 
-  // Ring around saucer edge
-  const ringGeometry = new THREE.TorusGeometry(22, 3, 8, 24)
+  // Ring around saucer edge (reduced from 22 to 10 units)
+  const ringGeometry = new THREE.TorusGeometry(10, 1.5, 8, 24)
   ringGeometry.rotateX(Math.PI / 2)
   const ring = new THREE.Mesh(ringGeometry, material)
   group.add(ring)
@@ -544,24 +545,25 @@ function createUFOLarge(material: THREE.Material): THREE.Object3D {
 /**
  * Create small UFO mesh - compact flying saucer.
  * Same shape as large but more compact.
+ * Scaled down to 60% of original size (8 unit radius body)
  */
 function createUFOSmall(material: THREE.Material): THREE.Object3D {
   const group = new THREE.Group()
 
-  // Main saucer body - flattened sphere (smaller)
-  const bodyGeometry = new THREE.SphereGeometry(15, 12, 8)
+  // Main saucer body - flattened sphere (reduced from 15 to 8 units radius)
+  const bodyGeometry = new THREE.SphereGeometry(8, 12, 8)
   bodyGeometry.scale(1, 0.35, 1) // Slightly less flat
   const body = new THREE.Mesh(bodyGeometry, material)
   group.add(body)
 
-  // Top dome - smaller sphere
-  const domeGeometry = new THREE.SphereGeometry(6, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2)
+  // Top dome - smaller sphere (reduced from 6 to 3 units)
+  const domeGeometry = new THREE.SphereGeometry(3, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2)
   const dome = new THREE.Mesh(domeGeometry, material)
-  dome.position.y = 4
+  dome.position.y = 2
   group.add(dome)
 
-  // Ring around saucer edge (smaller)
-  const ringGeometry = new THREE.TorusGeometry(13, 2, 6, 16)
+  // Ring around saucer edge (reduced from 13 to 7 units)
+  const ringGeometry = new THREE.TorusGeometry(7, 1, 6, 16)
   ringGeometry.rotateX(Math.PI / 2)
   const ring = new THREE.Mesh(ringGeometry, material)
   group.add(ring)
