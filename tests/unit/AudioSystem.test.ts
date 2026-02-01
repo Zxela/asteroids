@@ -434,6 +434,104 @@ describe('AudioSystem', () => {
     })
   })
 
+  describe('Attract Mode Music Handling', () => {
+    it('should play menu music on attractMode state (AC1, AC2)', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
+    })
+
+    it('should keep menu music playing when entering attract mode from main menu (AC3)', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      // Start at main menu
+      globalEventBus.emit('gameStateChanged', { state: 'mainMenu' })
+      const menuMusicCallCount = (audioManager.playMusic as ReturnType<typeof vi.fn>).mock.calls.length
+
+      vi.clearAllMocks()
+
+      // Enter attract mode
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+
+      // Should play menu music again (same track, so continues seamlessly)
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
+    })
+
+    it('should transition from attract mode back to menu without interruption (AC3)', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      // Enter attract mode
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+      vi.clearAllMocks()
+
+      // Return to main menu
+      globalEventBus.emit('gameStateChanged', { state: 'mainMenu' })
+
+      // Should play menu music (same track, AudioManager handles continuity)
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
+    })
+
+    it('should transition from attract mode to gameplay with background music (AC4)', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      // Start in attract mode
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+      vi.clearAllMocks()
+
+      // Start real game
+      globalEventBus.emit('gameStateChanged', { state: 'playing' })
+
+      // Should switch to background music
+      expect(audioManager.playMusic).toHaveBeenCalledWith('music_background', expect.any(Object))
+    })
+
+    it('should not call stopMusic when entering attract mode (AC5)', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+
+      expect(audioManager.stopMusic).not.toHaveBeenCalled()
+    })
+
+    it('should handle rapid state changes involving attract mode without audio glitches (AC5)', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      // Rapid state changes
+      globalEventBus.emit('gameStateChanged', { state: 'mainMenu' })
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+      globalEventBus.emit('gameStateChanged', { state: 'mainMenu' })
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+
+      // All calls should be to menu music, no stop calls
+      const musicCalls = (audioManager.playMusic as ReturnType<typeof vi.fn>).mock.calls
+      musicCalls.forEach(call => {
+        expect(call[0]).toBe('music_menu')
+      })
+      expect(audioManager.stopMusic).not.toHaveBeenCalled()
+    })
+
+    it('should treat attractMode and mainMenu identically for music purposes', () => {
+      const system1 = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+      globalEventBus.emit('gameStateChanged', { state: 'mainMenu' })
+      const menuCall = (audioManager.playMusic as ReturnType<typeof vi.fn>).mock.calls[0]
+
+      vi.clearAllMocks()
+
+      const system2 = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+      globalEventBus.emit('gameStateChanged', { state: 'attractMode' })
+      const attractCall = (audioManager.playMusic as ReturnType<typeof vi.fn>).mock.calls[0]
+
+      // Both should call playMusic with exact same parameters
+      expect(attractCall[0]).toBe(menuCall[0])
+      expect(attractCall[1]).toEqual(menuCall[1])
+
+      system1.destroy()
+      system2.destroy()
+    })
+  })
+
   describe('Volume Settings', () => {
     it('should respect muted state when playing sounds', () => {
       (audioManager.isMuted as ReturnType<typeof vi.fn>).mockReturnValue(true)

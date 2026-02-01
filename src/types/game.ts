@@ -13,7 +13,7 @@ import type { ActivePowerUp, WeaponType } from './components'
 /**
  * Game flow states - the high-level states of the game.
  */
-export type GameFlowState = 'loading' | 'mainMenu' | 'playing' | 'paused' | 'gameOver' | 'victory'
+export type GameFlowState = 'loading' | 'mainMenu' | 'attractMode' | 'playing' | 'paused' | 'gameOver' | 'victory'
 
 /**
  * Game flow events - triggers for state transitions.

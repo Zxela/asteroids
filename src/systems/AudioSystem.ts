@@ -362,6 +362,8 @@ export class AudioSystem {
 
     switch (data.state) {
       case 'mainMenu':
+      case 'attractMode':
+        // Attract mode keeps menu music playing (it's a demo shown on the menu)
         this.audioManager.playMusic('music_menu', { volume: 1.0 })
         break
 
