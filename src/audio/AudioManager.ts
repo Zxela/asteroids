@@ -106,7 +106,7 @@ export class AudioManager {
   /**
    * Play a sound effect by ID.
    * @param id - Sound ID (e.g., 'shoot', 'explosion', 'powerup', 'thrust', 'gameOver')
-   * @param options - Optional playback options
+   * @param options - Optional playback options (volume, loop, rate)
    */
   playSound(id: string, options: PlaySoundOptions = {}): void {
     if (this.muted) {
@@ -124,6 +124,17 @@ export class AudioManager {
     const effectiveVolume = this.sfxVolume * baseVolume * optionVolume
 
     sound.volume(effectiveVolume)
+
+    // Apply loop option if provided
+    if (options.loop !== undefined) {
+      sound.loop(options.loop)
+    }
+
+    // Apply rate option if provided
+    if (options.rate !== undefined) {
+      sound.rate(options.rate)
+    }
+
     sound.play()
   }
 

@@ -27,6 +27,7 @@ class MockHowl {
   src: string
   _volume: number
   _loop: boolean
+  _rate: number
   preload: boolean
   onload: (() => void) | null = null
   playing = false
@@ -44,6 +45,7 @@ class MockHowl {
     this.src = options.src[0]
     this._volume = options.volume ?? 1
     this._loop = options.loop ?? false
+    this._rate = 1
     this.preload = options.preload ?? true
     this.onload = options.onload ?? null
     mockHowlInstances.push(this)
@@ -87,6 +89,14 @@ class MockHowl {
       return this._loop
     }
     this._loop = loop
+    return this
+  }
+
+  rate(rate?: number): number | this {
+    if (rate === undefined) {
+      return this._rate
+    }
+    this._rate = rate
     return this
   }
 
@@ -705,6 +715,36 @@ describe('AudioManager', () => {
       expect(options.loop).toBe(true)
       expect(options.rate).toBe(0.8)
       expect(options.volume).toBe(0.5)
+      manager.destroy()
+    })
+
+    it('playSound must set loop(true) when options.loop is true', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      manager.playSound('shoot', { loop: true })
+
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+      expect(sound).toBeDefined()
+      expect(sound?.loop()).toBe(true)
+      manager.destroy()
+    })
+
+    it('playSound must set rate when options.rate is provided', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      // Mock the rate method to track calls
+      const mockRate = vi.fn()
+      const originalRate = MockHowl.prototype.rate
+
+      manager.playSound('shoot', { rate: 1.2 })
+
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+      expect(sound).toBeDefined()
+      expect(sound?.rate()).toBe(1.2)
       manager.destroy()
     })
   })
