@@ -451,4 +451,187 @@ describe('DamageSystem', () => {
       expect(world.isEntityAlive(projectileId)).toBe(true)
     })
   })
+
+  describe('UFO-Asteroid Collisions', () => {
+    /**
+     * Helper to create a UFO entity
+     */
+    function createUFO(health = 1): EntityId {
+      const id = world.createEntity()
+      world.addComponent(id, new Transform(new Vector3(0, 0, 0)))
+      world.addComponent(id, new Collider('sphere', 15, 'ufo', ['player', 'projectile', 'asteroid']))
+      world.addComponent(id, new Health(health))
+      return id
+    }
+
+    it('should destroy asteroid on UFO contact (AC-015)', () => {
+      const ufoId = createUFO(1)
+      const asteroidId = createAsteroid(30)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      // Position asteroid to collide with UFO
+      // UFO radius 15 + asteroid radius 20 = 35 collision range
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0) // Distance 30 < 35 = collision
+
+      collisionSystem.update(world, 16)
+      expect(collisionSystem.getCollisionCount()).toBe(1)
+
+      const asteroidHealth = world.getComponent(asteroidId, Health)
+
+      damageSystem.update(world, 16)
+
+      // AC-015: Asteroid must be destroyed on UFO contact
+      expect(asteroidHealth!.current).toBe(0)
+    })
+
+    it('should NOT damage UFO on asteroid collision (AC-016)', () => {
+      const ufoId = createUFO(1)
+      const asteroidId = createAsteroid(30)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      // Position asteroid to collide with UFO
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0)
+
+      collisionSystem.update(world, 16)
+
+      const ufoHealth = world.getComponent(ufoId, Health)
+      const initialHealth = ufoHealth!.current
+
+      damageSystem.update(world, 16)
+
+      // AC-016: UFO must NOT be damaged by asteroid collision
+      expect(ufoHealth!.current).toBe(initialHealth)
+    })
+
+    it('should trigger asteroid destruction for visual feedback (AC-017)', () => {
+      const ufoId = createUFO(1)
+      const asteroidId = createAsteroid(30)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      // Position asteroid to collide with UFO
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0)
+
+      collisionSystem.update(world, 16)
+      damageSystem.update(world, 16)
+
+      // AC-017: Collision must generate visual feedback (asteroid destruction triggers split)
+      // Note: The asteroid is not destroyed by DamageSystem, but health is set to 0
+      // AsteroidDestructionSystem will handle actual destruction/splitting
+      const asteroidHealth = world.getComponent(asteroidId, Health)
+      expect(asteroidHealth!.current).toBe(0)
+      // Asteroid entity should still exist (not destroyed yet by DamageSystem)
+      expect(world.isEntityAlive(asteroidId)).toBe(true)
+    })
+
+    it('should handle collision with layer order reversed (ufo first)', () => {
+      // Create UFO first so it has lower entity ID
+      const ufoId = createUFO(1)
+      const asteroidId = createAsteroid(30)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      // Position asteroid to collide with UFO
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0)
+
+      collisionSystem.update(world, 16)
+      expect(collisionSystem.getCollisionCount()).toBe(1)
+
+      const ufoHealth = world.getComponent(ufoId, Health)
+      const asteroidHealth = world.getComponent(asteroidId, Health)
+      const initialUfoHealth = ufoHealth!.current
+
+      damageSystem.update(world, 16)
+
+      // Asteroid destroyed, UFO unharmed
+      expect(asteroidHealth!.current).toBe(0)
+      expect(ufoHealth!.current).toBe(initialUfoHealth)
+    })
+
+    it('should handle collision with layer order reversed (asteroid first)', () => {
+      // Create asteroid first so it has lower entity ID
+      const asteroidId = createAsteroid(30)
+      const ufoId = createUFO(1)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      // Position asteroid to collide with UFO
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0)
+
+      collisionSystem.update(world, 16)
+      expect(collisionSystem.getCollisionCount()).toBe(1)
+
+      const ufoHealth = world.getComponent(ufoId, Health)
+      const asteroidHealth = world.getComponent(asteroidId, Health)
+      const initialUfoHealth = ufoHealth!.current
+
+      damageSystem.update(world, 16)
+
+      // Asteroid destroyed, UFO unharmed
+      expect(asteroidHealth!.current).toBe(0)
+      expect(ufoHealth!.current).toBe(initialUfoHealth)
+    })
+
+    it('should handle already destroyed UFO', () => {
+      const ufoId = createUFO(1)
+      const asteroidId = createAsteroid(30)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0)
+
+      collisionSystem.update(world, 16)
+      world.destroyEntity(ufoId)
+
+      // Should not throw
+      expect(() => damageSystem.update(world, 16)).not.toThrow()
+
+      // Asteroid should not take damage
+      const asteroidHealth = world.getComponent(asteroidId, Health)
+      expect(asteroidHealth!.current).toBe(30)
+    })
+
+    it('should handle already destroyed asteroid', () => {
+      const ufoId = createUFO(1)
+      const asteroidId = createAsteroid(30)
+
+      // Update asteroid collider mask to include UFO
+      const asteroidCollider = world.getComponent(asteroidId, Collider)
+      asteroidCollider!.mask = ['player', 'projectile', 'ufo']
+
+      const asteroidTransform = world.getComponent(asteroidId, Transform)
+      asteroidTransform!.position.set(30, 0, 0)
+
+      collisionSystem.update(world, 16)
+      world.destroyEntity(asteroidId)
+
+      // Should not throw
+      expect(() => damageSystem.update(world, 16)).not.toThrow()
+
+      // UFO should still exist and be unharmed
+      expect(world.isEntityAlive(ufoId)).toBe(true)
+      const ufoHealth = world.getComponent(ufoId, Health)
+      expect(ufoHealth!.current).toBe(1)
+    })
+  })
 })
