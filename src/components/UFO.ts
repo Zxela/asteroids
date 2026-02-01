@@ -35,14 +35,14 @@ export const UFO_CONFIG = {
     shootInterval: 2000, // 2 seconds between shots
     accuracy: 0.3, // 30% accuracy (more random)
     points: 200,
-    colliderRadius: 25
+    colliderRadius: 15
   },
   small: {
     speed: 120,
     shootInterval: 1500, // 1.5 seconds between shots
     accuracy: 0.8, // 80% accuracy (more precise)
     points: 1000,
-    colliderRadius: 15
+    colliderRadius: 10
   }
 } as const
 
