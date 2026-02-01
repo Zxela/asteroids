@@ -171,6 +171,7 @@ export class UFOSystem implements System {
       // Check if UFO is destroyed
       if (health.current <= 0) {
         this.emitUFODestroyed(ufoId, transform.position.clone(), ufo.ufoSize, ufo.points)
+        this.stopUfoSound(ufoId)
         world.destroyEntity(ufoId)
         this.ufoStates.delete(ufoId)
         continue
@@ -217,6 +218,7 @@ export class UFOSystem implements System {
 
       // Check if UFO has left screen bounds (destroy if too far)
       if (this.isOutOfBounds(transform.position)) {
+        this.stopUfoSound(ufoId)
         world.destroyEntity(ufoId)
         this.ufoStates.delete(ufoId)
       }

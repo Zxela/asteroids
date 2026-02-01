@@ -1033,6 +1033,151 @@ describe('UFOSystem', () => {
       }).not.toThrow()
     })
   })
+
+  describe('Call stopUfoSound on UFO destruction (AC-012)', () => {
+    it('should call stopUfoSound when UFO is destroyed (health <= 0)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalled()
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Update health to 0 (destroyed)
+      const health = world.getComponent(ufoId, { name: 'Health' })
+      health.current = 0
+
+      // Second update - should stop sound when UFO is destroyed
+      ufoSystem.update(world, 16)
+
+      // Verify stopSound was called
+      expect(stopSound).toHaveBeenCalledWith(123)
+    })
+
+    it('should call stopUfoSound when UFO exits screen bounds', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalled()
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Move UFO out of bounds (beyond margin of 200)
+      const transform = world.getComponent(ufoId, { name: 'Transform' })
+      transform.position.x = 2000 // Far beyond SCREEN_HALF_WIDTH (960) + margin (200)
+
+      // Second update - should stop sound when UFO exits bounds
+      ufoSystem.update(world, 16)
+
+      // Verify stopSound was called
+      expect(stopSound).toHaveBeenCalledWith(123)
+    })
+
+    it('should reset activeSoundId after stopping sound on destruction', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Destroy UFO
+      const health = world.getComponent(ufoId, { name: 'Health' })
+      health.current = 0
+
+      // Second update - should stop sound
+      ufoSystem.update(world, 16)
+
+      // Verify activeSoundId is reset to null
+      expect(ufoSystem.activeSoundId).toBe(null)
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+  })
 })
 
 // Helper function to create a mock world
