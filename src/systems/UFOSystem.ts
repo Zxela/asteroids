@@ -171,6 +171,17 @@ export class UFOSystem implements System {
           verticalDirection: 0
         }
         this.ufoStates.set(ufoId, state)
+
+        // Start UFO loop sound for first UFO
+        if (this.activeUfoId === null && this.audioManager) {
+          this.activeUfoId = ufoId
+          const basePitch = ufo.ufoSize === 'small' ? 1.3 : 1.0
+          this.activeSoundId = this.audioManager.playSound('ufoLoop', {
+            loop: true,
+            volume: 0.4,
+            rate: basePitch
+          })
+        }
       }
 
       // Update movement
