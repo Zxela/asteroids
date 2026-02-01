@@ -103,10 +103,10 @@ export function createUFO(world: World, options: CreateUFOOptions): EntityId {
   const position = options.position ?? spawn.position
   const direction = options.direction ?? spawn.direction
 
-  // Calculate scale based on size
-  const scale = size === 'large' ? 1.5 : 1.0
+  // No scale factor - mesh is already correctly sized
+  const scale = 1.0
 
-  // Transform: Position at spawn point, no rotation, size-based scale
+  // Transform: Position at spawn point, no rotation, scale 1.0
   world.addComponent(
     ufoId,
     new Transform(position.clone(), new Vector3(0, 0, 0), new Vector3(scale, scale, scale))
