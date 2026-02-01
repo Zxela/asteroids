@@ -43,4 +43,16 @@ describe('UFOSystem', () => {
       expect(ufoSystem.audioManager).toBe(audioManager)
     })
   })
+
+  describe('Sound State Tracking', () => {
+    it('should track activeSoundId for current UFO sound (AC-009f)', () => {
+      const ufoSystem = new UFOSystem()
+      expect(ufoSystem.activeSoundId).toBe(null)
+    })
+
+    it('should track activeUfoId for current UFO entity (AC-009g)', () => {
+      const ufoSystem = new UFOSystem()
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+  })
 })

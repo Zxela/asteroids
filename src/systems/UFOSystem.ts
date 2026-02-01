@@ -101,6 +101,8 @@ export class UFOSystem implements System {
   private events: UFOSystemEvent[] = []
   private ufoStates: Map<EntityId, UFOState> = new Map()
   audioManager: AudioManager | null = null
+  activeSoundId: number | null = null
+  activeUfoId: EntityId | null = null
 
   /**
    * Sets the audio manager for the UFO system.
