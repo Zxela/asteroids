@@ -187,6 +187,11 @@ export class UFOSystem implements System {
       // Update movement
       this.updateMovement(ufo, transform, velocity, state, deltaTime)
 
+      // Update doppler pitch modulation
+      if (ufoId === this.activeUfoId && this.audioManager && this.activeSoundId !== null) {
+        this.updateDopplerEffect(ufo, transform)
+      }
+
       // Update shooting
       if (playerPos) {
         this.updateShooting(ufoId, ufo, transform, playerPos, deltaTime)
@@ -198,6 +203,26 @@ export class UFOSystem implements System {
         this.ufoStates.delete(ufoId)
       }
     }
+  }
+
+  /**
+   * Updates doppler pitch effect based on UFO horizontal position.
+   */
+  private updateDopplerEffect(ufo: UFO, transform: Transform): void {
+    if (!this.audioManager || this.activeSoundId === null) return
+
+    // Calculate normalized X position (0.0 at left edge, 1.0 at right edge)
+    const normalizedX = (transform.position.x + SCREEN_HALF_WIDTH) / (SCREEN_HALF_WIDTH * 2)
+
+    // Calculate doppler pitch (0.8 to 1.2 range)
+    const dopplerPitch = 0.8 + normalizedX * 0.4
+
+    // Apply base pitch multiplier
+    const basePitch = ufo.ufoSize === 'small' ? 1.3 : 1.0
+    const finalPitch = dopplerPitch * basePitch
+
+    // Update sound rate
+    this.audioManager.setSoundRate(this.activeSoundId, finalPitch)
   }
 
   /**

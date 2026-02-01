@@ -232,6 +232,277 @@ describe('UFOSystem', () => {
       expect(playSound).toHaveBeenCalledTimes(1)
     })
   })
+
+  describe('Doppler Pitch Modulation', () => {
+    it('should modulate sound pitch based on UFO horizontal position (AC-010)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123) // mock sound ID
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Center of screen
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+
+      // Second update - should modulate pitch
+      ufoSystem.update(world, 16)
+
+      expect(setSoundRate).toHaveBeenCalled()
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const soundId = lastCall[0]
+      const pitch = lastCall[1]
+
+      expect(soundId).toBe(123)
+      expect(pitch).toBeGreaterThanOrEqual(0.8)
+      expect(pitch).toBeLessThanOrEqual(1.2)
+    })
+
+    it('should use pitch 0.8 when UFO is at left edge', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(-960, 0, 0), // Left edge
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set pitch to 0.8
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(0.8, 2)
+    })
+
+    it('should use pitch 1.2 when UFO is at right edge', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(960, 0, 0), // Right edge
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set pitch to 1.2
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(1.2, 2)
+    })
+
+    it('should use pitch 1.0 when UFO is at center', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Center
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set pitch to 1.0
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(1.0, 2)
+    })
+
+    it('should apply basePitch multiplier for small UFO doppler effect', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'small',
+        shootTimer: 1500,
+        points: 1000
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Center
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(120, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should apply 1.3x multiplier to center pitch (1.0 * 1.3 = 1.3)
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(1.3, 2)
+    })
+
+    it('should not call setSoundRate if activeSoundId is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Update with no UFOs
+      ufoSystem.update(world, 16)
+
+      expect(setSoundRate).not.toHaveBeenCalled()
+    })
+
+    it('should not call setSoundRate if audioManager is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      // Don't set audio manager
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      ufoSystem.update(world, 16)
+
+      expect(playSound).not.toHaveBeenCalled()
+    })
+  })
 })
 
 // Helper function to create a mock world
