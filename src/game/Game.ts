@@ -151,6 +151,9 @@ export class Game {
   private audioSystem: AudioSystem | null = null
   private globalEventEmitter: EventEmitter<GameEvents>
 
+  // Visual feedback
+  private flashOverlay: HTMLElement | null = null
+
   // Game state
   private shipEntityId: number | null = null
   private gameplayInitialized = false
@@ -200,6 +203,14 @@ export class Game {
     this.attractModeSystem = new AttractModeSystem()
     this.attractModeSystem.onStart(() => this.startAttractMode())
     this.attractModeSystem.onExit(() => this.exitAttractMode())
+
+    // Set up screen flash overlay for powerup collection feedback
+    this.setupFlashOverlay()
+
+    // Subscribe to powerUpCollected events for visual feedback
+    this.globalEventEmitter.on('powerUpCollected', (data) => {
+      this.flashScreen(data.color)
+    })
   }
 
   /**
@@ -723,6 +734,14 @@ export class Game {
         })
       }
     }
+
+    // Pass powerup collected events to particle system
+    if (this.powerUpSystem && this.eventEmitter) {
+      const powerUpEvents = this.powerUpSystem.getEvents()
+      for (const event of powerUpEvents) {
+        this.eventEmitter.emit('powerUpCollected', event.data)
+      }
+    }
   }
 
   /**
@@ -778,5 +797,50 @@ export class Game {
       // Trigger screen flash for wave start (classic arcade effect)
       this.hud?.triggerWaveFlash()
     }
+  }
+
+  /**
+   * Set up the screen flash overlay element.
+   * Creates a full-screen overlay div for visual feedback on powerup collection.
+   */
+  private setupFlashOverlay(): void {
+    this.flashOverlay = document.createElement('div')
+    this.flashOverlay.setAttribute('data-game-flash', '')
+    this.flashOverlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+    `
+    document.body.appendChild(this.flashOverlay)
+  }
+
+  /**
+   * Flash the screen with a specified color.
+   * Used for powerup collection feedback.
+   *
+   * @param color - Hex color value (e.g., 0xff00ff for magenta)
+   * @param duration - Duration of the flash in milliseconds (default: 100ms)
+   */
+  private flashScreen(color: number, duration = 100): void {
+    if (!this.flashOverlay) return
+
+    // Convert hex color to CSS rgb string
+    const r = (color >> 16) & 0xff
+    const g = (color >> 8) & 0xff
+    const b = color & 0xff
+    const hex = `rgb(${r}, ${g}, ${b})`
+
+    // Set color and trigger flash
+    this.flashOverlay.style.backgroundColor = hex
+    this.flashOverlay.style.opacity = '0.3'
+
+    // Fade out after duration
+    setTimeout(() => {
+      if (this.flashOverlay) {
+        this.flashOverlay.style.opacity = '0'
+      }
+    }, duration)
   }
 }

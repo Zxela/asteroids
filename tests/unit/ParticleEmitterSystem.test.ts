@@ -12,7 +12,7 @@ import { Vector3 } from 'three'
 import { ParticleEmitterSystem } from '../../src/systems/ParticleEmitterSystem'
 import { ParticleManager } from '../../src/rendering/ParticleManager'
 import { EventEmitter } from '../../src/utils/EventEmitter'
-import type { AsteroidDestroyedEventData, ShipThrustEventData, WeaponFiredEventData } from '../../src/types/events'
+import type { AsteroidDestroyedEventData, ShipThrustEventData, WeaponFiredEventData, PowerUpCollectedEventData } from '../../src/types/events'
 import type { WeaponType } from '../../src/types/components'
 
 // Event types for type-safe event emitter
@@ -20,6 +20,7 @@ interface TestEvents extends Record<string, unknown> {
   asteroidDestroyed: AsteroidDestroyedEventData
   shipThrust: ShipThrustEventData
   weaponFired: WeaponFiredEventData
+  powerUpCollected: PowerUpCollectedEventData
 }
 
 describe('ParticleEmitterSystem', () => {
@@ -912,6 +913,211 @@ describe('ParticleEmitterSystem', () => {
       // Trail max size (3) should be less than or equal to thrust min (2)
       // Actually trail has same upper bound as thrust min, but trail starts at 1 vs 2
       expect(maxTrailSize).toBeLessThanOrEqual(3)
+    })
+  })
+
+  // ====================================================
+  // PowerUp Collection Particle Burst Tests (Task 006)
+  // ====================================================
+  describe('PowerUp Collection - Particle Burst', () => {
+    it('should listen for powerUpCollected events', () => {
+      // AC1: ParticleSystem listens for powerUpCollected events
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'shield',
+        position: new Vector3(100, 200, 0),
+        color: 0x00ffff
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      expect(particles.length).toBeGreaterThan(0)
+    })
+
+    it('should create particle burst at powerup position', () => {
+      // AC2: Particle burst created at powerup position
+      const powerUpPosition = new Vector3(150, 250, 0)
+
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'rapidFire',
+        position: powerUpPosition,
+        color: 0xff8800
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      // All particles should start at powerup position
+      for (const particle of particles) {
+        const distance = particle.position.distanceTo(powerUpPosition)
+        expect(distance).toBeLessThan(10)
+      }
+    })
+
+    it('should use the color from the event', () => {
+      // AC3: Particles use the color from the event
+      const testColor = 0xff00ff // Magenta for multiShot
+
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'multiShot',
+        position: new Vector3(0, 0, 0),
+        color: testColor
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      for (const particle of particles) {
+        // Check magenta color (r=1, g=0, b=1)
+        expect(particle.color.r).toBeGreaterThan(0.9)
+        expect(particle.color.g).toBeLessThan(0.2)
+        expect(particle.color.b).toBeGreaterThan(0.9)
+      }
+    })
+
+    it('should spawn exactly 20 particles', () => {
+      // AC4: Burst parameters: 20 particles
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      expect(particles.length).toBe(20)
+    })
+
+    it('should set particle speed to 50 units/s', () => {
+      // AC4: Burst parameters: speed 50
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'extraLife',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ff00
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      for (const particle of particles) {
+        const speed = particle.velocity.length()
+        // Allow small variance due to radial distribution
+        expect(speed).toBeGreaterThanOrEqual(48)
+        expect(speed).toBeLessThanOrEqual(52)
+      }
+    })
+
+    it('should set particle lifetime to 500ms', () => {
+      // AC4: Burst parameters: lifetime 500ms
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      for (const particle of particles) {
+        expect(particle.maxLifetime).toBe(500)
+      }
+    })
+
+    it('should set particle size to 3 units', () => {
+      // AC4: Burst parameters: size 3
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'rapidFire',
+        position: new Vector3(0, 0, 0),
+        color: 0xff8800
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      for (const particle of particles) {
+        expect(particle.size).toBe(3)
+      }
+    })
+
+    it('should radiate particles outward in all directions', () => {
+      // AC5: Particles radiate outward in all directions
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'multiShot',
+        position: new Vector3(0, 0, 0),
+        color: 0xff00ff
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      const velocities = particles.map((p) => ({ x: p.velocity.x, y: p.velocity.y }))
+
+      // Check that particles have varied directions (radial spread)
+      const uniqueDirections = new Set(
+        velocities.map((v) => Math.atan2(v.y, v.x).toFixed(2))
+      )
+
+      // Should have many different directions for radial burst
+      expect(uniqueDirections.size).toBeGreaterThan(10)
+    })
+
+    it('should handle multiple powerup collections', () => {
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 3 as any,
+        powerUpType: 'rapidFire',
+        position: new Vector3(100, 100, 0),
+        color: 0xff8800
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      // Should have 20 particles from each collection
+      expect(particles.length).toBe(40)
+    })
+
+    it('should not overwhelm with particle count', () => {
+      // AC6: Effect is visible but not overwhelming
+      // 20 particles is a reasonable burst size
+      eventEmitter.emit('powerUpCollected', {
+        entityId: 1 as any,
+        powerUpEntityId: 2 as any,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+
+      emitterSystem.update({} as any, 16)
+
+      const particles = particleManager.getActiveParticles()
+      // Verify particle count is reasonable (not overwhelming)
+      expect(particles.length).toBeLessThanOrEqual(50)
     })
   })
 })
