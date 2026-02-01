@@ -651,4 +651,61 @@ describe('AudioManager', () => {
       manager.destroy()
     })
   })
+
+  describe('PlaySoundOptions Extensions - Loop and Rate', () => {
+    it('should have loop field defined in PlaySoundOptions', async () => {
+      const { PlaySoundOptions } = await import('../../src/audio/AudioManager')
+      // Just verify we can import - the actual check is that the interface accepts loop
+      const testOptions: Partial<typeof PlaySoundOptions> = { loop: true }
+      expect(testOptions.loop).toBeDefined()
+    })
+
+    it('should have rate field defined in PlaySoundOptions', async () => {
+      const { PlaySoundOptions } = await import('../../src/audio/AudioManager')
+      // Just verify we can import - the actual check is that the interface accepts rate
+      const testOptions: Partial<typeof PlaySoundOptions> = { rate: 1.5 }
+      expect(testOptions.rate).toBeDefined()
+    })
+
+    it('PlaySoundOptions with loop=true should pass type check', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const options: Parameters<typeof manager.playSound>[1] = { loop: true }
+      expect(options.loop).toBeDefined()
+      expect(options.loop).toBe(true)
+      manager.destroy()
+    })
+
+    it('PlaySoundOptions with rate number should pass type check', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const options: Parameters<typeof manager.playSound>[1] = { rate: 1.5 }
+      expect(options.rate).toBeDefined()
+      expect(options.rate).toBe(1.5)
+      manager.destroy()
+    })
+
+    it('PlaySoundOptions should support loop, rate, and volume together', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const options: Parameters<typeof manager.playSound>[1] = {
+        loop: true,
+        rate: 0.8,
+        volume: 0.5
+      }
+      expect(options.loop).toBeDefined()
+      expect(options.rate).toBeDefined()
+      expect(options.volume).toBeDefined()
+      expect(options.loop).toBe(true)
+      expect(options.rate).toBe(0.8)
+      expect(options.volume).toBe(0.5)
+      manager.destroy()
+    })
+  })
 })

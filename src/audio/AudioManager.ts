@@ -27,6 +27,8 @@ export type VolumeType = 'sfx' | 'music'
 /** Options for playing a sound */
 export interface PlaySoundOptions {
   volume?: number
+  loop?: boolean
+  rate?: number
 }
 
 /** Options for playing music */
