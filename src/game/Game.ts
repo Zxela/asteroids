@@ -27,12 +27,11 @@ import { PauseMenu } from '../ui/PauseMenu'
 import { LeaderboardStorage } from '../utils/LeaderboardStorage'
 
 import { AsteroidDestructionSystem } from '../systems/AsteroidDestructionSystem'
-import { AttractModeSystem, createPressStartOverlay } from '../systems/AttractModeSystem'
 import { CollisionSystem } from '../systems/CollisionSystem'
 import { DamageSystem } from '../systems/DamageSystem'
-import { HyperspaceSystem } from '../systems/HyperspaceSystem'
 // Systems
 import { InputSystem } from '../systems/InputSystem'
+import { UFOSpawnSystem } from '../systems/UFOSpawnSystem'
 import { ParticleEmitterSystem } from '../systems/ParticleEmitterSystem'
 import { ParticleRenderSystem } from '../systems/ParticleRenderSystem'
 import { PhysicsSystem } from '../systems/PhysicsSystem'
@@ -42,10 +41,11 @@ import { RenderSystem } from '../systems/RenderSystem'
 import { RespawnSystem } from '../systems/RespawnSystem'
 import { ScoreSystem } from '../systems/ScoreSystem'
 import { ShipControlSystem } from '../systems/ShipControlSystem'
-import { TensionSystem } from '../systems/TensionSystem'
-import { UFOSpawnSystem } from '../systems/UFOSpawnSystem'
 import { WaveSystem } from '../systems/WaveSystem'
 import { WeaponSystem } from '../systems/WeaponSystem'
+import { HyperspaceSystem } from '../systems/HyperspaceSystem'
+import { TensionSystem } from '../systems/TensionSystem'
+import { AttractModeSystem, createPressStartOverlay } from '../systems/AttractModeSystem'
 
 // Entities
 import { createShip } from '../entities/createShip'
@@ -67,19 +67,19 @@ import { AudioSystem } from '../systems/AudioSystem'
 // Types for game events
 import type {
   AsteroidDestroyedEventData,
-  BossDefeatedEventData,
-  BossSpawnedEventData,
-  HyperspaceActivatedEventData,
-  PlayerDiedEventData,
   PowerUpCollectedEventData,
   ShipThrustEventData,
+  WeaponFiredEventData,
+  PlayerDiedEventData,
   WaveStartedEventData,
-  WeaponFiredEventData
+  BossSpawnedEventData,
+  BossDefeatedEventData,
+  HyperspaceActivatedEventData
 } from '../types/events'
 import type { GameFlowState } from '../types/game'
 
 /**
- * Game event types for particle and audio systems (session-scoped).
+ * Game event types for particle and audio systems.
  */
 interface GameEvents extends Record<string, unknown> {
   asteroidDestroyed: AsteroidDestroyedEventData
@@ -92,15 +92,6 @@ interface GameEvents extends Record<string, unknown> {
   bossDefeated: BossDefeatedEventData
   gameStateChanged: { state: GameFlowState }
   hyperspaceActivated: HyperspaceActivatedEventData
-}
-
-/**
- * Global event types that persist across game sessions.
- * Used for systems like AudioSystem that need to respond to state changes
- * even before gameplay starts.
- */
-interface GlobalGameEvents extends Record<string, unknown> {
-  gameStateChanged: { state: GameFlowState }
 }
 
 /**
@@ -152,16 +143,16 @@ export class Game {
   private particleRenderSystem: ParticleRenderSystem | null = null
   private eventEmitter: EventEmitter<GameEvents> | null = null
 
-  // Global event emitter - persists across game sessions for systems
-  // that need to respond to state changes before gameplay starts (e.g., AudioSystem)
-  private globalEventEmitter: EventEmitter<GlobalGameEvents>
-
   // Background
   private starfield: Starfield | null = null
 
   // Audio
   private audioManager: AudioManager | null = null
   private audioSystem: AudioSystem | null = null
+  private globalEventEmitter: EventEmitter<GameEvents>
+
+  // Visual feedback
+  private flashOverlay: HTMLElement | null = null
 
   // Game state
   private shipEntityId: number | null = null
@@ -171,9 +162,8 @@ export class Game {
     this.world = new World()
     this.sceneManager = new SceneManager()
     this.fsm = new GameStateMachine()
-    // Create global event emitter that persists across game sessions
-    // This allows systems like AudioSystem to subscribe before gameplay starts
-    this.globalEventEmitter = new EventEmitter<GlobalGameEvents>()
+    // Create global event emitter (persists across game sessions)
+    this.globalEventEmitter = new EventEmitter<GameEvents>()
   }
 
   /**
@@ -187,6 +177,11 @@ export class Game {
     // Initialize AudioManager
     this.audioManager = AudioManager.getInstance()
     await this.audioManager.init()
+
+    // Create AudioSystem immediately after AudioManager init
+    // This ensures AudioSystem is ready to receive gameStateChanged events
+    // AudioSystem subscribes to globalEventEmitter for music state changes
+    this.audioSystem = new AudioSystem(this.audioManager, this.globalEventEmitter)
 
     // Register game states
     this.fsm.registerState('loading', new LoadingState())
@@ -208,6 +203,14 @@ export class Game {
     this.attractModeSystem = new AttractModeSystem()
     this.attractModeSystem.onStart(() => this.startAttractMode())
     this.attractModeSystem.onExit(() => this.exitAttractMode())
+
+    // Set up screen flash overlay for powerup collection feedback
+    this.setupFlashOverlay()
+
+    // Subscribe to powerUpCollected events for visual feedback
+    this.globalEventEmitter.on('powerUpCollected', (data) => {
+      this.flashScreen(data.color)
+    })
   }
 
   /**
@@ -262,7 +265,7 @@ export class Game {
     const scene = this.sceneManager.getScene()
     const camera = this.sceneManager.getCamera()
 
-    // Create event emitter for inter-system communication
+    // Create event emitter for inter-system communication (session-scoped)
     this.eventEmitter = new EventEmitter<GameEvents>()
 
     // Create particle infrastructure
@@ -270,8 +273,12 @@ export class Game {
     this.particleEmitterSystem = new ParticleEmitterSystem(this.particleManager, this.eventEmitter)
     this.particleRenderSystem = new ParticleRenderSystem(this.particleManager, scene, camera)
 
-    // Note: AudioSystem is created in start() and persists across game sessions
-    // It subscribes to globalEventEmitter for state changes (mainMenu, playing, gameOver, etc.)
+    // Connect AudioSystem to session event emitter for gameplay SFX
+    // AudioSystem was already created in initialize() with globalEventEmitter for music
+    // Now we also connect it to session events for gameplay sounds
+    if (this.audioSystem && this.eventEmitter) {
+      this.audioSystem.setSessionEventBus(this.eventEmitter)
+    }
 
     // Create and register systems
     this.inputSystem = new InputSystem()
@@ -284,12 +291,9 @@ export class Game {
     this.scoreSystem = new ScoreSystem()
     this.respawnSystem = new RespawnSystem()
 
-    // Create PowerUpSystem first (needed by WeaponSystem for multiShot effect)
-    this.powerUpSystem = new PowerUpSystem()
-
     // Create systems that emit events
     this.shipControlSystem = new ShipControlSystem(this.inputSystem, this.eventEmitter)
-    this.weaponSystem = new WeaponSystem(this.inputSystem, this.powerUpSystem)
+    this.weaponSystem = new WeaponSystem(this.inputSystem)
     this.hyperspaceSystem = new HyperspaceSystem(this.inputSystem, this.eventEmitter)
 
     // Register all systems with the world (order matters!)
@@ -304,6 +308,7 @@ export class Game {
     this.world.registerSystem(this.asteroidDestructionSystem)
     this.world.registerSystem(this.scoreSystem)
     this.world.registerSystem(this.respawnSystem)
+    this.powerUpSystem = new PowerUpSystem()
     this.world.registerSystem(this.powerUpSystem)
     this.ufoSpawnSystem = new UFOSpawnSystem(this.audioManager)
     this.world.registerSystem(this.ufoSpawnSystem)
@@ -356,8 +361,9 @@ export class Game {
     this.particleEmitterSystem = null
     this.particleRenderSystem = null
 
-    // Note: AudioSystem is NOT destroyed here - it persists across game sessions
-    // and subscribes to globalEventEmitter for state-based music transitions
+    // Clear session event emitter
+    // Note: AudioSystem is NOT destroyed - it persists across sessions
+    // We just disconnect it from the old session event bus
     this.eventEmitter = null
 
     // Reset game state
@@ -406,13 +412,9 @@ export class Game {
     this.gameOverScreen?.hide()
     this.hud?.hide()
 
-    // Emit game state change event on global emitter (persists across sessions)
-    // This allows systems like AudioSystem to respond to state changes
-    // even before gameplay starts (e.g., mainMenu state at game launch)
+    // Emit game state change event to global event emitter for music
+    // This ensures AudioSystem receives state changes even before session starts
     this.globalEventEmitter.emit('gameStateChanged', { state: newState as GameFlowState })
-
-    // Also emit on session-scoped emitter for backward compatibility
-    this.eventEmitter?.emit('gameStateChanged', { state: newState as GameFlowState })
 
     // Show appropriate UI for new state
     switch (newState) {
@@ -422,8 +424,8 @@ export class Game {
       case 'playing':
         // Initialize or reset gameplay for new game
         this.initializeGameplay()
-        // Emit state change on session emitter after it's created
-        this.eventEmitter?.emit('gameStateChanged', { state: 'playing' as GameFlowState })
+        // Emit state change again to global emitter after gameplay initialized
+        this.globalEventEmitter.emit('gameStateChanged', { state: 'playing' as GameFlowState })
         this.hud?.show()
         // Reset HUD to initial values
         this.hud?.updateScore(0)
@@ -555,18 +557,10 @@ export class Game {
     this.lastTime = performance.now()
     this.accumulator = 0
 
-    // Create AudioSystem immediately after AudioManager is ready (from initialize())
-    // This must happen before any state transitions so it can listen for gameStateChanged events
-    // AudioSystem subscribes to globalEventEmitter and persists across game sessions
-    if (this.audioManager && !this.audioSystem) {
-      this.audioSystem = new AudioSystem(this.audioManager, this.globalEventEmitter)
-    }
-
     // Start FSM in loading state, then transition to menu
     this.fsm.start('loading')
     // Since we have no async assets, immediately go to main menu
     this.fsm.transition('loadComplete')
-    // Now the AudioSystem will receive this event and play menu music
     this.onStateChange('mainMenu')
 
     this.gameLoop()
@@ -605,16 +599,6 @@ export class Game {
    */
   getFixedTimestep(): number {
     return this.fixedTimestep
-  }
-
-  /**
-   * Get the global event emitter.
-   * This emitter persists across game sessions and can be used
-   * by systems that need to respond to state changes before
-   * gameplay starts (e.g., AudioSystem for menu music).
-   */
-  getGlobalEventEmitter(): EventEmitter<GlobalGameEvents> {
-    return this.globalEventEmitter
   }
 
   /**
@@ -750,6 +734,14 @@ export class Game {
         })
       }
     }
+
+    // Pass powerup collected events to particle system
+    if (this.powerUpSystem && this.eventEmitter) {
+      const powerUpEvents = this.powerUpSystem.getEvents()
+      for (const event of powerUpEvents) {
+        this.eventEmitter.emit('powerUpCollected', event.data)
+      }
+    }
   }
 
   /**
@@ -805,5 +797,50 @@ export class Game {
       // Trigger screen flash for wave start (classic arcade effect)
       this.hud?.triggerWaveFlash()
     }
+  }
+
+  /**
+   * Set up the screen flash overlay element.
+   * Creates a full-screen overlay div for visual feedback on powerup collection.
+   */
+  private setupFlashOverlay(): void {
+    this.flashOverlay = document.createElement('div')
+    this.flashOverlay.setAttribute('data-game-flash', '')
+    this.flashOverlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+    `
+    document.body.appendChild(this.flashOverlay)
+  }
+
+  /**
+   * Flash the screen with a specified color.
+   * Used for powerup collection feedback.
+   *
+   * @param color - Hex color value (e.g., 0xff00ff for magenta)
+   * @param duration - Duration of the flash in milliseconds (default: 100ms)
+   */
+  private flashScreen(color: number, duration = 100): void {
+    if (!this.flashOverlay) return
+
+    // Convert hex color to CSS rgb string
+    const r = (color >> 16) & 0xff
+    const g = (color >> 8) & 0xff
+    const b = color & 0xff
+    const hex = `rgb(${r}, ${g}, ${b})`
+
+    // Set color and trigger flash
+    this.flashOverlay.style.backgroundColor = hex
+    this.flashOverlay.style.opacity = '0.3'
+
+    // Fade out after duration
+    setTimeout(() => {
+      if (this.flashOverlay) {
+        this.flashOverlay.style.opacity = '0'
+      }
+    }, duration)
   }
 }

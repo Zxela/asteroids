@@ -49,14 +49,6 @@ interface AudioEventMap extends Record<string, unknown> {
 }
 
 /**
- * Minimal event map for global events (state changes only).
- * Used when AudioSystem subscribes to globalEventEmitter for music transitions.
- */
-interface GlobalAudioEventMap extends Record<string, unknown> {
-  gameStateChanged: { state: GameFlowState }
-}
-
-/**
  * Volume multipliers for asteroid sizes
  */
 const ASTEROID_VOLUME_MULTIPLIERS: Record<string, number> = {
@@ -97,8 +89,11 @@ export class AudioSystem {
   /** Reference to AudioManager for sound playback */
   private audioManager: AudioManager | null
 
-  /** Reference to EventBus for event subscriptions (accepts full or global-only event maps) */
-  private eventBus: EventEmitter<AudioEventMap> | EventEmitter<GlobalAudioEventMap> | null
+  /** Reference to global EventBus for game state events (persists across sessions) */
+  private globalEventBus: EventEmitter<AudioEventMap> | null
+
+  /** Reference to session EventBus for gameplay events (recreated each session) */
+  private sessionEventBus: EventEmitter<AudioEventMap> | null
 
   /** Flag indicating if thrust sound is currently playing */
   private thrustSoundPlaying = false
@@ -126,16 +121,17 @@ export class AudioSystem {
    * Create a new AudioSystem instance.
    *
    * @param audioManager - AudioManager instance for sound playback
-   * @param eventBus - EventEmitter for subscribing to game events. Can be either:
-   *                   - Full AudioEventMap for gameplay sounds (session-scoped)
-   *                   - GlobalAudioEventMap for state changes only (persists across sessions)
+   * @param globalEventBus - EventEmitter for global events (gameStateChanged)
+   * @param sessionEventBus - Optional EventEmitter for session events (gameplay SFX)
    */
   constructor(
     audioManager: AudioManager,
-    eventBus: EventEmitter<AudioEventMap> | EventEmitter<GlobalAudioEventMap>
+    globalEventBus: EventEmitter<AudioEventMap>,
+    sessionEventBus?: EventEmitter<AudioEventMap>
   ) {
     this.audioManager = audioManager || null
-    this.eventBus = eventBus || null
+    this.globalEventBus = globalEventBus || null
+    this.sessionEventBus = sessionEventBus || null
 
     // Create bound handlers for cleanup
     this.handlers = {
@@ -156,28 +152,50 @@ export class AudioSystem {
 
   /**
    * Subscribe to all game events.
-   * Sets up listeners for audio triggers.
-   * Note: When using GlobalAudioEventMap, only gameStateChanged is subscribed.
-   * Other gameplay events are safely subscribed but won't fire on global emitter.
+   * Sets up listeners for audio triggers on both global and session event buses.
    */
   private subscribeToEvents(): void {
-    if (!this.eventBus) return
+    // Subscribe to global events (game state changes for music)
+    if (this.globalEventBus) {
+      this.globalEventBus.on('gameStateChanged', this.handlers.gameStateChanged)
+    }
 
-    // Cast to full AudioEventMap for subscription - this is safe because:
-    // 1. EventEmitter.on() just registers handlers in a Map
-    // 2. Events not emitted simply won't trigger their handlers
-    // 3. This allows AudioSystem to work with both full and global-only emitters
-    const bus = this.eventBus as EventEmitter<AudioEventMap>
+    // Subscribe to session events (gameplay SFX)
+    this.subscribeToSessionEvents()
+  }
 
-    bus.on('weaponFired', this.handlers.weaponFired)
-    bus.on('asteroidDestroyed', this.handlers.asteroidDestroyed)
-    bus.on('powerUpCollected', this.handlers.powerUpCollected)
-    bus.on('shipThrust', this.handlers.shipThrust)
-    bus.on('playerDied', this.handlers.playerDied)
-    bus.on('waveStarted', this.handlers.waveStarted)
-    bus.on('bossSpawned', this.handlers.bossSpawned)
-    bus.on('bossDefeated', this.handlers.bossDefeated)
-    bus.on('gameStateChanged', this.handlers.gameStateChanged)
+  /**
+   * Subscribe to session-specific gameplay events.
+   * Called when setting a new session event bus.
+   */
+  private subscribeToSessionEvents(): void {
+    if (!this.sessionEventBus) return
+
+    this.sessionEventBus.on('weaponFired', this.handlers.weaponFired)
+    this.sessionEventBus.on('asteroidDestroyed', this.handlers.asteroidDestroyed)
+    this.sessionEventBus.on('powerUpCollected', this.handlers.powerUpCollected)
+    this.sessionEventBus.on('shipThrust', this.handlers.shipThrust)
+    this.sessionEventBus.on('playerDied', this.handlers.playerDied)
+    this.sessionEventBus.on('waveStarted', this.handlers.waveStarted)
+    this.sessionEventBus.on('bossSpawned', this.handlers.bossSpawned)
+    this.sessionEventBus.on('bossDefeated', this.handlers.bossDefeated)
+  }
+
+  /**
+   * Unsubscribe from session-specific gameplay events.
+   * Called when replacing the session event bus.
+   */
+  private unsubscribeFromSessionEvents(): void {
+    if (!this.sessionEventBus) return
+
+    this.sessionEventBus.off('weaponFired', this.handlers.weaponFired)
+    this.sessionEventBus.off('asteroidDestroyed', this.handlers.asteroidDestroyed)
+    this.sessionEventBus.off('powerUpCollected', this.handlers.powerUpCollected)
+    this.sessionEventBus.off('shipThrust', this.handlers.shipThrust)
+    this.sessionEventBus.off('playerDied', this.handlers.playerDied)
+    this.sessionEventBus.off('waveStarted', this.handlers.waveStarted)
+    this.sessionEventBus.off('bossSpawned', this.handlers.bossSpawned)
+    this.sessionEventBus.off('bossDefeated', this.handlers.bossDefeated)
   }
 
   /**
@@ -185,20 +203,13 @@ export class AudioSystem {
    * Called during cleanup/destroy.
    */
   private unsubscribeFromEvents(): void {
-    if (!this.eventBus) return
+    // Unsubscribe from global events
+    if (this.globalEventBus) {
+      this.globalEventBus.off('gameStateChanged', this.handlers.gameStateChanged)
+    }
 
-    // Cast to full AudioEventMap for unsubscription (mirrors subscribeToEvents)
-    const bus = this.eventBus as EventEmitter<AudioEventMap>
-
-    bus.off('weaponFired', this.handlers.weaponFired)
-    bus.off('asteroidDestroyed', this.handlers.asteroidDestroyed)
-    bus.off('powerUpCollected', this.handlers.powerUpCollected)
-    bus.off('shipThrust', this.handlers.shipThrust)
-    bus.off('playerDied', this.handlers.playerDied)
-    bus.off('waveStarted', this.handlers.waveStarted)
-    bus.off('bossSpawned', this.handlers.bossSpawned)
-    bus.off('bossDefeated', this.handlers.bossDefeated)
-    bus.off('gameStateChanged', this.handlers.gameStateChanged)
+    // Unsubscribe from session events
+    this.unsubscribeFromSessionEvents()
   }
 
   /**
@@ -351,6 +362,8 @@ export class AudioSystem {
 
     switch (data.state) {
       case 'mainMenu':
+      case 'attractMode':
+        // Attract mode keeps menu music playing (it's a demo shown on the menu)
         this.audioManager.playMusic('music_menu', { volume: 1.0 })
         break
 
@@ -375,6 +388,24 @@ export class AudioSystem {
         // No music changes for these states
         break
     }
+  }
+
+  /**
+   * Set a new session event bus for gameplay events.
+   * Unsubscribes from the old session event bus and subscribes to the new one.
+   * This allows AudioSystem to persist across game sessions while connecting to new gameplay events.
+   *
+   * @param sessionEventBus - New session event emitter for gameplay events
+   */
+  setSessionEventBus(sessionEventBus: EventEmitter<AudioEventMap>): void {
+    // Unsubscribe from old session events
+    this.unsubscribeFromSessionEvents()
+
+    // Update reference
+    this.sessionEventBus = sessionEventBus
+
+    // Subscribe to new session events
+    this.subscribeToSessionEvents()
   }
 
   /**
@@ -416,6 +447,7 @@ export class AudioSystem {
 
     this.thrustSoundPlaying = false
     this.audioManager = null
-    this.eventBus = null
+    this.globalEventBus = null
+    this.sessionEventBus = null
   }
 }

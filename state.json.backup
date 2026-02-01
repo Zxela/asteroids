@@ -1,0 +1,73 @@
+{
+  "session_id": "powerups-and-music-6a0c1d24",
+  "branch": "create/powerups-and-music-6a0c1d24",
+  "worktree": "../asteroids-create-powerups-and-music-6a0c1d24",
+  "feature": "powerups-and-music",
+  "created_at": "2026-01-30T15:35:00Z",
+  "phase": "implementing",
+  "tasks": {
+    "001": {
+      "status": "completed",
+      "file": "docs/tasks/001-multishot-weapon-integration.md",
+      "attempts": 1,
+      "commits": [
+        "405e248"
+      ]
+    },
+    "002": {
+      "status": "completed",
+      "file": "docs/tasks/002-global-event-emitter.md",
+      "attempts": 1,
+      "commits": [
+        "43cdeb4"
+      ]
+    },
+    "003": {
+      "status": "in_progress",
+      "file": "docs/tasks/003-persistent-audio-system.md",
+      "attempts": 2,
+      "feedback": [
+        "Regression: AudioSystem only subscribes to globalEventEmitter which only has gameStateChanged. Gameplay audio events (weaponFired, asteroidDestroyed, etc.) are emitted to session eventEmitter and won't be received. Fix: AudioSystem needs dual subscription - global for music, session for SFX."
+      ],
+      "started_at": "2026-01-31T04:32:07.076Z"
+    },
+    "004": {
+      "status": "pending",
+      "file": "docs/tasks/004-attract-mode-music.md"
+    },
+    "005": {
+      "status": "pending",
+      "file": "docs/tasks/005-powerup-event-colors.md",
+      "started_at": "2026-01-31T04:30:13.852Z"
+    },
+    "006": {
+      "status": "pending",
+      "file": "docs/tasks/006-powerup-particle-effects.md"
+    },
+    "007": {
+      "status": "pending",
+      "file": "docs/tasks/007-screen-flash-effect.md"
+    },
+    "008": {
+      "status": "pending",
+      "file": "docs/tasks/008-powerup-balance-review.md"
+    }
+  },
+  "current_task": null,
+  "config": {
+    "auto_mode": false,
+    "retries": {
+      "same_agent": 2,
+      "fresh_agent": 1
+    }
+  },
+  "backlog": [
+    {
+      "id": "stars-skins",
+      "description": "Fix stars not showing on all skins/themes",
+      "priority": "later"
+    }
+  ],
+  "updated_at": "2026-01-31T04:32:07.076Z",
+  "conductor_pid": 23759
+}

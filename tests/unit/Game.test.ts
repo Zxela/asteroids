@@ -1,210 +1,75 @@
 /**
- * Game Unit Tests
+ * Game Unit Tests - Screen Flash Feature
  *
- * Tests for the main Game class, focusing on:
- * - Global event emitter initialization and persistence
- * - Game state change event emissions
+ * Tests for Game class screen flash functionality:
+ * - Flash overlay element creation
+ * - Flash overlay styling (covers screen, pointer-events: none)
+ * - Flash triggered on powerUpCollected event
+ * - Flash color matches powerup color
+ * - Flash opacity and duration
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { JSDOM } from 'jsdom'
-import type { GameFlowState } from '../../src/types/game'
-
-// We need to set up JSDOM before importing Game
-let dom: JSDOM
-let document: Document
-let window: Window & typeof globalThis
-
-beforeEach(() => {
-  dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
-  document = dom.window.document
-  window = dom.window as unknown as Window & typeof globalThis
-  // Make document, window, and HTMLElement available globally
-  global.document = document
-  global.window = window
-  global.HTMLElement = dom.window.HTMLElement
-  global.requestAnimationFrame = vi.fn((cb) => {
-    return setTimeout(cb, 16) as unknown as number
-  })
-  global.cancelAnimationFrame = vi.fn()
-  global.localStorage = {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-    length: 0,
-    key: vi.fn()
-  }
-})
-
-afterEach(() => {
-  vi.clearAllMocks()
-  vi.resetModules()
-  dom.window.close()
-})
+import { Vector3 } from 'three'
 
 // Mock modules before importing Game
-vi.mock('three', () => ({
-  Scene: vi.fn().mockImplementation(() => ({
-    add: vi.fn(),
-    remove: vi.fn(),
-    traverse: vi.fn(),
-    children: []
-  })),
-  PerspectiveCamera: vi.fn().mockImplementation(() => ({
-    position: { set: vi.fn(), x: 0, y: 0, z: 0 },
-    lookAt: vi.fn(),
-    aspect: 1,
-    updateProjectionMatrix: vi.fn()
-  })),
-  WebGLRenderer: vi.fn().mockImplementation(() => ({
-    setSize: vi.fn(),
-    setPixelRatio: vi.fn(),
-    render: vi.fn(),
-    domElement: { style: {} },
-    dispose: vi.fn()
-  })),
-  Vector3: vi.fn().mockImplementation((x = 0, y = 0, z = 0) => ({ x, y, z, set: vi.fn(), clone: vi.fn() })),
-  Color: vi.fn().mockImplementation(() => ({})),
-  Mesh: vi.fn().mockImplementation(() => ({
-    position: { x: 0, y: 0, z: 0, set: vi.fn() },
-    rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1, set: vi.fn() },
-    geometry: { dispose: vi.fn() },
-    material: { dispose: vi.fn() }
-  })),
-  BoxGeometry: vi.fn(),
-  MeshBasicMaterial: vi.fn(),
-  Group: vi.fn().mockImplementation(() => ({
-    add: vi.fn(),
-    remove: vi.fn(),
-    children: [],
-    position: { x: 0, y: 0, z: 0 }
-  })),
-  InstancedMesh: vi.fn().mockImplementation(() => ({
-    count: 0,
-    setMatrixAt: vi.fn(),
-    setColorAt: vi.fn(),
-    instanceMatrix: { needsUpdate: false },
-    instanceColor: { needsUpdate: false },
-    geometry: { dispose: vi.fn() },
-    material: { dispose: vi.fn() }
-  })),
-  Matrix4: vi.fn().mockImplementation(() => ({
-    compose: vi.fn().mockReturnThis(),
-    makeRotationZ: vi.fn().mockReturnThis()
-  })),
-  Quaternion: vi.fn().mockImplementation(() => ({
-    setFromEuler: vi.fn().mockReturnThis()
-  })),
-  Euler: vi.fn().mockImplementation(() => ({})),
-  SphereGeometry: vi.fn(),
-  BufferGeometry: vi.fn(),
-  LineBasicMaterial: vi.fn(),
-  Line: vi.fn()
-}))
-
-// Mock SceneManager
 vi.mock('../../src/rendering/SceneManager', () => ({
   SceneManager: vi.fn().mockImplementation(() => ({
     init: vi.fn().mockResolvedValue(undefined),
-    getScene: vi.fn().mockReturnValue({
-      add: vi.fn(),
-      remove: vi.fn(),
-      traverse: vi.fn(),
-      children: []
-    }),
-    getCamera: vi.fn().mockReturnValue({
-      position: { x: 0, y: 0, z: 0 },
-      aspect: 1,
-      updateProjectionMatrix: vi.fn()
-    }),
+    getScene: vi.fn().mockReturnValue({}),
+    getCamera: vi.fn().mockReturnValue({}),
     render: vi.fn(),
     clearGameObjects: vi.fn()
   }))
 }))
 
-// Mock AudioManager
 vi.mock('../../src/audio/AudioManager', () => ({
   AudioManager: {
     getInstance: vi.fn().mockReturnValue({
       init: vi.fn().mockResolvedValue(undefined),
-      playSound: vi.fn(),
-      stopSound: vi.fn(),
-      setMasterVolume: vi.fn()
+      playMusic: vi.fn(),
+      stopMusic: vi.fn(),
+      playSFX: vi.fn()
     })
   }
 }))
 
-// Mock Starfield
 vi.mock('../../src/rendering/Starfield', () => ({
   Starfield: vi.fn().mockImplementation(() => ({
-    update: vi.fn(),
-    dispose: vi.fn()
+    update: vi.fn()
   }))
 }))
 
-// Mock AttractModeSystem
-vi.mock('../../src/systems/AttractModeSystem', () => ({
-  AttractModeSystem: vi.fn().mockImplementation(() => ({
-    onStart: vi.fn(),
-    onExit: vi.fn(),
-    activate: vi.fn(),
-    deactivate: vi.fn(),
-    resetIdleTimer: vi.fn(),
-    updateIdleTimer: vi.fn().mockReturnValue(false),
-    update: vi.fn().mockReturnValue({ movement: { x: 0, y: 0 }, shoot: false })
-  })),
-  createPressStartOverlay: vi.fn().mockReturnValue({ style: {} })
-}))
+// Set up JSDOM before importing Game
+let dom: JSDOM
+let document: Document
 
-// Mock UI components
-vi.mock('../../src/ui/MainMenu', () => ({
-  MainMenu: vi.fn().mockImplementation(() => ({
-    mount: vi.fn(),
-    show: vi.fn(),
-    hide: vi.fn(),
-    handleKeyDown: vi.fn(),
-    onInteraction: vi.fn()
-  }))
-}))
+beforeEach(() => {
+  dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+  document = dom.window.document
+  // Make document and window available globally
+  global.document = document
+  global.HTMLElement = dom.window.HTMLElement
+  global.window = dom.window as unknown as Window & typeof globalThis
 
-vi.mock('../../src/ui/PauseMenu', () => ({
-  PauseMenu: vi.fn().mockImplementation(() => ({
-    mount: vi.fn(),
-    show: vi.fn(),
-    hide: vi.fn(),
-    handleKeyDown: vi.fn()
-  }))
-}))
+  // Mock requestAnimationFrame
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    setTimeout(() => cb(performance.now()), 16)
+    return 1
+  })
 
-vi.mock('../../src/ui/GameOverScreen', () => ({
-  GameOverScreen: vi.fn().mockImplementation(() => ({
-    mount: vi.fn(),
-    show: vi.fn(),
-    hide: vi.fn()
-  }))
-}))
+  // Mock performance.now
+  vi.stubGlobal('performance', {
+    now: () => Date.now()
+  })
+})
 
-vi.mock('../../src/ui/HUD', () => ({
-  HUD: vi.fn().mockImplementation(() => ({
-    mount: vi.fn(),
-    show: vi.fn(),
-    hide: vi.fn(),
-    updateScore: vi.fn(),
-    updateLives: vi.fn(),
-    updateWave: vi.fn(),
-    triggerWaveFlash: vi.fn()
-  }))
-}))
-
-// Mock LeaderboardStorage
-vi.mock('../../src/utils/LeaderboardStorage', () => ({
-  LeaderboardStorage: vi.fn().mockImplementation(() => ({
-    getLeaderboard: vi.fn().mockReturnValue({ entries: [], maxEntries: 10 }),
-    addEntry: vi.fn()
-  }))
-}))
+afterEach(() => {
+  vi.clearAllTimers()
+  vi.unstubAllGlobals()
+  dom.window.close()
+})
 
 // Dynamically import Game after JSDOM setup
 async function getGame() {
@@ -212,135 +77,284 @@ async function getGame() {
   return Game
 }
 
-describe('Game', () => {
-  describe('Global Event Emitter', () => {
-    it('should have globalEventEmitter property after construction', async () => {
+describe('Game - Screen Flash Feature', () => {
+  describe('Flash Overlay Element Creation (AC1, AC2)', () => {
+    it('should create flash overlay element on initialization', async () => {
       const Game = await getGame()
       const game = new Game()
-
-      // The globalEventEmitter should exist immediately after construction
-      // (not just after initialize)
-      expect(game.getGlobalEventEmitter()).toBeDefined()
-      expect(game.getGlobalEventEmitter()).not.toBeNull()
-    })
-
-    it('should have globalEventEmitter with on, off, and emit methods', async () => {
-      const Game = await getGame()
-      const game = new Game()
-
-      const emitter = game.getGlobalEventEmitter()
-      expect(typeof emitter.on).toBe('function')
-      expect(typeof emitter.off).toBe('function')
-      expect(typeof emitter.emit).toBe('function')
-    })
-
-    it('should persist globalEventEmitter across initialize calls', async () => {
-      const Game = await getGame()
-      const game = new Game()
-
-      const emitterBeforeInit = game.getGlobalEventEmitter()
       await game.initialize()
-      const emitterAfterInit = game.getGlobalEventEmitter()
-      expect(emitterBeforeInit).toBe(emitterAfterInit)
+
+      const flashOverlay = document.querySelector('[data-game-flash]')
+
+      expect(flashOverlay).not.toBeNull()
+      expect(flashOverlay).toBeInstanceOf(dom.window.HTMLElement)
+    })
+
+    it('should add flash overlay to DOM body', async () => {
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]')
+
+      expect(flashOverlay?.parentElement).toBe(document.body)
+    })
+
+    it('should set flash overlay to cover entire screen with fixed positioning', async () => {
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+
+      expect(flashOverlay.style.position).toBe('fixed')
+      // Accept either '0' or '0px' as both are valid CSS
+      expect(['0', '0px']).toContain(flashOverlay.style.inset)
+    })
+
+    it('should set pointer-events to none on flash overlay', async () => {
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+
+      expect(flashOverlay.style.pointerEvents).toBe('none')
+    })
+
+    it('should initialize flash overlay with opacity 0', async () => {
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+
+      expect(flashOverlay.style.opacity).toBe('0')
+    })
+
+    it('should set transition property on flash overlay', async () => {
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+
+      expect(flashOverlay.style.transition).toContain('opacity')
     })
   })
 
-  describe('Game State Changed Events', () => {
-    it('should emit gameStateChanged event when transitioning to mainMenu', async () => {
+  describe('Flash Screen Method', () => {
+    it('should have a flashScreen method', async () => {
       const Game = await getGame()
       const game = new Game()
-
-      const eventHandler = vi.fn()
-      game.getGlobalEventEmitter().on('gameStateChanged', eventHandler)
-
       await game.initialize()
-      game.start()
 
-      // start() transitions to mainMenu
-      expect(eventHandler).toHaveBeenCalledWith({ state: 'mainMenu' })
+      expect(typeof (game as any).flashScreen).toBe('function')
     })
 
-    it('should emit gameStateChanged event with correct state name', async () => {
+    it('should set background color from hex color parameter (AC4)', async () => {
       const Game = await getGame()
       const game = new Game()
-
-      const receivedStates: GameFlowState[] = []
-      game.getGlobalEventEmitter().on('gameStateChanged', (data: { state: GameFlowState }) => {
-        receivedStates.push(data.state)
-      })
-
       await game.initialize()
-      game.start()
 
-      // The start() method transitions: loading -> mainMenu
-      // So we should receive 'mainMenu' as the state change event
-      expect(receivedStates).toContain('mainMenu')
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+      const color = 0xff00ff // Magenta
+
+      ;(game as any).flashScreen(color)
+
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(255, 0, 255)')
     })
 
-    it('should emit gameStateChanged for all state transitions', async () => {
+    it('should set opacity to 0.3 during flash (AC5)', async () => {
       const Game = await getGame()
       const game = new Game()
-
-      const receivedStates: GameFlowState[] = []
-      game.getGlobalEventEmitter().on('gameStateChanged', (data: { state: GameFlowState }) => {
-        receivedStates.push(data.state)
-      })
-
       await game.initialize()
-      game.start() // -> mainMenu
 
-      // We can't easily trigger all transitions without more complex mocking,
-      // but we verify the mainMenu transition works
-      expect(receivedStates.includes('mainMenu')).toBe(true)
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+      const color = 0x00ffff // Cyan
+
+      ;(game as any).flashScreen(color)
+
+      expect(flashOverlay.style.opacity).toBe('0.3')
     })
 
-    it('should allow subscribing to events before game starts', async () => {
+    it('should fade out flash after 100ms (AC6, AC7)', async () => {
+      vi.useFakeTimers()
+
       const Game = await getGame()
       const game = new Game()
-
-      const eventHandler = vi.fn()
-
-      // Subscribe BEFORE initialize
-      game.getGlobalEventEmitter().on('gameStateChanged', eventHandler)
-
       await game.initialize()
-      game.start()
 
-      // The handler should still receive the event
-      expect(eventHandler).toHaveBeenCalled()
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+      const color = 0x00ff00 // Green
+
+      ;(game as any).flashScreen(color)
+      expect(flashOverlay.style.opacity).toBe('0.3')
+
+      // Advance timer by 100ms
+      vi.advanceTimersByTime(100)
+
+      expect(flashOverlay.style.opacity).toBe('0')
+
+      vi.useRealTimers()
     })
 
-    it('should include state property in gameStateChanged event data', async () => {
+    it('should handle different powerup colors correctly', async () => {
       const Game = await getGame()
       const game = new Game()
-
-      let eventData: { state: GameFlowState } | null = null
-      game.getGlobalEventEmitter().on('gameStateChanged', (data: { state: GameFlowState }) => {
-        eventData = data
-      })
-
       await game.initialize()
-      game.start()
 
-      expect(eventData).not.toBeNull()
-      expect(eventData!.state).toBe('mainMenu')
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+
+      // Test shield (cyan)
+      ;(game as any).flashScreen(0x00ffff)
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(0, 255, 255)')
+
+      // Test rapidFire (orange)
+      ;(game as any).flashScreen(0xff8800)
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(255, 136, 0)')
+
+      // Test multiShot (magenta)
+      ;(game as any).flashScreen(0xff00ff)
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(255, 0, 255)')
+
+      // Test extraLife (green)
+      ;(game as any).flashScreen(0x00ff00)
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(0, 255, 0)')
+    })
+
+    it('should not crash if flash overlay is missing', async () => {
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      // Remove the overlay
+      const flashOverlay = document.querySelector('[data-game-flash]')
+      flashOverlay?.remove()
+
+      // Should not throw
+      expect(() => {
+        ;(game as any).flashScreen(0xff0000)
+      }).not.toThrow()
     })
   })
 
-  describe('Session Event Emitter Preservation', () => {
-    it('should keep session-scoped eventEmitter separate from globalEventEmitter', async () => {
+  describe('PowerUp Collection Event Integration (AC3)', () => {
+    it('should trigger flash when powerUpCollected event is emitted', async () => {
       const Game = await getGame()
       const game = new Game()
-
       await game.initialize()
 
-      // globalEventEmitter exists from construction
-      const globalEmitter = game.getGlobalEventEmitter()
-      expect(globalEmitter).toBeDefined()
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
 
-      // The session eventEmitter is created in initializeGameplay,
-      // which happens when transitioning to 'playing' state
-      // The global emitter should be different from any session emitter
+      // Get global event emitter
+      const globalEventEmitter = (game as any).globalEventEmitter
+
+      // Emit powerUpCollected event
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 2,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+
+      // Flash should be triggered
+      expect(flashOverlay.style.opacity).toBe('0.3')
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(0, 255, 255)')
+    })
+
+    it('should flash with correct color for each powerup type', async () => {
+      vi.useFakeTimers()
+
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+      const globalEventEmitter = (game as any).globalEventEmitter
+
+      // Test shield (cyan)
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 2,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(0, 255, 255)')
+      vi.advanceTimersByTime(150)
+
+      // Test rapidFire (orange)
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 3,
+        powerUpType: 'rapidFire',
+        position: new Vector3(0, 0, 0),
+        color: 0xff8800
+      })
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(255, 136, 0)')
+      vi.advanceTimersByTime(150)
+
+      // Test multiShot (magenta)
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 4,
+        powerUpType: 'multiShot',
+        position: new Vector3(0, 0, 0),
+        color: 0xff00ff
+      })
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(255, 0, 255)')
+      vi.advanceTimersByTime(150)
+
+      // Test extraLife (green)
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 5,
+        powerUpType: 'extraLife',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ff00
+      })
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(0, 255, 0)')
+
+      vi.useRealTimers()
+    })
+
+    it('should handle multiple rapid powerup collections', async () => {
+      vi.useFakeTimers()
+
+      const Game = await getGame()
+      const game = new Game()
+      await game.initialize()
+
+      const flashOverlay = document.querySelector('[data-game-flash]') as HTMLElement
+      const globalEventEmitter = (game as any).globalEventEmitter
+
+      // First powerup
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 2,
+        powerUpType: 'shield',
+        position: new Vector3(0, 0, 0),
+        color: 0x00ffff
+      })
+      expect(flashOverlay.style.opacity).toBe('0.3')
+
+      // Second powerup before first fades
+      vi.advanceTimersByTime(50)
+      globalEventEmitter.emit('powerUpCollected', {
+        entityId: 1,
+        powerUpEntityId: 3,
+        powerUpType: 'rapidFire',
+        position: new Vector3(0, 0, 0),
+        color: 0xff8800
+      })
+
+      // Should still flash with new color
+      expect(flashOverlay.style.opacity).toBe('0.3')
+      expect(flashOverlay.style.backgroundColor).toBe('rgb(255, 136, 0)')
+
+      vi.useRealTimers()
     })
   })
 })

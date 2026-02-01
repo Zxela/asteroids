@@ -229,6 +229,50 @@ describe('PowerUpSystem', () => {
       expect(events[0].data.entityId).toBe(playerId)
     })
 
+    it('should include color in event for shield powerup', () => {
+      const powerUpId = createPowerUpEntity(world, 'shield')
+      const collision = createCollisionEvent(playerId, powerUpId)
+
+      powerUpSystem.setCollisions([collision])
+      powerUpSystem.update(world, 16)
+
+      const events = powerUpSystem.getEvents()
+      expect(events[0].data.color).toBe(0x00ffff) // cyan
+    })
+
+    it('should include color in event for rapidFire powerup', () => {
+      const powerUpId = createPowerUpEntity(world, 'rapidFire')
+      const collision = createCollisionEvent(playerId, powerUpId)
+
+      powerUpSystem.setCollisions([collision])
+      powerUpSystem.update(world, 16)
+
+      const events = powerUpSystem.getEvents()
+      expect(events[0].data.color).toBe(0xff8800) // orange
+    })
+
+    it('should include color in event for multiShot powerup', () => {
+      const powerUpId = createPowerUpEntity(world, 'multiShot')
+      const collision = createCollisionEvent(playerId, powerUpId)
+
+      powerUpSystem.setCollisions([collision])
+      powerUpSystem.update(world, 16)
+
+      const events = powerUpSystem.getEvents()
+      expect(events[0].data.color).toBe(0xff00ff) // magenta
+    })
+
+    it('should include color in event for extraLife powerup', () => {
+      const powerUpId = createPowerUpEntity(world, 'extraLife')
+      const collision = createCollisionEvent(playerId, powerUpId)
+
+      powerUpSystem.setCollisions([collision])
+      powerUpSystem.update(world, 16)
+
+      const events = powerUpSystem.getEvents()
+      expect(events[0].data.color).toBe(0x00ff00) // green
+    })
+
     it('should clear events at start of each update', () => {
       const powerUpId = createPowerUpEntity(world, 'shield')
       const collision = createCollisionEvent(playerId, powerUpId)
@@ -601,6 +645,24 @@ describe('PowerUpSystem', () => {
 
       // ExtraLife is instant, no active effect
       expect(powerUpSystem.hasActiveEffect(playerId, 'extraLife')).toBe(false)
+    })
+  })
+
+  describe('getPowerUpColor', () => {
+    it('should return cyan (0x00ffff) for shield powerup', () => {
+      expect(powerUpSystem.getPowerUpColor('shield')).toBe(0x00ffff)
+    })
+
+    it('should return orange (0xff8800) for rapidFire powerup', () => {
+      expect(powerUpSystem.getPowerUpColor('rapidFire')).toBe(0xff8800)
+    })
+
+    it('should return magenta (0xff00ff) for multiShot powerup', () => {
+      expect(powerUpSystem.getPowerUpColor('multiShot')).toBe(0xff00ff)
+    })
+
+    it('should return green (0x00ff00) for extraLife powerup', () => {
+      expect(powerUpSystem.getPowerUpColor('extraLife')).toBe(0x00ff00)
     })
   })
 

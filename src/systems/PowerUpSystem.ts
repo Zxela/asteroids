@@ -215,7 +215,8 @@ export class PowerUpSystem implements System {
       entityId: playerId,
       powerUpEntityId: powerUpId,
       powerUpType,
-      position: position ?? new Vector3(0, 0, 0)
+      position: position ?? new Vector3(0, 0, 0),
+      color: this.getPowerUpColor(powerUpType)
     } as unknown as PowerUpCollectedEventData
 
     this.events.push({
@@ -386,5 +387,24 @@ export class PowerUpSystem implements System {
     if (!effectComponent) return false
 
     return effectComponent.hasEffect(powerUpType)
+  }
+
+  /**
+   * Get the color associated with a power-up type for visual feedback.
+   *
+   * @param powerUpType - Type of power-up
+   * @returns Hex color value (0xRRGGBB)
+   */
+  getPowerUpColor(powerUpType: PowerUpType): number {
+    switch (powerUpType) {
+      case 'shield':
+        return 0x00ffff // cyan
+      case 'rapidFire':
+        return 0xff8800 // orange
+      case 'multiShot':
+        return 0xff00ff // magenta
+      case 'extraLife':
+        return 0x00ff00 // green
+    }
   }
 }
