@@ -23,6 +23,7 @@ import { Vector3 } from 'three'
 import { Health, Player, Transform, Velocity } from '../components'
 import { UFO, type UFOSize, UFO_CONFIG } from '../components/UFO'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import type { AudioManager } from '../audio/AudioManager'
 
 // Type assertions for component classes
 const UFOClass = UFO as unknown as ComponentClass<UFO>
@@ -99,6 +100,16 @@ const MAX_DIRECTION_CHANGE = 3000
 export class UFOSystem implements System {
   private events: UFOSystemEvent[] = []
   private ufoStates: Map<EntityId, UFOState> = new Map()
+  audioManager: AudioManager | null = null
+
+  /**
+   * Sets the audio manager for the UFO system.
+   *
+   * @param audioManager - The AudioManager instance
+   */
+  setAudioManager(audioManager: AudioManager): void {
+    this.audioManager = audioManager
+  }
 
   /**
    * Updates the UFO AI each frame.
