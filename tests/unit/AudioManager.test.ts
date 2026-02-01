@@ -29,10 +29,11 @@ class MockHowl {
   _loop: boolean
   preload: boolean
   onload: (() => void) | null = null
-  playing = false
+  _playing = false
   muted = false
   id = Math.random()
   fadeId: number | null = null
+  _playingIds: Set<number> = new Set()
 
   constructor(options: {
     src: string[]
@@ -55,17 +56,26 @@ class MockHowl {
   }
 
   play(): number {
-    this.playing = true
+    this._playing = true
+    this._playingIds.add(this.id)
     return this.id
   }
 
-  stop(): this {
-    this.playing = false
+  stop(soundId?: number): this {
+    if (soundId !== undefined) {
+      this._playingIds.delete(soundId)
+      if (this._playingIds.size === 0) {
+        this._playing = false
+      }
+    } else {
+      this._playing = false
+      this._playingIds.clear()
+    }
     return this
   }
 
   pause(): this {
-    this.playing = false
+    this._playing = false
     return this
   }
 
@@ -98,11 +108,18 @@ class MockHowl {
   }
 
   unload(): void {
-    this.playing = false
+    this._playing = false
   }
 
   state(): string {
     return 'loaded'
+  }
+
+  playing(soundId?: number): boolean {
+    if (soundId !== undefined) {
+      return this._playingIds.has(soundId)
+    }
+    return this._playing
   }
 }
 
@@ -251,7 +268,7 @@ describe('AudioManager', () => {
       manager.playSound('shoot')
 
       const shootSound = mockHowlInstances.find(h => h.src.includes('shoot'))
-      expect(shootSound?.playing).toBe(true)
+      expect(shootSound?._playing).toBe(true)
       manager.destroy()
     })
 
@@ -315,7 +332,7 @@ describe('AudioManager', () => {
 
       const bgMusic = mockHowlInstances.find(h => h.src.includes('background'))
       expect(bgMusic?._loop).toBe(true)
-      expect(bgMusic?.playing).toBe(true)
+      expect(bgMusic?._playing).toBe(true)
       manager.destroy()
     })
 
@@ -342,7 +359,7 @@ describe('AudioManager', () => {
 
       manager.playMusic('music_boss')
 
-      expect(bgMusic?.playing).toBe(false)
+      expect(bgMusic?._playing).toBe(false)
       manager.destroy()
     })
 
@@ -371,7 +388,7 @@ describe('AudioManager', () => {
 
       manager.stopMusic()
 
-      expect(bgMusic?.playing).toBe(false)
+      expect(bgMusic?._playing).toBe(false)
       manager.destroy()
     })
 
@@ -549,7 +566,7 @@ describe('AudioManager', () => {
 
       manager.stopAllSounds()
 
-      const playingSounds = mockHowlInstances.filter(h => h.playing)
+      const playingSounds = mockHowlInstances.filter(h => h._playing)
       expect(playingSounds.length).toBe(0)
       manager.destroy()
     })
@@ -570,6 +587,42 @@ describe('AudioManager', () => {
       // Let me re-read... "stopAllSounds() - stop all active sounds"
       // This could be interpreted either way. Let's check the spec more carefully.
       // The task says "Stop all active sound effects" so we'll keep music playing
+      manager.destroy()
+    })
+  })
+
+  describe('stopSound', () => {
+    it('should stop the specified sound instance (AC-012a)', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const soundId = manager.playSound('shoot')
+      const shootSound = mockHowlInstances.find(h => h.src.includes('shoot'))
+
+      expect(shootSound?.playing(soundId)).toBe(true)
+
+      manager.stopSound(soundId)
+
+      expect(shootSound?.playing(soundId)).toBe(false)
+      manager.destroy()
+    })
+
+    it('should not affect other playing sounds when stopping one', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const shootId = manager.playSound('shoot')
+      const explosionId = manager.playSound('explosion')
+
+      const shootSound = mockHowlInstances.find(h => h.src.includes('shoot'))
+      const explosionSound = mockHowlInstances.find(h => h.src.includes('explosion'))
+
+      manager.stopSound(shootId)
+
+      expect(shootSound?.playing(shootId)).toBe(false)
+      expect(explosionSound?.playing(explosionId)).toBe(true)
       manager.destroy()
     })
   })

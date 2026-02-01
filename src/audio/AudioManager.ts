@@ -105,15 +105,16 @@ export class AudioManager {
    * Play a sound effect by ID.
    * @param id - Sound ID (e.g., 'shoot', 'explosion', 'powerup', 'thrust', 'gameOver')
    * @param options - Optional playback options
+   * @returns The sound instance ID for use with stopSound, or 0 if sound couldn't be played
    */
-  playSound(id: string, options: PlaySoundOptions = {}): void {
+  playSound(id: string, options: PlaySoundOptions = {}): number {
     if (this.muted) {
-      return
+      return 0
     }
 
     const sound = this.getOrLoadSound(id)
     if (!sound) {
-      return
+      return 0
     }
 
     // Calculate effective volume
@@ -122,7 +123,7 @@ export class AudioManager {
     const effectiveVolume = this.sfxVolume * baseVolume * optionVolume
 
     sound.volume(effectiveVolume)
-    sound.play()
+    return sound.play()
   }
 
   /**
@@ -175,6 +176,16 @@ export class AudioManager {
       this.currentMusic.stop()
       this.currentMusic = null
       this.currentMusicId = null
+    }
+  }
+
+  /**
+   * Stop a specific sound instance by its ID.
+   * @param soundId - The sound instance ID returned from playSound
+   */
+  stopSound(soundId: number): void {
+    for (const sound of this.sounds.values()) {
+      sound.stop(soundId)
     }
   }
 
