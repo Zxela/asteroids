@@ -107,15 +107,16 @@ export class AudioManager {
    * Play a sound effect by ID.
    * @param id - Sound ID (e.g., 'shoot', 'explosion', 'powerup', 'thrust', 'gameOver')
    * @param options - Optional playback options (volume, loop, rate)
+   * @returns Sound instance ID for controlling playback, or -1 if sound could not be played
    */
-  playSound(id: string, options: PlaySoundOptions = {}): void {
+  playSound(id: string, options: PlaySoundOptions = {}): number {
     if (this.muted) {
-      return
+      return -1
     }
 
     const sound = this.getOrLoadSound(id)
     if (!sound) {
-      return
+      return -1
     }
 
     // Calculate effective volume
@@ -135,7 +136,7 @@ export class AudioManager {
       sound.rate(options.rate)
     }
 
-    sound.play()
+    return sound.play()
   }
 
   /**
@@ -268,6 +269,38 @@ export class AudioManager {
       if (!id.startsWith('music_')) {
         sound.stop()
       }
+    }
+  }
+
+  /**
+   * Set the playback rate for a specific sound instance.
+   * @param soundId - Sound instance ID (returned from playSound)
+   * @param rate - Playback rate (0.5 = half speed, 1.0 = normal, 2.0 = double speed)
+   */
+  setSoundRate(soundId: number, rate: number): void {
+    for (const sound of this.sounds.values()) {
+      sound.rate(rate, soundId)
+    }
+  }
+
+  /**
+   * Set the volume for a specific sound instance.
+   * @param soundId - Sound instance ID (returned from playSound)
+   * @param volume - Volume level (0.0 to 1.0)
+   */
+  setSoundVolume(soundId: number, volume: number): void {
+    for (const sound of this.sounds.values()) {
+      sound.volume(volume, soundId)
+    }
+  }
+
+  /**
+   * Stop a specific sound instance.
+   * @param soundId - Sound instance ID (returned from playSound)
+   */
+  stopSound(soundId: number): void {
+    for (const sound of this.sounds.values()) {
+      sound.stop(soundId)
     }
   }
 

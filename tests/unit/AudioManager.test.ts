@@ -61,7 +61,11 @@ class MockHowl {
     return this.id
   }
 
-  stop(): this {
+  stop(soundId?: number): this {
+    // If soundId is provided, only stop if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
+    }
     this.playing = false
     return this
   }
@@ -76,25 +80,37 @@ class MockHowl {
     return this
   }
 
-  volume(vol?: number): number | this {
+  volume(vol?: number, soundId?: number): number | this {
     if (vol === undefined) {
       return this._volume
+    }
+    // If soundId is provided, only update if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
     }
     this._volume = vol
     return this
   }
 
-  loop(loop?: boolean): boolean | this {
+  loop(loop?: boolean, soundId?: number): boolean | this {
     if (loop === undefined) {
       return this._loop
+    }
+    // If soundId is provided, only update if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
     }
     this._loop = loop
     return this
   }
 
-  rate(rate?: number): number | this {
+  rate(rate?: number, soundId?: number): number | this {
     if (rate === undefined) {
       return this._rate
+    }
+    // If soundId is provided, only update if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
     }
     this._rate = rate
     return this
