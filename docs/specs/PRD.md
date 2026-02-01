@@ -1,101 +1,99 @@
-# Product Requirements Document: Powerups & Music System
+# PRD: Fix UFO Spaceship Behavior
 
 ## Problem Statement
 
-The Asteroids game has two interconnected issues affecting player experience:
+The UFO enemy in the game does not match the original Asteroids arcade behavior:
 
-1. **Broken MultiShot Powerup**: The MultiShot powerup is collected and tracked but has no gameplay effect. Players collect a glowing magenta orb expecting triple-shot capability, but nothing changes. This breaks player trust in the powerup system.
+1. **Size**: UFOs are approximately 6x larger than they should be relative to the player ship
+2. **Movement**: UFOs spawn but appear static or move incorrectly
+3. **Sound**: No characteristic doppler-effect "oooOoooOO" warbling sound while UFO is active
+4. **Collision**: UFO-asteroid collisions are not implemented (UFOs should destroy asteroids on contact)
 
-2. **Silent Menus**: Menu music never plays because the AudioSystem is architecturally tied to gameplay initialization. Players experience silence on the main menu and during attract mode demo, missing critical audio atmosphere that sets the game's tone.
+In the original 1979 Asteroids arcade game, UFOs were memorable enemies that:
+- Were roughly the same size as the player ship
+- Flew across the screen in wave patterns
+- Made a distinctive warbling sound that changed pitch based on proximity (doppler effect)
+- Could collide with and destroy asteroids
 
 ## Goals
 
-1. **Fix MultiShot powerup** to fire 3 projectiles in a spread pattern when active
-2. **Add visual feedback** for all powerup collections (particles, effects)
-3. **Review and balance** powerup spawn rates, durations, and effect strengths
-4. **Refactor AudioSystem** to persist across the entire game lifecycle
-5. **Enable menu music** to play immediately when entering main menu
-6. **Enable proper music transitions** between game states (menu → playing → game over)
+1. Scale UFO meshes to be proportional to player ship (roughly same size)
+2. Ensure UFO movement AI is functioning correctly
+3. Add continuous doppler-effect sound while UFO is on screen
+4. Add UFO-asteroid collision handling
 
 ## Non-Goals
 
-- Adding new powerup types (scope limited to existing 4 types)
-- Changing the core weapon switching system (1-4, Z/X keys)
-- Fixing stars/skins visual bug (tracked separately for later)
-- Adding new music tracks
-- Implementing audio settings UI
+- NG-001: Changing UFO shooting behavior (already implemented correctly)
+- NG-002: Changing UFO spawn timing/frequency
+- NG-003: Changing UFO point values
+- NG-004: Adding new UFO types beyond large/small
 
 ## User Stories
 
-### US-1: MultiShot Powerup Works
+### US-1: Properly Sized UFO
 **As a** player
-**I want** the MultiShot powerup to fire 3 projectiles in a spread
-**So that** I can destroy multiple asteroids at once
+**I want** the UFO to be similarly sized to my ship
+**So that** the game feels authentic to the original Asteroids
 
 **Acceptance Criteria:**
-- Collecting MultiShot powerup activates spread-fire for 15 seconds
-- While active, pressing fire shoots 3 projectiles (center, +15°, -15°)
-- Effect stacks with RapidFire (faster triple shots)
-- Visual indicator shows MultiShot is active on HUD
-- Effect expires after 15 seconds, reverting to single shot
+- [ ] Large UFO visual radius must be 15-20 units (currently ~75 units with scale)
+- [ ] Small UFO visual radius must be 10-12 units
+- [ ] UFO collider radius must match new visual size
+- [ ] UFO should appear proportional to player ship on screen
 
-### US-2: Powerup Collection Feedback
+### US-2: UFO Movement
 **As a** player
-**I want** clear visual feedback when I collect a powerup
-**So that** I know the powerup was collected and what effect I received
+**I want** the UFO to fly across the screen in a wave pattern
+**So that** it's a challenging moving target
 
 **Acceptance Criteria:**
-- Particle burst effect on powerup collection
-- Brief screen flash/tint matching powerup color
-- Powerup icon appears on HUD with countdown timer
-- Audio confirmation already plays (existing)
+- [ ] UFO must move horizontally across screen at configured speed (80/120 units/s)
+- [ ] UFO must have slight vertical oscillation while moving
+- [ ] UFO must wrap or exit at screen edge correctly
+- [ ] Movement must be smooth without stuttering
 
-### US-3: Menu Music Plays
+### US-3: UFO Doppler Sound
 **As a** player
-**I want** music to play on the main menu
-**So that** the game feels polished and atmospheric from the start
+**I want** to hear the UFO's distinctive warbling sound
+**So that** I know when a UFO is on screen and can gauge its proximity
 
 **Acceptance Criteria:**
-- Menu music starts playing when main menu appears
-- Music loops until player starts game
-- Smooth transition/crossfade to gameplay music when starting
-- Music respects volume settings
+- [ ] Continuous warbling "oooOoooOO" sound must play while UFO is active
+- [ ] Sound pitch must vary based on UFO's horizontal position (doppler effect simulation)
+- [ ] Sound must be louder when UFO is closer to player
+- [ ] Sound must stop when UFO is destroyed or exits screen
+- [ ] Large and small UFOs must have different base pitches
 
-### US-4: Music State Transitions
+### US-4: UFO-Asteroid Collision
 **As a** player
-**I want** appropriate music for each game state
-**So that** the audio matches what's happening in the game
+**I want** UFOs to destroy asteroids they collide with
+**So that** the gameplay matches the original Asteroids
 
 **Acceptance Criteria:**
-- Main Menu: menu.mp3 loops
-- Playing: background.mp3 loops
-- Attract Mode (Demo): menu.mp3 continues (it's still menu context)
-- Game Over: music fades, gameOver.mp3 plays once
-- Return to Menu: menu.mp3 resumes
-
-### US-5: Balanced Powerup System
-**As a** player
-**I want** powerups to feel impactful but not overpowered
-**So that** the game remains challenging and fun
-
-**Acceptance Criteria:**
-- Powerup spawn rate feels rewarding but not trivial (review 10% rate)
-- Effect durations provide meaningful advantage without trivializing gameplay
-- Shield duration balanced against typical asteroid encounter rate
-- RapidFire cooldown reduction feels noticeably faster
+- [ ] UFO collider must include 'asteroid' in its collision mask
+- [ ] When UFO hits asteroid, asteroid must be destroyed (splits if large/medium)
+- [ ] UFO must NOT be damaged by asteroid collision
+- [ ] Collision must generate visual feedback (explosion particles)
 
 ## Success Metrics
 
-- MultiShot powerup produces 3 projectiles when collected and fired
-- Menu music plays within 1 second of main menu appearing
-- All 4 powerup types have working effects
-- Visual feedback appears for every powerup collection
-- Music transitions occur without gaps or overlaps
-- No audio-related console errors
+| Metric | Target |
+|--------|--------|
+| UFO size ratio to ship | 1:1 to 1.5:1 (currently ~6:1) |
+| UFO movement speed | Matches config (80/120 units/s) |
+| Doppler sound frequency range | 0.8x to 1.2x base pitch |
+| UFO-asteroid collision detection | 100% of contacts detected |
 
-## Technical Constraints
+## Technical Context
 
-- Must work with existing ECS architecture
-- Must maintain browser autoplay policy compliance (user interaction required)
-- Must not break existing powerup tests
-- Audio files already exist (menu.mp3, background.mp3, etc.)
+### Current Implementation
+- `src/components/UFO.ts`: UFO_CONFIG defines speed, collider radius (25/15)
+- `src/rendering/MeshFactory.ts`: createUFOLarge uses radius 25 + scale 1.5 in createUFO
+- `src/systems/UFOSystem.ts`: Movement AI exists but may not be applied correctly
+- `src/entities/createUFO.ts`: Scale factor of 1.5 for large, 1.0 for small
+- `src/config/audioConfig.ts`: Only has `ufoWarning` sound, no continuous UFO sound
+
+### Ship Reference
+- Ship collider radius: 12 units
+- Ship mesh: ~20 units tall (cone geometry)

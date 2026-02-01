@@ -1,4 +1,4 @@
-# Architecture Decision Record: Persistent AudioSystem & Powerup Fixes
+# Architecture Decision Record: UFO Behavior Fixes
 
 ## Status
 
@@ -6,129 +6,139 @@ Proposed
 
 ## Context
 
-The game has two architectural issues:
+The UFO enemy implementation has several issues that deviate from the original Asteroids arcade behavior:
 
-### Issue 1: AudioSystem Lifecycle
-Currently, `AudioSystem` is created inside `initializeGameplay()` which only runs when the player clicks "Play". This means:
-- No event listener exists when transitioning to main menu
-- The `gameStateChanged` event fires but has no subscriber
-- Menu music never plays
-- Each new game creates a fresh AudioSystem, losing state
+### Issue 1: UFO Size
+The UFO mesh is created with a body radius of 25 units (large) or 15 units (small), then scaled by 1.5x for large UFOs. Combined with the ring and dome geometry, the effective visual size is ~75 units - roughly 6x larger than the player ship (12 unit collider, ~20 unit visual).
 
-### Issue 2: MultiShot Not Wired
-`PowerUpSystem` correctly tracks the multiShot effect but `WeaponSystem` never checks for it. The systems are decoupled but the integration point was never implemented.
+### Issue 2: UFO Movement
+The `UFOSystem.updateMovement()` method exists and sets velocity, but the UFOs may appear static if the velocity isn't being applied by `PhysicsSystem` or if the movement logic has a bug.
+
+### Issue 3: No Continuous UFO Sound
+The original Asteroids had a distinctive warbling sound that played continuously while a UFO was on screen. Currently, only a `ufoWarning` sound exists (beat that plays before spawn). No sound plays while the UFO is active.
+
+### Issue 4: No UFO-Asteroid Collision
+UFO colliders only collide with `['player', 'projectile']`. In the original game, UFOs could destroy asteroids by flying into them.
 
 ## Decision Drivers
 
-- Menu music must play before any gameplay occurs
-- AudioSystem must persist across game sessions (menu → play → game over → menu)
-- PowerUpSystem and WeaponSystem need a clean integration pattern
-- Solution must work with existing ECS architecture
-- Browser autoplay policies require user interaction before audio
+- Match original Asteroids arcade behavior for authenticity
+- Maintain existing ECS architecture patterns
+- UFO should feel like a threatening enemy, not a background prop
+- Audio implementation must work with Howler.js
 
 ## Options Considered
 
-### Option 1: Direct AudioManager Calls (Rejected)
-Have `MainMenu` and `Game` directly call `audioManager.playMusic()`.
+### Option 1: Simple Parameter Tweaks (Selected for Size/Movement)
+Adjust UFO mesh geometry dimensions and remove the 1.5x scale multiplier.
 
 **Pros:**
-- Simple, immediate fix
+- Minimal code changes
+- Easy to verify visually
 - No architectural changes
 
 **Cons:**
-- Bypasses event system, creating inconsistency
-- Music logic scattered across multiple files
-- Harder to maintain and debug
+- May need to adjust multiple places (mesh, collider, config)
 
-### Option 2: Minimal AudioSystem Move (Rejected)
-Create AudioSystem earlier in Game constructor.
+### Option 2: New UFOAudioSystem (Selected for Sound)
+Create a new system that tracks active UFOs and manages their continuous audio with pitch modulation.
 
 **Pros:**
-- Small change
-- Fixes immediate problem
+- Clean separation of concerns
+- Can handle doppler effect calculation
+- Follows existing system pattern
 
 **Cons:**
-- Still recreates AudioSystem each game
-- Event emitter lifecycle still problematic
-- Doesn't address root cause
+- New system to maintain
+- Needs integration with AudioManager
 
-### Option 3: Persistent AudioSystem (Selected)
-Create AudioSystem once during `AudioManager.init()` and keep it alive for the entire application lifecycle.
-
-**Pros:**
-- Single source of truth for audio state
-- Clean event handling for all game states
-- No recreation/cleanup complexity
-- Matches how AudioManager already works (singleton)
+### Option 3: Extend AudioSystem (Rejected)
+Add UFO sound handling directly to AudioSystem.
 
 **Cons:**
-- Larger refactor
-- Need to ensure proper event subscription lifecycle
+- AudioSystem already complex
+- UFO-specific logic doesn't belong there
 
 ## Decision
 
-**Implement Option 3: Persistent AudioSystem**
+1. **Size Fix**: Reduce UFO mesh geometry dimensions by ~60% and remove the scale factor in `createUFO.ts`. Adjust `UFO_CONFIG.colliderRadius` to match new sizes.
 
-The AudioSystem will be:
-1. Created once during game initialization (before main menu)
-2. Subscribed to a global event emitter that persists across game sessions
-3. Responsible for all music state transitions
+2. **Movement Fix**: Debug `UFOSystem.updateMovement()` to ensure velocity is properly applied. Verify `PhysicsSystem` processes UFO entities.
 
-For the MultiShot integration:
-1. WeaponSystem will receive a reference to PowerUpSystem
-2. During firing, check `powerUpSystem.hasActiveEffect(entityId, 'multiShot')`
-3. If active, use spread-shot firing logic instead of single-shot
+3. **Doppler Sound**: Add continuous UFO sound with pitch modulation:
+   - Add `ufoSound` audio definition (looping warble)
+   - `UFOSystem` starts sound on UFO spawn, stops on destroy
+   - Pitch varies from 0.8x (left edge) to 1.2x (right edge)
+   - Volume varies with distance to player
+
+4. **UFO-Asteroid Collision**: Add `'asteroid'` to UFO collision mask. Handle collision in `DamageSystem` to destroy asteroid without damaging UFO.
 
 ## Consequences
 
 ### Positive
-- Menu music plays immediately
-- Consistent audio behavior across all game states
-- Single AudioSystem instance simplifies debugging
-- Clear integration pattern for PowerUpSystem → WeaponSystem
+- UFOs match original Asteroids proportions
+- Distinctive audio feedback when UFO appears
+- More authentic gameplay with UFO-asteroid interactions
+- Clear audio cues for UFO position
 
 ### Negative
-- Requires refactoring Game.ts initialization order
-- Need to create a persistent event emitter separate from gameplay events
-- WeaponSystem gains dependency on PowerUpSystem
+- Need to source/create UFO warble sound effect
+- Additional complexity in UFOSystem for audio management
+- DamageSystem gains new collision case
 
 ### Risks
-- Browser autoplay may still block initial music (mitigated by existing user interaction flow)
-- Event emitter memory leaks if not properly managed (mitigated by singleton pattern)
+- Sound pitch modulation may not work well on all browsers (mitigated by fallback to constant pitch)
+- UFO-asteroid collision may make game easier (mitigated by UFO rarity)
 
 ## Implementation Notes
 
-### AudioSystem Changes
+### Size Changes
 ```typescript
-// Create persistent event emitter in Game class (not per-session)
-class Game {
-  private globalEventEmitter: EventEmitter  // Persists across sessions
-  private audioSystem: AudioSystem          // Created once, never destroyed
+// UFO_CONFIG (new values)
+large: { colliderRadius: 15 },  // was 25
+small: { colliderRadius: 10 }   // was 15
 
-  constructor() {
-    this.globalEventEmitter = new EventEmitter()
-    this.audioSystem = new AudioSystem(audioManager, this.globalEventEmitter)
-    // ...
-  }
-}
+// MeshFactory createUFOLarge (new dimensions)
+bodyGeometry = new THREE.SphereGeometry(12, 16, 12)  // was 25
+ringGeometry = new THREE.TorusGeometry(10, 2, 8, 24)  // was 22, 3
+
+// createUFO.ts - remove scale factor
+const scale = 1.0  // was 1.5 for large
 ```
 
-### WeaponSystem Changes
+### Audio Implementation
 ```typescript
-class WeaponSystem {
-  constructor(inputSystem: InputSystem, powerUpSystem: PowerUpSystem) {
-    this.powerUpSystem = powerUpSystem
-  }
-
-  private handleStandardFiring(...) {
-    const hasMultiShot = this.powerUpSystem?.hasActiveEffect(entityId, 'multiShot')
-    if (hasMultiShot || weapon.currentWeapon === 'spread') {
-      this.fireSpreadShot(...)
-    } else {
-      this.fireSingleShot(...)
-    }
-  }
+// audioConfig.ts
+ufoLoop: {
+  id: 'ufoLoop',
+  path: '/assets/audio/ufo_loop.mp3',
+  volume: 0.5,
+  preload: true
 }
+
+// UFOSystem - play/stop on UFO lifecycle
+private ufoSoundId: number | null = null
+
+onUFOSpawned(ufo: UFO) {
+  this.ufoSoundId = this.audioManager.playSound('ufoLoop', {
+    loop: true,
+    rate: ufo.ufoSize === 'small' ? 1.2 : 1.0
+  })
+}
+
+onUFODestroyed() {
+  this.audioManager.stopSound(this.ufoSoundId)
+}
+
+// Pitch modulation in update()
+const pitch = 0.8 + (position.x + SCREEN_HALF_WIDTH) / (SCREEN_HALF_WIDTH * 2) * 0.4
+this.audioManager.setSoundRate(this.ufoSoundId, pitch)
+```
+
+### Collision Mask Change
+```typescript
+// createUFO.ts
+new Collider('sphere', config.colliderRadius, 'ufo', ['player', 'projectile', 'asteroid'])
 ```
 
 ## Related Documents
