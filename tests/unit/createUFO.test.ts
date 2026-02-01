@@ -155,6 +155,20 @@ describe('createUFO', () => {
       expect(collider?.mask).toContain('player')
       expect(collider?.mask).toContain('projectile')
     })
+
+    it('should include asteroid in collision mask', () => {
+      const ufoId = createUFO(world, { size: 'large' })
+      const collider = world.getComponent<Collider>(ufoId, Collider)
+
+      expect(collider?.mask).toContain('asteroid')
+    })
+
+    it('should include asteroid in collision mask for small UFO', () => {
+      const ufoId = createUFO(world, { size: 'small' })
+      const collider = world.getComponent<Collider>(ufoId, Collider)
+
+      expect(collider?.mask).toContain('asteroid')
+    })
   })
 
   describe('Health Configuration', () => {

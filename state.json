@@ -92,7 +92,7 @@
     {"skill": "homerun:implement", "timestamp": "2026-01-31T07:30:00Z", "phase": "implementing", "task": "005"}
   ],
   "parallel_state": {
-    "running_tasks": [],
+    "running_tasks": ["007", "016"],
     "pending_review": [],
     "retry_queue": [],
     "blocked_by_failure": false,

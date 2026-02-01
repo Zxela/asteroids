@@ -748,4 +748,34 @@ describe('AudioManager', () => {
       manager.destroy()
     })
   })
+
+  describe('setSoundRate and setSoundVolume', () => {
+    it('setSoundRate must update playback rate of active sound instance', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const soundId = manager.playSound('shoot', { loop: true })
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+
+      manager.setSoundRate(soundId, 1.5)
+
+      expect(sound?.rate()).toBe(1.5)
+      manager.destroy()
+    })
+
+    it('setSoundVolume must update volume of active sound instance', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const soundId = manager.playSound('shoot', { loop: true })
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+
+      manager.setSoundVolume(soundId, 0.8)
+
+      expect(sound?.volume()).toBe(0.8)
+      manager.destroy()
+    })
+  })
 })
