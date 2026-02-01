@@ -5,6 +5,7 @@
  * - Querying CollisionSystem.getCollisions() each frame
  * - Applying projectile damage to asteroids and UFOs
  * - Applying damage to player ship on asteroid/UFO collision
+ * - Destroying asteroids on UFO collision (UFO unharmed)
  * - Destroying projectiles after they deal damage
  *
  * Following ADR-0001: ECS architecture for game entity management.
@@ -66,6 +67,7 @@ export class DamageSystem implements System {
    * - Projectile-UFO collisions: apply projectile damage to UFO, destroy projectile
    * - Asteroid-player collisions: apply instant kill damage to player if not invulnerable
    * - UFO-player collisions: apply instant kill damage to player if not invulnerable
+   * - UFO-asteroid collisions: destroy asteroid (instant kill), UFO unharmed
    * - UFO projectile-player collisions: apply instant kill damage to player
    *
    * @param world - The ECS world containing entities
@@ -118,6 +120,24 @@ export class DamageSystem implements System {
         const playerId = layer1 === 'player' ? entity1 : entity2
 
         this.handleEnemyPlayerCollision(world, playerId)
+        continue
+      }
+
+      // Handle UFO-asteroid collisions (UFO destroys asteroid, UFO unharmed)
+      if (
+        (layer1 === 'ufo' && layer2 === 'asteroid') ||
+        (layer1 === 'asteroid' && layer2 === 'ufo')
+      ) {
+        const asteroidId = layer1 === 'asteroid' ? entity1 : entity2
+        const ufoId = layer1 === 'ufo' ? entity1 : entity2
+
+        // Only damage the asteroid if both entities are still alive
+        if (!world.isEntityAlive(asteroidId) || !world.isEntityAlive(ufoId)) {
+          continue
+        }
+
+        // Only damage the asteroid, not the UFO
+        this.applyDamage(world, asteroidId, 999) // Instant kill
         continue
       }
 
@@ -261,5 +281,30 @@ export class DamageSystem implements System {
 
     // Destroy the UFO projectile
     world.destroyEntity(projectileId)
+  }
+
+  /**
+   * Apply damage to an entity.
+   *
+   * Helper method to apply damage to any entity with a Health component.
+   *
+   * @param world - The ECS world
+   * @param entityId - The entity to damage
+   * @param damage - The amount of damage to apply
+   */
+  private applyDamage(world: World, entityId: EntityId, damage: number): void {
+    // Verify entity is still alive
+    if (!world.isEntityAlive(entityId)) {
+      return
+    }
+
+    const health = world.getComponent(entityId, HealthClass)
+
+    if (!health) {
+      return
+    }
+
+    // Apply damage
+    health.takeDamage(damage)
   }
 }

@@ -158,6 +158,7 @@ export interface PowerUpCollectedEventData {
   powerUpEntityId: EntityId // Power-up entity
   powerUpType: PowerUpType
   position: Vector3
+  color: number // Hex color for visual feedback (particles, screen flash)
 }
 
 /**

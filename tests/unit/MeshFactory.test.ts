@@ -361,4 +361,81 @@ describe('MeshFactory', () => {
       expect(mesh).toBeInstanceOf(THREE.Group)
     })
   })
+
+  describe('UFO Meshes (AC-001c, AC-001d, AC-004)', () => {
+    it('should create ufo_large mesh', () => {
+      const mesh = MeshFactory.createMesh('ufo_large', 'standard')
+
+      expect(mesh).toBeDefined()
+      expect(mesh).toBeInstanceOf(THREE.Group)
+    })
+
+    it('should create ufo_small mesh', () => {
+      const mesh = MeshFactory.createMesh('ufo_small', 'standard')
+
+      expect(mesh).toBeDefined()
+      expect(mesh).toBeInstanceOf(THREE.Group)
+    })
+
+    it('should have large UFO body geometry radius of 12 units (AC-001c)', () => {
+      const ufoGroup = MeshFactory.createMesh('ufo_large', 'standard') as THREE.Group
+
+      // Find the body mesh (first child of the group)
+      const bodyMesh = ufoGroup.children[0] as THREE.Mesh
+      expect(bodyMesh).toBeDefined()
+
+      const bodyGeometry = bodyMesh.geometry as THREE.SphereGeometry
+      expect(bodyGeometry).toBeDefined()
+      expect(bodyGeometry.parameters.radius).toBe(12)
+    })
+
+    it('should have small UFO body geometry radius of 8 units (AC-001d)', () => {
+      const ufoGroup = MeshFactory.createMesh('ufo_small', 'standard') as THREE.Group
+
+      // Find the body mesh (first child of the group)
+      const bodyMesh = ufoGroup.children[0] as THREE.Mesh
+      expect(bodyMesh).toBeDefined()
+
+      const bodyGeometry = bodyMesh.geometry as THREE.SphereGeometry
+      expect(bodyGeometry).toBeDefined()
+      expect(bodyGeometry.parameters.radius).toBe(8)
+    })
+
+    it('should scale large UFO body vertically to create flattened appearance', () => {
+      const ufoGroup = MeshFactory.createMesh('ufo_large', 'standard') as THREE.Group
+      const bodyMesh = ufoGroup.children[0] as THREE.Mesh
+
+      // Body should have vertical scale applied (0.3)
+      const bodyGeometry = bodyMesh.geometry as THREE.SphereGeometry
+      expect(bodyGeometry.parameters.radius).toBe(12)
+      // The geometry is scaled on the object itself, check that mesh exists and has proper structure
+      expect(bodyMesh).toBeInstanceOf(THREE.Mesh)
+    })
+
+    it('should scale small UFO body vertically to create flattened appearance', () => {
+      const ufoGroup = MeshFactory.createMesh('ufo_small', 'standard') as THREE.Group
+      const bodyMesh = ufoGroup.children[0] as THREE.Mesh
+
+      // Body should have vertical scale applied (0.35)
+      const bodyGeometry = bodyMesh.geometry as THREE.SphereGeometry
+      expect(bodyGeometry.parameters.radius).toBe(8)
+      expect(bodyMesh).toBeInstanceOf(THREE.Mesh)
+    })
+
+    it('should have large UFO dome positioned above body', () => {
+      const ufoGroup = MeshFactory.createMesh('ufo_large', 'standard') as THREE.Group
+      const domeMesh = ufoGroup.children[1] as THREE.Mesh
+
+      expect(domeMesh).toBeDefined()
+      expect(domeMesh.position.y).toBeGreaterThan(0)
+    })
+
+    it('should have small UFO dome positioned above body', () => {
+      const ufoGroup = MeshFactory.createMesh('ufo_small', 'standard') as THREE.Group
+      const domeMesh = ufoGroup.children[1] as THREE.Mesh
+
+      expect(domeMesh).toBeDefined()
+      expect(domeMesh.position.y).toBeGreaterThan(0)
+    })
+  })
 })

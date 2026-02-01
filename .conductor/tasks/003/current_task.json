@@ -1,0 +1,25 @@
+{
+  "task": {
+    "id": "003",
+    "file": "docs/tasks/003-persistent-audio-system.md",
+    "content": "---\nid: \"003\"\ntitle: \"Create AudioSystem before main menu\"\nstatus: pending\ndepends_on: [\"002\"]\ntest_file: tests/unit/AudioSystem.test.ts\n---\n\n# 003: Create AudioSystem before main menu\n\n## Objective\n\nMove AudioSystem creation to happen immediately after AudioManager.init(), before the main menu state transition. This ensures there's a listener for the gameStateChanged event when transitioning to mainMenu, enabling menu music to play.\n\n## Acceptance Criteria\n\n- [ ] AudioSystem created in `Game.start()` after `AudioManager.init()` completes\n- [ ] AudioSystem subscribes to globalEventEmitter (not session eventEmitter)\n- [ ] AudioSystem is NOT destroyed/recreated between game sessions\n- [ ] Menu music plays when entering mainMenu state\n- [ ] Background music plays when entering playing state\n- [ ] Music stops/fades on gameOver state\n- [ ] AudioSystem handles state transitions without errors\n\n## Technical Notes\n\nFrom TECHNICAL_DESIGN.md:\n```typescript\nasync start() {\n  await this.audioManager.init()\n  // Create AudioSystem immediately after AudioManager is ready\n  this.audioSystem = new AudioSystem(this.audioManager, this.globalEventEmitter)\n  // Now main menu transition will have a listener\n  this.onStateChange('mainMenu')\n}\n```\n\nCurrent flow (broken):\n1. Game.start() → AudioManager.init()\n2. onStateChange('mainMenu') → event fires, no listener\n3. User clicks Play → initializeGameplay() → AudioSystem created (too late!)\n\nTarget flow (fixed):\n1. Game.start() → AudioManager.init()\n2. AudioSystem created, subscribes to globalEventEmitter\n3. onStateChange('mainMenu') → event fires, AudioSystem receives it\n4. Menu music plays!\n\n## Test Requirements\n\nAdd to `tests/unit/AudioSystem.test.ts`:\n- Test AudioSystem receives gameStateChanged events from emitter\n- Test playMusic called with 'music_menu' on mainMenu state\n- Test playMusic called with 'music_background' on playing state\n- Test stopMusic called on gameOver state\n",
+    "state": {
+      "status": "in_progress",
+      "file": "docs/tasks/003-persistent-audio-system.md",
+      "attempts": 2,
+      "feedback": [
+        "Regression: AudioSystem only subscribes to globalEventEmitter which only has gameStateChanged. Gameplay audio events (weaponFired, asteroidDestroyed, etc.) are emitted to session eventEmitter and won't be received. Fix: AudioSystem needs dual subscription - global for music, session for SFX."
+      ],
+      "started_at": "2026-01-31T04:32:07.076Z"
+    }
+  },
+  "workflow": {
+    "id": "powerups-and-music-6a0c1d24",
+    "branch": "create/powerups-and-music-6a0c1d24"
+  },
+  "previous_feedback": [
+    "Regression: AudioSystem only subscribes to globalEventEmitter which only has gameStateChanged. Gameplay audio events (weaponFired, asteroidDestroyed, etc.) are emitted to session eventEmitter and won't be received. Fix: AudioSystem needs dual subscription - global for music, session for SFX."
+  ],
+  "conductor_dir": ".conductor/tasks/003",
+  "result_file": ".conductor/tasks/003/result.yaml"
+}

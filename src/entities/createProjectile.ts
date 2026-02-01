@@ -118,10 +118,10 @@ export function createProjectile(world: World, config: ProjectileConfig): Entity
 
   // Collider: Configure based on projectile type
   // Boss projectiles use "bossProjectile" layer and only collide with "player"
-  // Player projectiles use "projectile" layer and collide with "asteroid" and "boss"
+  // Player projectiles use "projectile" layer and collide with "asteroid", "boss", and "ufo"
   const isBossProjectile = config.type === 'boss'
   const collisionLayer: CollisionLayer = isBossProjectile ? 'bossProjectile' : 'projectile'
-  const collisionMask: CollisionLayer[] = isBossProjectile ? ['player'] : ['asteroid', 'boss']
+  const collisionMask: CollisionLayer[] = isBossProjectile ? ['player'] : ['asteroid', 'boss', 'ufo']
 
   world.addComponent(
     projectileId,

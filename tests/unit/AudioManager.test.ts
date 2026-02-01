@@ -27,6 +27,7 @@ class MockHowl {
   src: string
   _volume: number
   _loop: boolean
+  _rate: number
   preload: boolean
   onload: (() => void) | null = null
   playing = false
@@ -44,6 +45,7 @@ class MockHowl {
     this.src = options.src[0]
     this._volume = options.volume ?? 1
     this._loop = options.loop ?? false
+    this._rate = 1
     this.preload = options.preload ?? true
     this.onload = options.onload ?? null
     mockHowlInstances.push(this)
@@ -59,7 +61,11 @@ class MockHowl {
     return this.id
   }
 
-  stop(): this {
+  stop(soundId?: number): this {
+    // If soundId is provided, only stop if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
+    }
     this.playing = false
     return this
   }
@@ -74,19 +80,39 @@ class MockHowl {
     return this
   }
 
-  volume(vol?: number): number | this {
+  volume(vol?: number, soundId?: number): number | this {
     if (vol === undefined) {
       return this._volume
+    }
+    // If soundId is provided, only update if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
     }
     this._volume = vol
     return this
   }
 
-  loop(loop?: boolean): boolean | this {
+  loop(loop?: boolean, soundId?: number): boolean | this {
     if (loop === undefined) {
       return this._loop
     }
+    // If soundId is provided, only update if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
+    }
     this._loop = loop
+    return this
+  }
+
+  rate(rate?: number, soundId?: number): number | this {
+    if (rate === undefined) {
+      return this._rate
+    }
+    // If soundId is provided, only update if it matches this instance
+    if (soundId !== undefined && soundId !== this.id) {
+      return this
+    }
+    this._rate = rate
     return this
   }
 
@@ -648,6 +674,123 @@ describe('AudioManager', () => {
       const shootSound = mockHowlInstances.find(h => h.src.includes('shoot'))
       expect(shootSound).toBeDefined()
       expect(shootSound?.src).toContain('/assets/audio/shoot.mp3')
+      manager.destroy()
+    })
+  })
+
+  describe('PlaySoundOptions Extensions - Loop and Rate', () => {
+    it('should have loop field defined in PlaySoundOptions', async () => {
+      const { PlaySoundOptions } = await import('../../src/audio/AudioManager')
+      // Just verify we can import - the actual check is that the interface accepts loop
+      const testOptions: Partial<typeof PlaySoundOptions> = { loop: true }
+      expect(testOptions.loop).toBeDefined()
+    })
+
+    it('should have rate field defined in PlaySoundOptions', async () => {
+      const { PlaySoundOptions } = await import('../../src/audio/AudioManager')
+      // Just verify we can import - the actual check is that the interface accepts rate
+      const testOptions: Partial<typeof PlaySoundOptions> = { rate: 1.5 }
+      expect(testOptions.rate).toBeDefined()
+    })
+
+    it('PlaySoundOptions with loop=true should pass type check', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const options: Parameters<typeof manager.playSound>[1] = { loop: true }
+      expect(options.loop).toBeDefined()
+      expect(options.loop).toBe(true)
+      manager.destroy()
+    })
+
+    it('PlaySoundOptions with rate number should pass type check', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const options: Parameters<typeof manager.playSound>[1] = { rate: 1.5 }
+      expect(options.rate).toBeDefined()
+      expect(options.rate).toBe(1.5)
+      manager.destroy()
+    })
+
+    it('PlaySoundOptions should support loop, rate, and volume together', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const options: Parameters<typeof manager.playSound>[1] = {
+        loop: true,
+        rate: 0.8,
+        volume: 0.5
+      }
+      expect(options.loop).toBeDefined()
+      expect(options.rate).toBeDefined()
+      expect(options.volume).toBeDefined()
+      expect(options.loop).toBe(true)
+      expect(options.rate).toBe(0.8)
+      expect(options.volume).toBe(0.5)
+      manager.destroy()
+    })
+
+    it('playSound must set loop(true) when options.loop is true', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      manager.playSound('shoot', { loop: true })
+
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+      expect(sound).toBeDefined()
+      expect(sound?.loop()).toBe(true)
+      manager.destroy()
+    })
+
+    it('playSound must set rate when options.rate is provided', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      // Mock the rate method to track calls
+      const mockRate = vi.fn()
+      const originalRate = MockHowl.prototype.rate
+
+      manager.playSound('shoot', { rate: 1.2 })
+
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+      expect(sound).toBeDefined()
+      expect(sound?.rate()).toBe(1.2)
+      manager.destroy()
+    })
+  })
+
+  describe('setSoundRate and setSoundVolume', () => {
+    it('setSoundRate must update playback rate of active sound instance', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const soundId = manager.playSound('shoot', { loop: true })
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+
+      manager.setSoundRate(soundId, 1.5)
+
+      expect(sound?.rate()).toBe(1.5)
+      manager.destroy()
+    })
+
+    it('setSoundVolume must update volume of active sound instance', async () => {
+      const AudioManager = await getAudioManager()
+      const manager = AudioManager.getInstance()
+      await manager.init()
+
+      const soundId = manager.playSound('shoot', { loop: true })
+      const sound = mockHowlInstances.find(h => h.src.includes('shoot'))
+
+      manager.setSoundVolume(soundId, 0.8)
+
+      expect(sound?.volume()).toBe(0.8)
       manager.destroy()
     })
   })

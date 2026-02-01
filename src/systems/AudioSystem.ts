@@ -89,8 +89,11 @@ export class AudioSystem {
   /** Reference to AudioManager for sound playback */
   private audioManager: AudioManager | null
 
-  /** Reference to EventBus for event subscriptions */
-  private eventBus: EventEmitter<AudioEventMap> | null
+  /** Reference to global EventBus for game state events (persists across sessions) */
+  private globalEventBus: EventEmitter<AudioEventMap> | null
+
+  /** Reference to session EventBus for gameplay events (recreated each session) */
+  private sessionEventBus: EventEmitter<AudioEventMap> | null
 
   /** Flag indicating if thrust sound is currently playing */
   private thrustSoundPlaying = false
@@ -118,11 +121,17 @@ export class AudioSystem {
    * Create a new AudioSystem instance.
    *
    * @param audioManager - AudioManager instance for sound playback
-   * @param eventBus - EventEmitter for subscribing to game events
+   * @param globalEventBus - EventEmitter for global events (gameStateChanged)
+   * @param sessionEventBus - Optional EventEmitter for session events (gameplay SFX)
    */
-  constructor(audioManager: AudioManager, eventBus: EventEmitter<AudioEventMap>) {
+  constructor(
+    audioManager: AudioManager,
+    globalEventBus: EventEmitter<AudioEventMap>,
+    sessionEventBus?: EventEmitter<AudioEventMap>
+  ) {
     this.audioManager = audioManager || null
-    this.eventBus = eventBus || null
+    this.globalEventBus = globalEventBus || null
+    this.sessionEventBus = sessionEventBus || null
 
     // Create bound handlers for cleanup
     this.handlers = {
@@ -143,20 +152,50 @@ export class AudioSystem {
 
   /**
    * Subscribe to all game events.
-   * Sets up listeners for audio triggers.
+   * Sets up listeners for audio triggers on both global and session event buses.
    */
   private subscribeToEvents(): void {
-    if (!this.eventBus) return
+    // Subscribe to global events (game state changes for music)
+    if (this.globalEventBus) {
+      this.globalEventBus.on('gameStateChanged', this.handlers.gameStateChanged)
+    }
 
-    this.eventBus.on('weaponFired', this.handlers.weaponFired)
-    this.eventBus.on('asteroidDestroyed', this.handlers.asteroidDestroyed)
-    this.eventBus.on('powerUpCollected', this.handlers.powerUpCollected)
-    this.eventBus.on('shipThrust', this.handlers.shipThrust)
-    this.eventBus.on('playerDied', this.handlers.playerDied)
-    this.eventBus.on('waveStarted', this.handlers.waveStarted)
-    this.eventBus.on('bossSpawned', this.handlers.bossSpawned)
-    this.eventBus.on('bossDefeated', this.handlers.bossDefeated)
-    this.eventBus.on('gameStateChanged', this.handlers.gameStateChanged)
+    // Subscribe to session events (gameplay SFX)
+    this.subscribeToSessionEvents()
+  }
+
+  /**
+   * Subscribe to session-specific gameplay events.
+   * Called when setting a new session event bus.
+   */
+  private subscribeToSessionEvents(): void {
+    if (!this.sessionEventBus) return
+
+    this.sessionEventBus.on('weaponFired', this.handlers.weaponFired)
+    this.sessionEventBus.on('asteroidDestroyed', this.handlers.asteroidDestroyed)
+    this.sessionEventBus.on('powerUpCollected', this.handlers.powerUpCollected)
+    this.sessionEventBus.on('shipThrust', this.handlers.shipThrust)
+    this.sessionEventBus.on('playerDied', this.handlers.playerDied)
+    this.sessionEventBus.on('waveStarted', this.handlers.waveStarted)
+    this.sessionEventBus.on('bossSpawned', this.handlers.bossSpawned)
+    this.sessionEventBus.on('bossDefeated', this.handlers.bossDefeated)
+  }
+
+  /**
+   * Unsubscribe from session-specific gameplay events.
+   * Called when replacing the session event bus.
+   */
+  private unsubscribeFromSessionEvents(): void {
+    if (!this.sessionEventBus) return
+
+    this.sessionEventBus.off('weaponFired', this.handlers.weaponFired)
+    this.sessionEventBus.off('asteroidDestroyed', this.handlers.asteroidDestroyed)
+    this.sessionEventBus.off('powerUpCollected', this.handlers.powerUpCollected)
+    this.sessionEventBus.off('shipThrust', this.handlers.shipThrust)
+    this.sessionEventBus.off('playerDied', this.handlers.playerDied)
+    this.sessionEventBus.off('waveStarted', this.handlers.waveStarted)
+    this.sessionEventBus.off('bossSpawned', this.handlers.bossSpawned)
+    this.sessionEventBus.off('bossDefeated', this.handlers.bossDefeated)
   }
 
   /**
@@ -164,17 +203,13 @@ export class AudioSystem {
    * Called during cleanup/destroy.
    */
   private unsubscribeFromEvents(): void {
-    if (!this.eventBus) return
+    // Unsubscribe from global events
+    if (this.globalEventBus) {
+      this.globalEventBus.off('gameStateChanged', this.handlers.gameStateChanged)
+    }
 
-    this.eventBus.off('weaponFired', this.handlers.weaponFired)
-    this.eventBus.off('asteroidDestroyed', this.handlers.asteroidDestroyed)
-    this.eventBus.off('powerUpCollected', this.handlers.powerUpCollected)
-    this.eventBus.off('shipThrust', this.handlers.shipThrust)
-    this.eventBus.off('playerDied', this.handlers.playerDied)
-    this.eventBus.off('waveStarted', this.handlers.waveStarted)
-    this.eventBus.off('bossSpawned', this.handlers.bossSpawned)
-    this.eventBus.off('bossDefeated', this.handlers.bossDefeated)
-    this.eventBus.off('gameStateChanged', this.handlers.gameStateChanged)
+    // Unsubscribe from session events
+    this.unsubscribeFromSessionEvents()
   }
 
   /**
@@ -327,6 +362,8 @@ export class AudioSystem {
 
     switch (data.state) {
       case 'mainMenu':
+      case 'attractMode':
+        // Attract mode keeps menu music playing (it's a demo shown on the menu)
         this.audioManager.playMusic('music_menu', { volume: 1.0 })
         break
 
@@ -351,6 +388,24 @@ export class AudioSystem {
         // No music changes for these states
         break
     }
+  }
+
+  /**
+   * Set a new session event bus for gameplay events.
+   * Unsubscribes from the old session event bus and subscribes to the new one.
+   * This allows AudioSystem to persist across game sessions while connecting to new gameplay events.
+   *
+   * @param sessionEventBus - New session event emitter for gameplay events
+   */
+  setSessionEventBus(sessionEventBus: EventEmitter<AudioEventMap>): void {
+    // Unsubscribe from old session events
+    this.unsubscribeFromSessionEvents()
+
+    // Update reference
+    this.sessionEventBus = sessionEventBus
+
+    // Subscribe to new session events
+    this.subscribeToSessionEvents()
   }
 
   /**
@@ -392,6 +447,7 @@ export class AudioSystem {
 
     this.thrustSoundPlaying = false
     this.audioManager = null
-    this.eventBus = null
+    this.globalEventBus = null
+    this.sessionEventBus = null
   }
 }

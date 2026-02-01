@@ -4,6 +4,8 @@
  * Listens for game events and spawns appropriate particle effects:
  * - asteroidDestroyed -> explosion particles (20-50, radial spread)
  * - shipThrust -> thrust trail particles (50/second rate)
+ * - weaponFired -> projectile trail particles (20/second rate)
+ * - powerUpCollected -> collection burst particles (20 particles, radial)
  *
  * Duration based on asteroid size:
  * - Small: 500ms
@@ -22,7 +24,8 @@ import type { AsteroidSize, WeaponType } from '../types/components'
 import type {
   AsteroidDestroyedEventData,
   ShipThrustEventData,
-  WeaponFiredEventData
+  WeaponFiredEventData,
+  PowerUpCollectedEventData
 } from '../types/events'
 import type { EventEmitter } from '../utils/EventEmitter'
 
@@ -33,6 +36,7 @@ interface ParticleEvents extends Record<string, unknown> {
   asteroidDestroyed: AsteroidDestroyedEventData
   shipThrust: ShipThrustEventData
   weaponFired: WeaponFiredEventData
+  powerUpCollected: PowerUpCollectedEventData
 }
 
 /**
@@ -86,6 +90,16 @@ const TRAIL_CONFIG = {
 }
 
 /**
+ * PowerUp collection burst particle configuration.
+ */
+const POWERUP_BURST_CONFIG = {
+  particleCount: 20,
+  speed: 50,
+  lifetime: 500,
+  size: 3
+}
+
+/**
  * Explosion colors (orange, red, yellow).
  */
 const EXPLOSION_COLORS: Color[] = [
@@ -130,6 +144,14 @@ interface PendingTrail {
 }
 
 /**
+ * Pending powerup collection burst event data.
+ */
+interface PendingPowerUpBurst {
+  position: Vector3
+  color: number
+}
+
+/**
  * ParticleEmitterSystem spawns particles based on game events.
  *
  * @example
@@ -154,6 +176,9 @@ export class ParticleEmitterSystem implements System {
 
   /** Pending trail events for projectiles */
   private pendingTrails: PendingTrail[] = []
+
+  /** Pending powerup collection burst events */
+  private pendingPowerUpBursts: PendingPowerUpBurst[] = []
 
   /** Current thrust state */
   private thrustActive = false
@@ -200,6 +225,13 @@ export class ParticleEmitterSystem implements System {
         weaponType: data.weaponType
       })
     })
+
+    eventEmitter.on('powerUpCollected', (data) => {
+      this.pendingPowerUpBursts.push({
+        position: data.position.clone(),
+        color: data.color
+      })
+    })
   }
 
   /**
@@ -223,6 +255,9 @@ export class ParticleEmitterSystem implements System {
     // Process pending explosions
     this.processExplosions()
 
+    // Process pending powerup collection bursts
+    this.processPowerUpBursts()
+
     // Emit thrust particles if active
     if (this.thrustActive) {
       this.emitThrustParticles(deltaTime)
@@ -242,6 +277,18 @@ export class ParticleEmitterSystem implements System {
 
     // Clear processed explosions
     this.pendingExplosions = []
+  }
+
+  /**
+   * Process all pending powerup collection burst events.
+   */
+  private processPowerUpBursts(): void {
+    for (const burst of this.pendingPowerUpBursts) {
+      this.spawnPowerUpBurst(burst.position, burst.color)
+    }
+
+    // Clear processed bursts
+    this.pendingPowerUpBursts = []
   }
 
   /**
@@ -290,6 +337,54 @@ export class ParticleEmitterSystem implements System {
       particle.size =
         EXPLOSION_CONFIG.minSize +
         Math.random() * (EXPLOSION_CONFIG.maxSize - EXPLOSION_CONFIG.minSize)
+    }
+  }
+
+  /**
+   * Spawn powerup collection burst particles at the given position.
+   *
+   * Creates a satisfying particle burst effect when the player collects a powerup.
+   * The particles match the powerup's color and burst outward from the collection point.
+   *
+   * Parameters:
+   * - 20 particles
+   * - Speed: 50 units/s
+   * - Lifetime: 500ms
+   * - Size: 3 units
+   *
+   * @param position - Center of the burst (powerup collection point)
+   * @param color - Hex color value (0xRRGGBB) for the particles
+   */
+  private spawnPowerUpBurst(position: Vector3, color: number): void {
+    // Convert hex color to Three.js Color
+    const particleColor = new Color(color)
+
+    for (let i = 0; i < POWERUP_BURST_CONFIG.particleCount; i++) {
+      const particle = this.particleManager.acquireParticle()
+      if (!particle) {
+        break // Pool exhausted
+      }
+
+      // Set position at burst center
+      particle.position.copy(position)
+
+      // Random radial velocity (outward in all directions)
+      const angle = Math.random() * Math.PI * 2
+      particle.velocity.set(
+        Math.cos(angle) * POWERUP_BURST_CONFIG.speed,
+        Math.sin(angle) * POWERUP_BURST_CONFIG.speed,
+        0
+      )
+
+      // Set lifetime
+      particle.lifetime = POWERUP_BURST_CONFIG.lifetime
+      particle.maxLifetime = POWERUP_BURST_CONFIG.lifetime
+
+      // Set color from powerup
+      particle.color.copy(particleColor)
+
+      // Set size
+      particle.size = POWERUP_BURST_CONFIG.size
     }
   }
 

@@ -1,85 +1,99 @@
-# Product Requirements Document: Background Music Soundtrack
+# PRD: Fix UFO Spaceship Behavior
 
 ## Problem Statement
 
-The Asteroids 3D game has a fully functional audio system with sound effects (shooting, explosions, thrust, etc.) but the music tracks (`menu.mp3`, `background.mp3`, `boss.mp3`) are placeholders. Players experience the game without an immersive soundtrack, reducing the atmospheric impact and emotional engagement.
+The UFO enemy in the game does not match the original Asteroids arcade behavior:
+
+1. **Size**: UFOs are approximately 6x larger than they should be relative to the player ship
+2. **Movement**: UFOs spawn but appear static or move incorrectly
+3. **Sound**: No characteristic doppler-effect "oooOoooOO" warbling sound while UFO is active
+4. **Collision**: UFO-asteroid collisions are not implemented (UFOs should destroy asteroids on contact)
+
+In the original 1979 Asteroids arcade game, UFOs were memorable enemies that:
+- Were roughly the same size as the player ship
+- Flew across the screen in wave patterns
+- Made a distinctive warbling sound that changed pitch based on proximity (doppler effect)
+- Could collide with and destroy asteroids
 
 ## Goals
 
-1. **Add cohesive synthwave soundtrack** - Three music tracks (menu, gameplay, boss) with shared melodic motifs but escalating energy levels
-2. **Enhance immersion** - Music that complements the 3D space visuals and retro arcade heritage
-3. **Zero code friction** - Leverage existing AudioManager/AudioSystem infrastructure with minimal changes
-4. **Royalty-free sourcing** - All tracks must be legally usable without licensing concerns
+1. Scale UFO meshes to be proportional to player ship (roughly same size)
+2. Ensure UFO movement AI is functioning correctly
+3. Add continuous doppler-effect sound while UFO is on screen
+4. Add UFO-asteroid collision handling
 
 ## Non-Goals
 
-- Custom music composition or AI generation (out of scope for this phase)
-- Dynamic/adaptive music that changes based on gameplay intensity
-- Additional sound effects or audio system refactoring
-- Music settings UI beyond existing volume controls
+- NG-001: Changing UFO shooting behavior (already implemented correctly)
+- NG-002: Changing UFO spawn timing/frequency
+- NG-003: Changing UFO point values
+- NG-004: Adding new UFO types beyond large/small
 
 ## User Stories
 
-### US-1: Menu Atmosphere
-**As a** player on the main menu
-**I want** to hear ambient synthwave music
-**So that** I'm drawn into the game's atmosphere before playing
+### US-1: Properly Sized UFO
+**As a** player
+**I want** the UFO to be similarly sized to my ship
+**So that** the game feels authentic to the original Asteroids
 
 **Acceptance Criteria:**
-- Music plays automatically when menu loads
-- Track has relaxed, atmospheric synthwave feel
-- Loops seamlessly without jarring transitions
-- Respects user's mute/volume settings
+- [ ] Large UFO visual radius must be 15-20 units (currently ~75 units with scale)
+- [ ] Small UFO visual radius must be 10-12 units
+- [ ] UFO collider radius must match new visual size
+- [ ] UFO should appear proportional to player ship on screen
 
-### US-2: Gameplay Energy
-**As a** player during active gameplay
-**I want** driving, energetic background music
-**So that** the soundtrack matches the action intensity
-
-**Acceptance Criteria:**
-- Music transitions from menu track when game starts
-- Track has higher energy than menu (faster tempo, fuller sound)
-- Maintains synthwave aesthetic consistent with menu track
-- Loops without interrupting gameplay focus
-
-### US-3: Boss Battle Intensity
-**As a** player fighting a boss
-**I want** intense, climactic music
-**So that** the boss encounter feels epic and high-stakes
+### US-2: UFO Movement
+**As a** player
+**I want** the UFO to fly across the screen in a wave pattern
+**So that** it's a challenging moving target
 
 **Acceptance Criteria:**
-- Music switches when boss spawns
-- Track has highest energy level (driving bass, tension)
-- Returns to gameplay track when boss defeated
-- Transitions don't cause audio glitches
+- [ ] UFO must move horizontally across screen at configured speed (80/120 units/s)
+- [ ] UFO must have slight vertical oscillation while moving
+- [ ] UFO must wrap or exit at screen edge correctly
+- [ ] Movement must be smooth without stuttering
 
-### US-4: Consistent Theme
-**As a** player progressing through the game
-**I want** music tracks that feel related
-**So that** the soundtrack feels like a cohesive album, not random songs
+### US-3: UFO Doppler Sound
+**As a** player
+**I want** to hear the UFO's distinctive warbling sound
+**So that** I know when a UFO is on screen and can gauge its proximity
 
 **Acceptance Criteria:**
-- All three tracks share recognizable synthwave characteristics
-- Ideally from same artist/album or similar production style
-- Energy progression: menu (chill) → gameplay (driving) → boss (intense)
+- [ ] Continuous warbling "oooOoooOO" sound must play while UFO is active
+- [ ] Sound pitch must vary based on UFO's horizontal position (doppler effect simulation)
+- [ ] Sound must be louder when UFO is closer to player
+- [ ] Sound must stop when UFO is destroyed or exits screen
+- [ ] Large and small UFOs must have different base pitches
+
+### US-4: UFO-Asteroid Collision
+**As a** player
+**I want** UFOs to destroy asteroids they collide with
+**So that** the gameplay matches the original Asteroids
+
+**Acceptance Criteria:**
+- [ ] UFO collider must include 'asteroid' in its collision mask
+- [ ] When UFO hits asteroid, asteroid must be destroyed (splits if large/medium)
+- [ ] UFO must NOT be damaged by asteroid collision
+- [ ] Collision must generate visual feedback (explosion particles)
 
 ## Success Metrics
 
-- All three music slots filled with actual synthwave tracks
-- No audio loading errors or playback issues
-- Seamless looping on all tracks
-- File sizes reasonable for web delivery (<10MB total for all music)
+| Metric | Target |
+|--------|--------|
+| UFO size ratio to ship | 1:1 to 1.5:1 (currently ~6:1) |
+| UFO movement speed | Matches config (80/120 units/s) |
+| Doppler sound frequency range | 0.8x to 1.2x base pitch |
+| UFO-asteroid collision detection | 100% of contacts detected |
 
-## Dependencies
+## Technical Context
 
-- Existing `AudioManager` class (src/audio/AudioManager.ts)
-- Existing `AudioSystem` class (src/systems/AudioSystem.ts)
-- Existing `audioConfig` (src/config/audioConfig.ts)
-- Audio files location: `public/assets/audio/`
+### Current Implementation
+- `src/components/UFO.ts`: UFO_CONFIG defines speed, collider radius (25/15)
+- `src/rendering/MeshFactory.ts`: createUFOLarge uses radius 25 + scale 1.5 in createUFO
+- `src/systems/UFOSystem.ts`: Movement AI exists but may not be applied correctly
+- `src/entities/createUFO.ts`: Scale factor of 1.5 for large, 1.0 for small
+- `src/config/audioConfig.ts`: Only has `ufoWarning` sound, no continuous UFO sound
 
-## Timeline
-
-Single-session implementation:
-1. Source and download tracks
-2. Verify playback works
-3. Adjust volume levels if needed
+### Ship Reference
+- Ship collider radius: 12 units
+- Ship mesh: ~20 units tall (cone geometry)
