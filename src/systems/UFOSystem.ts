@@ -114,6 +114,19 @@ export class UFOSystem implements System {
   }
 
   /**
+   * Stops the active UFO sound and resets tracking state.
+   *
+   * @param ufoId - The UFO entity ID
+   */
+  stopUfoSound(ufoId: EntityId): void {
+    if (ufoId === this.activeUfoId && this.audioManager && this.activeSoundId !== null) {
+      this.audioManager.stopSound(this.activeSoundId)
+      this.activeSoundId = null
+      this.activeUfoId = null
+    }
+  }
+
+  /**
    * Updates the UFO AI each frame.
    *
    * @param world - The ECS world

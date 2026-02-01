@@ -786,6 +786,253 @@ describe('UFOSystem', () => {
       expect(setSoundVolume).not.toHaveBeenCalled()
     })
   })
+
+  describe('stopUfoSound Helper Method', () => {
+    it('should stop active sound when called (AC-012b)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123) // mock sound ID
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalled()
+
+      // Call stopUfoSound with the UFO ID
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Verify stopSound was called with the active sound ID
+      expect(stopSound).toHaveBeenCalledWith(123)
+    })
+
+    it('should reset activeSoundId to null when called (AC-012c)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Call stopUfoSound
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Verify activeSoundId is reset to null
+      expect(ufoSystem.activeSoundId).toBe(null)
+    })
+
+    it('should reset activeUfoId to null when called', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeUfoId).toBe(ufoId)
+
+      // Call stopUfoSound
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Verify activeUfoId is reset to null
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+
+    it('should only stop sound if ufoId matches activeUfoId', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId1 = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId1, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId1, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId1, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId1, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeUfoId).toBe(ufoId1)
+
+      // Try to stop sound with different UFO ID
+      const differentUfoId = 999
+      ufoSystem.stopUfoSound(differentUfoId)
+
+      // Verify stopSound was NOT called (different UFO ID)
+      expect(stopSound).not.toHaveBeenCalled()
+      // Verify sound is still active
+      expect(ufoSystem.activeSoundId).toBe(123)
+      expect(ufoSystem.activeUfoId).toBe(ufoId1)
+    })
+
+    it('should handle stopUfoSound when activeUfoId is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Call stopUfoSound without starting sound (activeUfoId is null)
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Should not crash and stopSound should not be called
+      expect(stopSound).not.toHaveBeenCalled()
+      expect(ufoSystem.activeSoundId).toBe(null)
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+
+    it('should handle stopUfoSound when audioManager is null', () => {
+      const ufoSystem = new UFOSystem()
+      // Don't set audio manager
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Call stopUfoSound without audio manager set
+      // Should not crash
+      expect(() => {
+        ufoSystem.stopUfoSound(ufoId)
+      }).not.toThrow()
+    })
+  })
 })
 
 // Helper function to create a mock world
