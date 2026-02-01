@@ -4,7 +4,7 @@
   "worktree": "../asteroids-create-fix-ufo-behavior-e5a2aa7c",
   "feature": "fix-ufo-behavior",
   "created_at": "2026-01-31T06:00:00Z",
-  "phase": "discovery",
+  "phase": "planning",
   "spec_paths": {
     "prd": "docs/specs/PRD.md",
     "adr": "docs/specs/ADR.md",
