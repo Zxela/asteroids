@@ -47,6 +47,8 @@ export interface SfxConfig {
   readonly beat: AudioDefinition
   /** UFO warning sound (whomp whomp) */
   readonly ufoWarning: AudioDefinition
+  /** UFO continuous warbling sound (looping) */
+  readonly ufoLoop: AudioDefinition
 }
 
 /**
@@ -135,6 +137,12 @@ export const audioConfig: AudioConfig = {
       id: 'ufoWarning',
       path: '/assets/audio/ufo_warning.mp3',
       volume: 0.6,
+      preload: true
+    },
+    ufoLoop: {
+      id: 'ufoLoop',
+      path: '/assets/audio/ufo_loop.mp3',
+      volume: 0.4,
       preload: true
     }
   },

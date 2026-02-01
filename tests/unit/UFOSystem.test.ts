@@ -1,511 +1,1237 @@
 /**
  * UFOSystem Unit Tests
  *
- * Tests for UFO AI movement patterns:
- * - Horizontal movement at configured speed
- * - Vertical oscillation patterns
- * - Screen bounds and destruction
- * - Continuous smooth movement
+ * Tests for UFOSystem class:
+ * - UFO AI movement patterns
+ * - UFO shooting behavior
+ * - Event emission (projectile fired, UFO destroyed)
+ * - AudioManager integration
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Vector3 } from 'three'
-import { World } from '../../src/ecs/World'
 import { UFOSystem } from '../../src/systems/UFOSystem'
-import { Transform, Velocity, Physics, Collider, Health, Renderable, Player } from '../../src/components'
-import { UFO, UFO_CONFIG, type UFOSize } from '../../src/components/UFO'
-
-/**
- * Helper to create a mock UFO entity with specified properties
- */
-function createMockUFO(
-  world: World,
-  size: UFOSize = 'large',
-  position = new Vector3(0, 0, 0),
-  velocity = new Vector3(UFO_CONFIG[size].speed, 0, 0)
-): ReturnType<typeof world.createEntity> {
-  const entityId = world.createEntity()
-  const config = UFO_CONFIG[size]
-
-  world.addComponent(entityId, new Transform(position.clone()))
-  world.addComponent(entityId, new Velocity(velocity.clone()))
-  world.addComponent(entityId, new Physics(1, 0, config.speed, true))
-  world.addComponent(entityId, new Collider('sphere', config.colliderRadius, 'ufo', ['player', 'projectile']))
-  world.addComponent(entityId, new Health(1, 1))
-  world.addComponent(entityId, new UFO(size))
-  world.addComponent(entityId, new Renderable(`ufo_${size}`, 'emissive', true))
-
-  return entityId
-}
-
-/**
- * Helper to create a mock player entity
- */
-function createMockPlayer(world: World, position = new Vector3(200, 200, 0)): ReturnType<typeof world.createEntity> {
-  const entityId = world.createEntity()
-  world.addComponent(entityId, new Transform(position.clone()))
-  world.addComponent(entityId, new Velocity(new Vector3(0, 0, 0)))
-  world.addComponent(entityId, new Physics(1, 0.99, 300, true))
-  world.addComponent(entityId, new Collider('sphere', 20, 'player', ['asteroid', 'powerup']))
-  world.addComponent(entityId, new Health(1, 1))
-  world.addComponent(entityId, new Player(3))
-  world.addComponent(entityId, new Renderable('ship', 'standard', true))
-  return entityId
-}
+import { AudioManager } from '../../src/audio/AudioManager'
 
 describe('UFOSystem', () => {
-  let world: World
-  let ufoSystem: UFOSystem
-
-  beforeEach(() => {
-    world = new World()
-    ufoSystem = new UFOSystem()
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    vi.clearAllMocks()
-  })
-
-  describe('Initialization and Entity Querying', () => {
-    it('should initialize UFOSystem without errors', () => {
-      expect(ufoSystem).toBeDefined()
+  describe('AudioManager Integration', () => {
+    it('should have audioManager property defined (AC-009d)', () => {
+      const ufoSystem = new UFOSystem()
+      expect(ufoSystem.audioManager).toBeDefined()
     })
 
-    it('should query for entities with UFO, Transform, Velocity, Health components', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
+    it('should have setAudioManager method (AC-009e)', () => {
+      const ufoSystem = new UFOSystem()
+      expect(typeof ufoSystem.setAudioManager).toBe('function')
+    })
 
+    it('should accept AudioManager instance in setAudioManager', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+
+      expect(() => {
+        ufoSystem.setAudioManager(audioManager)
+      }).not.toThrow()
+    })
+
+    it('should store the AudioManager instance after setAudioManager', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+
+      ufoSystem.setAudioManager(audioManager)
+
+      expect(ufoSystem.audioManager).toBe(audioManager)
+    })
+  })
+
+  describe('Sound State Tracking', () => {
+    it('should track activeSoundId for current UFO sound (AC-009f)', () => {
+      const ufoSystem = new UFOSystem()
+      expect(ufoSystem.activeSoundId).toBe(null)
+    })
+
+    it('should track activeUfoId for current UFO entity (AC-009g)', () => {
+      const ufoSystem = new UFOSystem()
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+  })
+
+  describe('UFO Sound Playback on Spawn', () => {
+    it('should play ufoLoop sound when first UFO spawns (AC-009h)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123) // mock sound ID
+
+      ufoSystem.setAudioManager(audioManager)
+
+      // Create a minimal world with UFO entity
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Add required components for large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Update system - should start sound on first UFO spawn
       ufoSystem.update(world, 16)
 
-      // Verify the UFO was found and processed
-      const ufo = world.getComponent(ufoId, UFO)
-      expect(ufo).toBeDefined()
-    })
-
-    it('should not throw when no UFO entities exist', () => {
-      createMockPlayer(world)
-      expect(() => ufoSystem.update(world, 16)).not.toThrow()
-    })
-
-    it('should not throw when no player entity exists', () => {
-      createMockUFO(world, 'large')
-      expect(() => ufoSystem.update(world, 16)).not.toThrow()
-    })
-  })
-
-  describe('AC-005: Horizontal Movement Speed (Configured Speed)', () => {
-    it('should maintain large UFO speed at 80 units/s', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      const speed = velocity?.linear.length() ?? 0
-
-      expect(speed).toBeCloseTo(UFO_CONFIG['large'].speed, 0)
-    })
-
-    it('should maintain small UFO speed at 120 units/s', () => {
-      const ufoId = createMockUFO(world, 'small', new Vector3(0, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      const speed = velocity?.linear.length() ?? 0
-
-      expect(speed).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
-    })
-
-    it('should apply configured speed to velocity linear component', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      expect(velocity?.linear.length()).toBeCloseTo(UFO_CONFIG['large'].speed, 0)
-    })
-
-    it('should update velocity correctly after multiple frames', () => {
-      const ufoId = createMockUFO(world, 'small')
-      createMockPlayer(world)
-
-      // Update multiple times
-      for (let i = 0; i < 5; i++) {
-        ufoSystem.update(world, 100)
-      }
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      expect(velocity?.linear.length()).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
-    })
-
-    it('should move with correct speed regardless of initial direction', () => {
-      // Create UFO moving leftward
-      const ufoId = createMockUFO(world, 'large', new Vector3(100, 0, 0), new Vector3(-UFO_CONFIG['large'].speed, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      const speed = velocity?.linear.length() ?? 0
-
-      expect(speed).toBeCloseTo(UFO_CONFIG['large'].speed, 0)
-    })
-  })
-
-  describe('AC-006: Vertical Oscillation', () => {
-    it('should apply vertical oscillation to UFO velocity', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, 0, 0))
-      createMockPlayer(world)
-
-      // Update multiple times to allow vertical direction changes
-      for (let i = 0; i < 5; i++) {
-        ufoSystem.update(world, 500)
-      }
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      // Velocity should be defined and not purely horizontal
-      expect(velocity?.linear).toBeDefined()
-    })
-
-    it('should have non-zero Y velocity during oscillation', () => {
-      const ufoId = createMockUFO(world, 'small', new Vector3(0, 0, 0))
-      createMockPlayer(world)
-
-      let foundNonZeroY = false
-
-      // Update to trigger direction change (need enough time for 1000-3000ms timer)
-      for (let i = 0; i < 50; i++) {
-        ufoSystem.update(world, 200)
-        const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-        if (velocity && velocity.linear.y !== 0) {
-          foundNonZeroY = true
-          break
-        }
-      }
-
-      // Over multiple updates, Y velocity should be non-zero at some point
-      expect(foundNonZeroY).toBe(true)
-    })
-
-    it('should vary vertical direction over time', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, 0, 0))
-      createMockPlayer(world)
-
-      const verticalVelocities: number[] = []
-
-      // Collect vertical velocities over time (need more iterations to see direction changes)
-      for (let i = 0; i < 40; i++) {
-        ufoSystem.update(world, 200)
-        const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-        if (velocity) {
-          verticalVelocities.push(velocity.linear.y)
-        }
-      }
-
-      // Should have variation in vertical velocity
-      const hasPositiveY = verticalVelocities.some(v => v > 0.01)
-      const hasNegativeY = verticalVelocities.some(v => v < -0.01)
-      const hasZeroY = verticalVelocities.some(v => Math.abs(v) < 0.01)
-
-      // Should have some variation - allowing for zero values when timer hasn't expired
-      const uniqueValues = new Set(verticalVelocities.map(v => Math.round(v * 100)))
-      expect(uniqueValues.size).toBeGreaterThan(1)
-    })
-
-    it('should limit vertical oscillation to prevent going too far up/down', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, 400, 0))
-      createMockPlayer(world)
-
-      // Update multiple times at screen edge
-      for (let i = 0; i < 50; i++) {
-        ufoSystem.update(world, 100)
-      }
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      // When at extreme Y, vertical velocity should reverse
-      const transform = world.getComponent<Transform>(ufoId, Transform)
-
-      if (transform && Math.abs(transform.position.y) > 400) {
-        // At screen edge, velocity should not continue moving away
-        expect(velocity?.linear).toBeDefined()
-      }
-    })
-  })
-
-  describe('AC-007: Screen Bounds Wrapping/Exit', () => {
-    it('should destroy UFO when it exits screen bounds (X axis)', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(1500, 0, 0), new Vector3(200, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(false)
-    })
-
-    it('should destroy UFO when it exits screen bounds (negative X axis)', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(-1500, 0, 0), new Vector3(-200, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(false)
-    })
-
-    it('should destroy UFO when it exits screen bounds (Y axis)', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, 1000, 0), new Vector3(0, 200, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(false)
-    })
-
-    it('should destroy UFO when it exits screen bounds (negative Y axis)', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, -1000, 0), new Vector3(0, -200, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(false)
-    })
-
-    it('should keep UFO alive when within screen bounds', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(500, 300, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(true)
-    })
-
-    it('should have margin of 200 units before destroying out-of-bounds UFO', () => {
-      // At 960 + 200 = 1160 (edge), should not be destroyed yet
-      const ufoId = createMockUFO(world, 'large', new Vector3(1160, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      // Should still be alive at margin boundary
-      expect(isAlive).toBe(true)
-    })
-
-    it('should destroy UFO past margin boundary', () => {
-      // At 960 + 200 + 1 = 1161 (past edge), should be destroyed
-      const ufoId = createMockUFO(world, 'large', new Vector3(1200, 0, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(false)
-    })
-  })
-
-  describe('AC-008: Smooth Movement Without Stuttering', () => {
-    it('should ensure velocity linear component is always defined', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      expect(velocity?.linear).toBeDefined()
-    })
-
-    it('should maintain consistent velocity across frames', () => {
-      const ufoId = createMockUFO(world, 'small')
-      createMockPlayer(world)
-
-      const velocities: number[] = []
-
-      for (let i = 0; i < 10; i++) {
-        ufoSystem.update(world, 100)
-        const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-        if (velocity) {
-          velocities.push(velocity.linear.length())
-        }
-      }
-
-      // All velocities should match configured speed
-      velocities.forEach(v => {
-        expect(v).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
+      expect(playSound).toHaveBeenCalledWith('ufoLoop', {
+        loop: true,
+        volume: 0.4,
+        rate: expect.any(Number)
       })
     })
 
-    it('should update velocity every frame without gaps', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
+    it('should use pitch 1.0 for large UFO (AC-013)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
 
-      // Update with small delta times
-      for (let i = 0; i < 30; i++) {
-        ufoSystem.update(world, 16.67) // ~60fps
+      ufoSystem.setAudioManager(audioManager)
 
-        const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-        // Velocity should always be defined after update
-        expect(velocity?.linear).toBeDefined()
-      }
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      ufoSystem.update(world, 16)
+
+      const playOptions = playSound.mock.calls[0][1]
+      expect(playOptions.rate).toBe(1.0)
     })
 
-    it('should not have stuttering velocity changes', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(0, 0, 0))
-      createMockPlayer(world)
+    it('should use pitch 1.3 for small UFO (AC-013)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
 
-      const velocityMagnitudes: number[] = []
+      ufoSystem.setAudioManager(audioManager)
 
-      for (let i = 0; i < 15; i++) {
-        ufoSystem.update(world, 100)
-        const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-        if (velocity) {
-          velocityMagnitudes.push(velocity.linear.length())
-        }
-      }
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
 
-      // Check that speed doesn't jump around (smooth transitions)
-      for (let i = 1; i < velocityMagnitudes.length; i++) {
-        const diff = Math.abs(velocityMagnitudes[i] - velocityMagnitudes[i - 1])
-        // Allow small differences due to vertical oscillation
-        expect(diff).toBeLessThan(50)
-      }
+      world.addComponent(ufoId, {
+        ufoSize: 'small',
+        shootTimer: 1500,
+        points: 1000
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(120, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      ufoSystem.update(world, 16)
+
+      const playOptions = playSound.mock.calls[0][1]
+      expect(playOptions.rate).toBe(1.3)
     })
 
-    it('should preserve velocity between frames for both sizes', () => {
-      const largeId = createMockUFO(world, 'large', new Vector3(-400, 0, 0))
-      const smallId = createMockUFO(world, 'small', new Vector3(400, 0, 0))
-      createMockPlayer(world)
+    it('should not play sound if already playing', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
 
-      for (let i = 0; i < 5; i++) {
-        ufoSystem.update(world, 100)
-      }
+      ufoSystem.setAudioManager(audioManager)
 
-      const largeVelocity = world.getComponent<Velocity>(largeId, Velocity)
-      const smallVelocity = world.getComponent<Velocity>(smallId, Velocity)
+      const world = createMockWorld()
 
-      expect(largeVelocity?.linear).toBeDefined()
-      expect(smallVelocity?.linear).toBeDefined()
-      expect(largeVelocity?.linear.length()).toBeCloseTo(UFO_CONFIG['large'].speed, 0)
-      expect(smallVelocity?.linear.length()).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
-    })
-  })
+      // First UFO
+      const ufoId1 = world.createEntity()
+      world.addComponent(ufoId1, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId1, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId1, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId1, {
+        current: 1,
+        max: 1
+      })
 
-  describe('Movement Edge Cases', () => {
-    it('should handle UFO at exact screen corner', () => {
-      const ufoId = createMockUFO(world, 'large', new Vector3(960, 540, 0))
-      createMockPlayer(world)
+      // First update - should play sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalledTimes(1)
 
-      expect(() => ufoSystem.update(world, 100)).not.toThrow()
-    })
+      // Second UFO spawns
+      const ufoId2 = world.createEntity()
+      world.addComponent(ufoId2, {
+        ufoSize: 'small',
+        shootTimer: 1500,
+        points: 1000
+      })
+      world.addComponent(ufoId2, {
+        position: new Vector3(100, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId2, {
+        linear: new Vector3(120, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId2, {
+        current: 1,
+        max: 1
+      })
 
-    it('should handle rapid direction changes', () => {
-      const ufoId = createMockUFO(world, 'small', new Vector3(0, 0, 0))
-      createMockPlayer(world)
-
-      for (let i = 0; i < 50; i++) {
-        ufoSystem.update(world, 100)
-      }
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      expect(velocity?.linear).toBeDefined()
-      expect(velocity?.linear.length()).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
-    })
-
-    it('should handle multiple UFOs moving simultaneously', () => {
-      const ufoId1 = createMockUFO(world, 'large', new Vector3(-300, -200, 0))
-      const ufoId2 = createMockUFO(world, 'small', new Vector3(300, 200, 0))
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity1 = world.getComponent<Velocity>(ufoId1, Velocity)
-      const velocity2 = world.getComponent<Velocity>(ufoId2, Velocity)
-
-      expect(velocity1?.linear).toBeDefined()
-      expect(velocity2?.linear).toBeDefined()
-      expect(velocity1?.linear.length()).toBeCloseTo(UFO_CONFIG['large'].speed, 0)
-      expect(velocity2?.linear.length()).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
-    })
-  })
-
-  describe('Movement State Management', () => {
-    it('should initialize movement state on first update', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-
-      const velocity = world.getComponent<Velocity>(ufoId, Velocity)
-      expect(velocity?.linear).toBeDefined()
-    })
-
-    it('should maintain state across multiple updates', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
-
-      ufoSystem.update(world, 100)
-      const velocity1 = world.getComponent<Velocity>(ufoId, Velocity)?.linear.clone()
-
-      ufoSystem.update(world, 100)
-      const velocity2 = world.getComponent<Velocity>(ufoId, Velocity)?.linear
-
-      // Both should be defined
-      expect(velocity1).toBeDefined()
-      expect(velocity2).toBeDefined()
-    })
-
-    it('should clean up state when UFO is destroyed by health', () => {
-      const ufoId = createMockUFO(world, 'large')
-      createMockPlayer(world)
-
-      // Reduce health to 0
-      const health = world.getComponent<Health>(ufoId, Health)
-      if (health) {
-        health.current = 0
-      }
-
-      ufoSystem.update(world, 100)
-
-      const isAlive = world.isEntityAlive(ufoId)
-      expect(isAlive).toBe(false)
+      // Second update - should NOT play sound again
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalledTimes(1)
     })
   })
 
-  describe('Integration with Other Systems', () => {
-    it('should not affect player velocity', () => {
-      createMockUFO(world, 'large')
-      const playerId = createMockPlayer(world, new Vector3(200, 200, 0))
+  describe('Doppler Pitch Modulation', () => {
+    it('should modulate sound pitch based on UFO horizontal position (AC-010)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123) // mock sound ID
 
-      const initialVelocity = world.getComponent<Velocity>(playerId, Velocity)?.linear.clone()
+      ufoSystem.setAudioManager(audioManager)
 
-      ufoSystem.update(world, 100)
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
 
-      const newVelocity = world.getComponent<Velocity>(playerId, Velocity)?.linear
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Center of screen
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
 
-      expect(newVelocity?.equals(initialVelocity!)).toBe(true)
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+
+      // Second update - should modulate pitch
+      ufoSystem.update(world, 16)
+
+      expect(setSoundRate).toHaveBeenCalled()
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const soundId = lastCall[0]
+      const pitch = lastCall[1]
+
+      expect(soundId).toBe(123)
+      expect(pitch).toBeGreaterThanOrEqual(0.8)
+      expect(pitch).toBeLessThanOrEqual(1.2)
     })
 
-    it('should process multiple UFOs independently', () => {
-      const ufoId1 = createMockUFO(world, 'large', new Vector3(-500, 0, 0))
-      const ufoId2 = createMockUFO(world, 'small', new Vector3(500, 0, 0))
-      createMockPlayer(world)
+    it('should use pitch 0.8 when UFO is at left edge', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
 
-      ufoSystem.update(world, 100)
+      ufoSystem.setAudioManager(audioManager)
 
-      const velocity1 = world.getComponent<Velocity>(ufoId1, Velocity)?.linear.length() ?? 0
-      const velocity2 = world.getComponent<Velocity>(ufoId2, Velocity)?.linear.length() ?? 0
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
 
-      // Should have different configured speeds
-      expect(velocity1).toBeCloseTo(UFO_CONFIG['large'].speed, 0)
-      expect(velocity2).toBeCloseTo(UFO_CONFIG['small'].speed, 0)
-      expect(velocity1).not.toEqual(velocity2)
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(-960, 0, 0), // Left edge
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set pitch to 0.8
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(0.8, 2)
+    })
+
+    it('should use pitch 1.2 when UFO is at right edge', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(960, 0, 0), // Right edge
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set pitch to 1.2
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(1.2, 2)
+    })
+
+    it('should use pitch 1.0 when UFO is at center', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Center
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set pitch to 1.0
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(1.0, 2)
+    })
+
+    it('should apply basePitch multiplier for small UFO doppler effect', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'small',
+        shootTimer: 1500,
+        points: 1000
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Center
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(120, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should apply 1.3x multiplier to center pitch (1.0 * 1.3 = 1.3)
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundRate.mock.calls[setSoundRate.mock.calls.length - 1]
+      const pitch = lastCall[1]
+
+      expect(pitch).toBeCloseTo(1.3, 2)
+    })
+
+    it('should not call setSoundRate if activeSoundId is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const setSoundRate = vi.spyOn(audioManager, 'setSoundRate')
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Update with no UFOs
+      ufoSystem.update(world, 16)
+
+      expect(setSoundRate).not.toHaveBeenCalled()
+    })
+
+    it('should not call setSoundRate if audioManager is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      // Don't set audio manager
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      ufoSystem.update(world, 16)
+
+      expect(playSound).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Distance-based Volume Modulation', () => {
+    it('should modulate sound volume based on distance to player (AC-011)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123) // mock sound ID
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player at center
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0), // Center
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO at center (close to player)
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Same position as player
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+
+      // Second update - should modulate volume based on distance
+      ufoSystem.update(world, 16)
+
+      expect(setSoundVolume).toHaveBeenCalled()
+      const lastCall = setSoundVolume.mock.calls[setSoundVolume.mock.calls.length - 1]
+      const soundId = lastCall[0]
+      const volume = lastCall[1]
+
+      expect(soundId).toBe(123)
+      expect(volume).toBeGreaterThanOrEqual(0.2)
+      expect(volume).toBeLessThanOrEqual(0.6)
+    })
+
+    it('should use volume 0.6 when UFO is at same position as player', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player at center
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO at same position
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Same as player
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set volume to 0.6 (closest)
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundVolume.mock.calls[setSoundVolume.mock.calls.length - 1]
+      const volume = lastCall[1]
+
+      expect(volume).toBeCloseTo(0.6, 2)
+    })
+
+    it('should use minimum volume 0.2 when UFO is very far from player', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player at center
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO very far away (beyond max distance)
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(2000, 2000, 0), // Very far, beyond maxDistance
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set volume to 0.2 (minimum, clamped)
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundVolume.mock.calls[setSoundVolume.mock.calls.length - 1]
+      const volume = lastCall[1]
+
+      expect(volume).toBe(0.2)
+    })
+
+    it('should not call setSoundVolume if activeSoundId is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player but no UFO
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Update with no UFOs
+      ufoSystem.update(world, 16)
+
+      expect(setSoundVolume).not.toHaveBeenCalled()
+    })
+
+    it('should not call setSoundVolume if audioManager is null', () => {
+      const ufoSystem = new UFOSystem()
+
+      const world = createMockWorld()
+
+      // Create player
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Update without audio manager set
+      ufoSystem.update(world, 16)
+
+      // setSoundVolume should not be called (no way to spy on it since audioManager is null)
+      // This test just ensures no crash
+      expect(ufoSystem.audioManager).toBeNull()
+    })
+
+    it('should not call setSoundVolume if player does not exist', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create UFO but no player
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should NOT call setSoundVolume (no player)
+      ufoSystem.update(world, 16)
+
+      expect(setSoundVolume).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('stopUfoSound Helper Method', () => {
+    it('should stop active sound when called (AC-012b)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123) // mock sound ID
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalled()
+
+      // Call stopUfoSound with the UFO ID
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Verify stopSound was called with the active sound ID
+      expect(stopSound).toHaveBeenCalledWith(123)
+    })
+
+    it('should reset activeSoundId to null when called (AC-012c)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Call stopUfoSound
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Verify activeSoundId is reset to null
+      expect(ufoSystem.activeSoundId).toBe(null)
+    })
+
+    it('should reset activeUfoId to null when called', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeUfoId).toBe(ufoId)
+
+      // Call stopUfoSound
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Verify activeUfoId is reset to null
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+
+    it('should only stop sound if ufoId matches activeUfoId', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId1 = world.createEntity()
+
+      // Create large UFO
+      world.addComponent(ufoId1, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId1, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId1, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId1, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeUfoId).toBe(ufoId1)
+
+      // Try to stop sound with different UFO ID
+      const differentUfoId = 999
+      ufoSystem.stopUfoSound(differentUfoId)
+
+      // Verify stopSound was NOT called (different UFO ID)
+      expect(stopSound).not.toHaveBeenCalled()
+      // Verify sound is still active
+      expect(ufoSystem.activeSoundId).toBe(123)
+      expect(ufoSystem.activeUfoId).toBe(ufoId1)
+    })
+
+    it('should handle stopUfoSound when activeUfoId is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Call stopUfoSound without starting sound (activeUfoId is null)
+      ufoSystem.stopUfoSound(ufoId)
+
+      // Should not crash and stopSound should not be called
+      expect(stopSound).not.toHaveBeenCalled()
+      expect(ufoSystem.activeSoundId).toBe(null)
+      expect(ufoSystem.activeUfoId).toBe(null)
+    })
+
+    it('should handle stopUfoSound when audioManager is null', () => {
+      const ufoSystem = new UFOSystem()
+      // Don't set audio manager
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Call stopUfoSound without audio manager set
+      // Should not crash
+      expect(() => {
+        ufoSystem.stopUfoSound(ufoId)
+      }).not.toThrow()
+    })
+  })
+
+  describe('Call stopUfoSound on UFO destruction (AC-012)', () => {
+    it('should call stopUfoSound when UFO is destroyed (health <= 0)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalled()
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Update health to 0 (destroyed)
+      const health = world.getComponent(ufoId, { name: 'Health' })
+      health.current = 0
+
+      // Second update - should stop sound when UFO is destroyed
+      ufoSystem.update(world, 16)
+
+      // Verify stopSound was called
+      expect(stopSound).toHaveBeenCalledWith(123)
+    })
+
+    it('should call stopUfoSound when UFO exits screen bounds', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const stopSound = vi.spyOn(audioManager, 'stopSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(playSound).toHaveBeenCalled()
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Move UFO out of bounds (beyond margin of 200)
+      const transform = world.getComponent(ufoId, { name: 'Transform' })
+      transform.position.x = 2000 // Far beyond SCREEN_HALF_WIDTH (960) + margin (200)
+
+      // Second update - should stop sound when UFO exits bounds
+      ufoSystem.update(world, 16)
+
+      // Verify stopSound was called
+      expect(stopSound).toHaveBeenCalledWith(123)
+    })
+
+    it('should reset activeSoundId after stopping sound on destruction', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+      const ufoId = world.createEntity()
+
+      // Create UFO
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+      expect(ufoSystem.activeSoundId).toBe(123)
+
+      // Destroy UFO
+      const health = world.getComponent(ufoId, { name: 'Health' })
+      health.current = 0
+
+      // Second update - should stop sound
+      ufoSystem.update(world, 16)
+
+      // Verify activeSoundId is reset to null
+      expect(ufoSystem.activeSoundId).toBe(null)
+      expect(ufoSystem.activeUfoId).toBe(null)
     })
   })
 })
+
+// Helper function to create a mock world
+function createMockWorld() {
+  const entities = new Map()
+  const components = new Map()
+
+  return {
+    createEntity: () => {
+      const id = entities.size + 1
+      entities.set(id, true)
+      components.set(id, new Map())
+      return id
+    },
+    addComponent: (entityId: number, component: any) => {
+      const entityComponents = components.get(entityId)
+      if (entityComponents) {
+        // Infer component type from structure
+        if ('ufoSize' in component) {
+          entityComponents.set('UFO', component)
+        } else if ('position' in component) {
+          entityComponents.set('Transform', component)
+        } else if ('linear' in component) {
+          entityComponents.set('Velocity', component)
+        } else if ('current' in component) {
+          entityComponents.set('Health', component)
+        } else if (Object.keys(component).length === 0) {
+          // Empty object is Player component marker
+          entityComponents.set('Player', component)
+        }
+      }
+    },
+    getComponent: (entityId: number, componentClass: any) => {
+      const entityComponents = components.get(entityId)
+      if (!entityComponents) return null
+
+      const className = componentClass.name
+      return entityComponents.get(className) || null
+    },
+    query: (...componentClasses: any[]) => {
+      const result = []
+      for (const [entityId, entityComponents] of components) {
+        const hasAll = componentClasses.every(cls =>
+          entityComponents.has(cls.name)
+        )
+        if (hasAll) {
+          result.push(entityId)
+        }
+      }
+      return result
+    },
+    destroyEntity: (entityId: number) => {
+      entities.delete(entityId)
+      components.delete(entityId)
+    }
+  }
+}

@@ -23,6 +23,7 @@ import { Vector3 } from 'three'
 import { Health, Player, Transform, Velocity } from '../components'
 import { UFO, type UFOSize, UFO_CONFIG } from '../components/UFO'
 import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import type { AudioManager } from '../audio/AudioManager'
 
 // Type assertions for component classes
 const UFOClass = UFO as unknown as ComponentClass<UFO>
@@ -99,6 +100,31 @@ const MAX_DIRECTION_CHANGE = 3000
 export class UFOSystem implements System {
   private events: UFOSystemEvent[] = []
   private ufoStates: Map<EntityId, UFOState> = new Map()
+  audioManager: AudioManager | null = null
+  activeSoundId: number | null = null
+  activeUfoId: EntityId | null = null
+
+  /**
+   * Sets the audio manager for the UFO system.
+   *
+   * @param audioManager - The AudioManager instance
+   */
+  setAudioManager(audioManager: AudioManager): void {
+    this.audioManager = audioManager
+  }
+
+  /**
+   * Stops the active UFO sound and resets tracking state.
+   *
+   * @param ufoId - The UFO entity ID
+   */
+  stopUfoSound(ufoId: EntityId): void {
+    if (ufoId === this.activeUfoId && this.audioManager && this.activeSoundId !== null) {
+      this.audioManager.stopSound(this.activeSoundId)
+      this.activeSoundId = null
+      this.activeUfoId = null
+    }
+  }
 
   /**
    * Updates the UFO AI each frame.
@@ -145,6 +171,7 @@ export class UFOSystem implements System {
       // Check if UFO is destroyed
       if (health.current <= 0) {
         this.emitUFODestroyed(ufoId, transform.position.clone(), ufo.ufoSize, ufo.points)
+        this.stopUfoSound(ufoId)
         world.destroyEntity(ufoId)
         this.ufoStates.delete(ufoId)
         continue
@@ -158,10 +185,31 @@ export class UFOSystem implements System {
           verticalDirection: 0
         }
         this.ufoStates.set(ufoId, state)
+
+        // Start UFO loop sound for first UFO
+        if (this.activeUfoId === null && this.audioManager) {
+          this.activeUfoId = ufoId
+          const basePitch = ufo.ufoSize === 'small' ? 1.3 : 1.0
+          this.activeSoundId = this.audioManager.playSound('ufoLoop', {
+            loop: true,
+            volume: 0.4,
+            rate: basePitch
+          })
+        }
       }
 
       // Update movement
       this.updateMovement(ufo, transform, velocity, state, deltaTime)
+
+      // Update doppler pitch modulation
+      if (ufoId === this.activeUfoId && this.audioManager && this.activeSoundId !== null) {
+        this.updateDopplerEffect(ufo, transform)
+
+        // Update volume based on distance to player
+        if (playerPos) {
+          this.updateVolumeByDistance(transform, playerPos)
+        }
+      }
 
       // Update shooting
       if (playerPos) {
@@ -170,10 +218,51 @@ export class UFOSystem implements System {
 
       // Check if UFO has left screen bounds (destroy if too far)
       if (this.isOutOfBounds(transform.position)) {
+        this.stopUfoSound(ufoId)
         world.destroyEntity(ufoId)
         this.ufoStates.delete(ufoId)
       }
     }
+  }
+
+  /**
+   * Updates doppler pitch effect based on UFO horizontal position.
+   */
+  private updateDopplerEffect(ufo: UFO, transform: Transform): void {
+    if (!this.audioManager || this.activeSoundId === null) return
+
+    // Calculate normalized X position (0.0 at left edge, 1.0 at right edge)
+    const normalizedX = (transform.position.x + SCREEN_HALF_WIDTH) / (SCREEN_HALF_WIDTH * 2)
+
+    // Calculate doppler pitch (0.8 to 1.2 range)
+    const dopplerPitch = 0.8 + normalizedX * 0.4
+
+    // Apply base pitch multiplier
+    const basePitch = ufo.ufoSize === 'small' ? 1.3 : 1.0
+    const finalPitch = dopplerPitch * basePitch
+
+    // Update sound rate
+    this.audioManager.setSoundRate(this.activeSoundId, finalPitch)
+  }
+
+  /**
+   * Updates volume based on distance from UFO to player.
+   */
+  private updateVolumeByDistance(transform: Transform, playerPos: Vector3): void {
+    if (!this.audioManager || this.activeSoundId === null) return
+
+    // Calculate distance from UFO to player
+    const distance = transform.position.distanceTo(playerPos)
+
+    // Maximum distance is approximately diagonal of screen
+    const maxDistance = SCREEN_HALF_WIDTH * 2
+
+    // Calculate volume: 0.6 (close) to 0.2 (far)
+    // volume = 0.6 * (1 - distance / maxDistance), with minimum of 0.2
+    const volume = Math.max(0.2, 0.6 * (1 - distance / maxDistance))
+
+    // Update sound volume
+    this.audioManager.setSoundVolume(this.activeSoundId, volume)
   }
 
   /**

@@ -1,0 +1,43 @@
+
+> asteroids-3d@0.1.0 test
+> vitest run tests/unit/createUFO.test.ts
+
+
+ RUN  v2.1.9 /home/zxela/asteroids-create-fix-ufo-behavior-e5a2aa7c
+
+ ❯ tests/unit/createUFO.test.ts (25 tests | 1 failed) 10ms
+   × createUFO > Transform Configuration - Scale Removal > should set scale to 1.0 for large UFO (no scale multiplier) 5ms
+     → expected Vector3{ x: 1.5, y: 1.5, z: 1.5 } to deeply equal Vector3{ x: 1, y: 1, z: 1 }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/createUFO.test.ts > createUFO > Transform Configuration - Scale Removal > should set scale to 1.0 for large UFO (no scale multiplier)
+AssertionError: expected Vector3{ x: 1.5, y: 1.5, z: 1.5 } to deeply equal Vector3{ x: 1, y: 1, z: 1 }
+
+- Expected
++ Received
+
+  Vector3 {
+-   "x": 1,
+-   "y": 1,
+-   "z": 1,
++   "x": 1.5,
++   "y": 1.5,
++   "z": 1.5,
+  }
+
+ ❯ tests/unit/createUFO.test.ts:47:32
+     45|       const transform = world.getComponent<Transform>(ufoId, Transform)
+     46| 
+     47|       expect(transform?.scale).toEqual(new Vector3(1.0, 1.0, 1.0))
+       |                                ^
+     48|     })
+     49| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 passed (25)
+   Start at  22:48:43
+   Duration  264ms (transform 78ms, setup 0ms, collect 108ms, tests 10ms, environment 0ms, prepare 54ms)
+
