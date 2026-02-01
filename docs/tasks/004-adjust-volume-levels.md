@@ -1,10 +1,12 @@
 ---
 id: "004"
 title: "Adjust volume levels in audioConfig if needed"
-status: pending
+status: completed
 depends_on: ["003"]
 test_file: null
 no_test_reason: "configuration only - static values with no logic to test"
+completed_at: "2026-02-01T12:05:00Z"
+notes: "No adjustment needed - volume levels balanced as-is"
 ---
 
 # 004: Adjust Volume Levels
@@ -15,10 +17,10 @@ Based on playback testing, adjust the volume levels in `audioConfig.ts` if the n
 
 ## Acceptance Criteria
 
-- [ ] Music volume doesn't overpower sound effects
-- [ ] Music is audible but not distracting during gameplay
-- [ ] Volume levels feel balanced across all three tracks
-- [ ] Menu music slightly quieter than gameplay (already configured: 0.4 vs 0.5)
+- [x] Music volume doesn't overpower sound effects
+- [x] Music is audible but not distracting during gameplay
+- [x] Volume levels feel balanced across all three tracks
+- [x] Menu music slightly quieter than gameplay (already configured: 0.4 vs 0.5)
 
 ## Technical Notes
 

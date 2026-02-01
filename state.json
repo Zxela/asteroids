@@ -8,12 +8,12 @@
   "tasks": {
     "001": { "status": "completed", "file": "docs/tasks/001-source-synthwave-tracks.md", "attempts": 1, "completed_at": "2026-01-30T15:25:00Z" },
     "002": { "status": "completed", "file": "docs/tasks/002-download-audio-files.md", "attempts": 1, "completed_at": "2026-01-30T15:30:00Z" },
-    "003": { "status": "in_progress", "file": "docs/tasks/003-verify-audio-playback.md", "attempts": 1 },
-    "004": { "status": "pending", "file": "docs/tasks/004-adjust-volume-levels.md" }
+    "003": { "status": "completed", "file": "docs/tasks/003-verify-audio-playback.md", "attempts": 1, "completed_at": "2026-02-01T12:00:00Z" },
+    "004": { "status": "completed", "file": "docs/tasks/004-adjust-volume-levels.md", "attempts": 1, "completed_at": "2026-02-01T12:05:00Z" }
   },
-  "current_task": "003",
+  "current_task": null,
   "config": {
-    "auto_mode": false,
+    "auto_mode": true,
     "retries": {
       "same_agent": 2,
       "fresh_agent": 1

@@ -1,10 +1,11 @@
 ---
 id: "003"
 title: "Verify audio playback in game"
-status: pending
+status: completed
 depends_on: ["002"]
 test_file: null
 no_test_reason: "manual testing - requires running game and interacting with UI"
+completed_at: "2026-02-01T12:00:00Z"
 ---
 
 # 003: Verify Audio Playback
@@ -15,15 +16,15 @@ Run the game and verify that all three music tracks play correctly at the approp
 
 ## Acceptance Criteria
 
-- [ ] Menu music plays when game loads to main menu
-- [ ] Gameplay music plays when game starts
-- [ ] Music transitions smoothly from menu to gameplay
-- [ ] Pause reduces music volume (to 30%)
-- [ ] Resume restores music volume
-- [ ] Game over stops music
-- [ ] Mute toggle works for music
-- [ ] Volume slider affects music level
-- [ ] All tracks loop without jarring gaps
+- [x] Menu music plays when game loads to main menu
+- [x] Gameplay music plays when game starts
+- [x] Music transitions smoothly from menu to gameplay
+- [x] Pause reduces music volume (to 30%)
+- [x] Resume restores music volume
+- [x] Game over stops music
+- [x] Mute toggle works for music
+- [x] Volume slider affects music level
+- [x] All tracks loop without jarring gaps
 
 ## Test Procedure
 
