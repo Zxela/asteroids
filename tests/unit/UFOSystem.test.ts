@@ -503,6 +503,289 @@ describe('UFOSystem', () => {
       expect(playSound).not.toHaveBeenCalled()
     })
   })
+
+  describe('Distance-based Volume Modulation', () => {
+    it('should modulate sound volume based on distance to player (AC-011)', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123) // mock sound ID
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player at center
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0), // Center
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO at center (close to player)
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Same position as player
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO and starts sound
+      ufoSystem.update(world, 16)
+
+      // Second update - should modulate volume based on distance
+      ufoSystem.update(world, 16)
+
+      expect(setSoundVolume).toHaveBeenCalled()
+      const lastCall = setSoundVolume.mock.calls[setSoundVolume.mock.calls.length - 1]
+      const soundId = lastCall[0]
+      const volume = lastCall[1]
+
+      expect(soundId).toBe(123)
+      expect(volume).toBeGreaterThanOrEqual(0.2)
+      expect(volume).toBeLessThanOrEqual(0.6)
+    })
+
+    it('should use volume 0.6 when UFO is at same position as player', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player at center
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO at same position
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0), // Same as player
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set volume to 0.6 (closest)
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundVolume.mock.calls[setSoundVolume.mock.calls.length - 1]
+      const volume = lastCall[1]
+
+      expect(volume).toBeCloseTo(0.6, 2)
+    })
+
+    it('should use minimum volume 0.2 when UFO is very far from player', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player at center
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO very far away (beyond max distance)
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(2000, 2000, 0), // Very far, beyond maxDistance
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should set volume to 0.2 (minimum, clamped)
+      ufoSystem.update(world, 16)
+
+      const lastCall = setSoundVolume.mock.calls[setSoundVolume.mock.calls.length - 1]
+      const volume = lastCall[1]
+
+      expect(volume).toBe(0.2)
+    })
+
+    it('should not call setSoundVolume if activeSoundId is null', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create player but no UFO
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Update with no UFOs
+      ufoSystem.update(world, 16)
+
+      expect(setSoundVolume).not.toHaveBeenCalled()
+    })
+
+    it('should not call setSoundVolume if audioManager is null', () => {
+      const ufoSystem = new UFOSystem()
+
+      const world = createMockWorld()
+
+      // Create player
+      const playerId = world.createEntity()
+      world.addComponent(playerId, {
+        // Player marker component
+      })
+      world.addComponent(playerId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+
+      // Create UFO
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // Update without audio manager set
+      ufoSystem.update(world, 16)
+
+      // setSoundVolume should not be called (no way to spy on it since audioManager is null)
+      // This test just ensures no crash
+      expect(ufoSystem.audioManager).toBeNull()
+    })
+
+    it('should not call setSoundVolume if player does not exist', () => {
+      const ufoSystem = new UFOSystem()
+      const audioManager = AudioManager.getInstance()
+      const playSound = vi.spyOn(audioManager, 'playSound')
+      const setSoundVolume = vi.spyOn(audioManager, 'setSoundVolume')
+      playSound.mockReturnValue(123)
+
+      ufoSystem.setAudioManager(audioManager)
+
+      const world = createMockWorld()
+
+      // Create UFO but no player
+      const ufoId = world.createEntity()
+      world.addComponent(ufoId, {
+        ufoSize: 'large',
+        shootTimer: 2000,
+        points: 200
+      })
+      world.addComponent(ufoId, {
+        position: new Vector3(0, 0, 0),
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1)
+      })
+      world.addComponent(ufoId, {
+        linear: new Vector3(80, 0, 0),
+        angular: new Vector3(0, 0, 0)
+      })
+      world.addComponent(ufoId, {
+        current: 1,
+        max: 1
+      })
+
+      // First update - spawns UFO
+      ufoSystem.update(world, 16)
+
+      // Second update - should NOT call setSoundVolume (no player)
+      ufoSystem.update(world, 16)
+
+      expect(setSoundVolume).not.toHaveBeenCalled()
+    })
+  })
 })
 
 // Helper function to create a mock world
@@ -529,6 +812,9 @@ function createMockWorld() {
           entityComponents.set('Velocity', component)
         } else if ('current' in component) {
           entityComponents.set('Health', component)
+        } else if (Object.keys(component).length === 0) {
+          // Empty object is Player component marker
+          entityComponents.set('Player', component)
         }
       }
     },

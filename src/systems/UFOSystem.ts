@@ -190,6 +190,11 @@ export class UFOSystem implements System {
       // Update doppler pitch modulation
       if (ufoId === this.activeUfoId && this.audioManager && this.activeSoundId !== null) {
         this.updateDopplerEffect(ufo, transform)
+
+        // Update volume based on distance to player
+        if (playerPos) {
+          this.updateVolumeByDistance(transform, playerPos)
+        }
       }
 
       // Update shooting
@@ -223,6 +228,26 @@ export class UFOSystem implements System {
 
     // Update sound rate
     this.audioManager.setSoundRate(this.activeSoundId, finalPitch)
+  }
+
+  /**
+   * Updates volume based on distance from UFO to player.
+   */
+  private updateVolumeByDistance(transform: Transform, playerPos: Vector3): void {
+    if (!this.audioManager || this.activeSoundId === null) return
+
+    // Calculate distance from UFO to player
+    const distance = transform.position.distanceTo(playerPos)
+
+    // Maximum distance is approximately diagonal of screen
+    const maxDistance = SCREEN_HALF_WIDTH * 2
+
+    // Calculate volume: 0.6 (close) to 0.2 (far)
+    // volume = 0.6 * (1 - distance / maxDistance), with minimum of 0.2
+    const volume = Math.max(0.2, 0.6 * (1 - distance / maxDistance))
+
+    // Update sound volume
+    this.audioManager.setSoundVolume(this.activeSoundId, volume)
   }
 
   /**
