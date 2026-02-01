@@ -32,6 +32,7 @@ import { DamageSystem } from '../systems/DamageSystem'
 // Systems
 import { InputSystem } from '../systems/InputSystem'
 import { UFOSpawnSystem } from '../systems/UFOSpawnSystem'
+import { UFOSystem } from '../systems/UFOSystem'
 import { ParticleEmitterSystem } from '../systems/ParticleEmitterSystem'
 import { ParticleRenderSystem } from '../systems/ParticleRenderSystem'
 import { PhysicsSystem } from '../systems/PhysicsSystem'
@@ -312,6 +313,11 @@ export class Game {
     this.world.registerSystem(this.powerUpSystem)
     this.ufoSpawnSystem = new UFOSpawnSystem(this.audioManager)
     this.world.registerSystem(this.ufoSpawnSystem)
+    const ufoSystem = new UFOSystem()
+    if (this.audioManager) {
+      ufoSystem.setAudioManager(this.audioManager)
+    }
+    this.world.registerSystem(ufoSystem)
     this.tensionSystem = new TensionSystem(this.audioManager)
     this.world.registerSystem(this.tensionSystem)
     this.world.registerSystem(this.particleEmitterSystem)
