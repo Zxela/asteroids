@@ -19,7 +19,7 @@
         }
       ],
       "test_file": "tests/unit/UFO.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [],
       "traces_to": {
         "user_stories": ["US-001"],
@@ -27,7 +27,8 @@
         "adr_decisions": ["ADR-001"]
       },
       "technical_notes": "Simple config value changes. Large UFO: 25 -> 15, Small UFO: 15 -> 10. This matches the reduced mesh geometry sizes.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "d02e910"
     },
     {
       "id": "002",
@@ -53,7 +54,7 @@
         }
       ],
       "test_file": "tests/unit/MeshFactory.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [],
       "traces_to": {
         "user_stories": ["US-001"],
@@ -61,7 +62,8 @@
         "adr_decisions": ["ADR-001"]
       },
       "technical_notes": "Reduce all geometry dimensions: Large UFO (body: 25->12, dome: 10->5, ring: 22->10), Small UFO (body: 15->8, dome: 6->3, ring: 13->7). See TECHNICAL_DESIGN.md for exact values.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "830db59"
     },
     {
       "id": "003",
@@ -101,7 +103,7 @@
         }
       ],
       "test_file": "tests/unit/audioConfig.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -109,7 +111,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Add to sfx section: ufoLoop: {id: 'ufoLoop', path: '/assets/audio/ufo_loop.mp3', volume: 0.4, preload: true}. Volume 0.4 to avoid overpowering gameplay.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "8565d4a"
     },
     {
       "id": "005",
@@ -130,7 +133,7 @@
         }
       ],
       "test_file": "tests/unit/AudioManager.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -138,7 +141,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Add to PlaySoundOptions: loop?: boolean; rate?: number; This enables continuous looping and doppler pitch effects.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "8f0e0a6"
     },
     {
       "id": "006",
