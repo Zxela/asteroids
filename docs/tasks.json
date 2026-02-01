@@ -1,0 +1,511 @@
+{
+  "tasks": [
+    {
+      "id": "001",
+      "title": "Reduce UFO_CONFIG collider radii to match new visual sizes",
+      "objective": "Update UFO_CONFIG in src/components/UFO.ts to reduce collider radii from 25/15 to 15/10 units for large/small UFOs, matching the new scaled-down visual sizes.",
+      "task_type": "add_config",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-001a",
+          "criterion": "Large UFO colliderRadius must be 15 units (reduced from 25)",
+          "test_assertion": "expect(UFO_CONFIG.large.colliderRadius).toBe(15)"
+        },
+        {
+          "id": "AC-001b",
+          "criterion": "Small UFO colliderRadius must be 10 units (reduced from 15)",
+          "test_assertion": "expect(UFO_CONFIG.small.colliderRadius).toBe(10)"
+        }
+      ],
+      "test_file": "tests/unit/UFO.test.ts",
+      "status": "pending",
+      "depends_on": [],
+      "traces_to": {
+        "user_stories": ["US-001"],
+        "acceptance_criteria": ["AC-001", "AC-002", "AC-003"],
+        "adr_decisions": ["ADR-001"]
+      },
+      "technical_notes": "Simple config value changes. Large UFO: 25 -> 15, Small UFO: 15 -> 10. This matches the reduced mesh geometry sizes.",
+      "model": "haiku"
+    },
+    {
+      "id": "002",
+      "title": "Scale down UFO mesh geometry in MeshFactory",
+      "objective": "Reduce UFO mesh dimensions in createUFOLarge and createUFOSmall functions (src/rendering/MeshFactory.ts) to approximately 60% of current size to match player ship proportions.",
+      "task_type": "add_config",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-001c",
+          "criterion": "Large UFO body geometry radius must be 12 units (reduced from 25)",
+          "test_assertion": "expect(bodyGeometry.parameters.radius).toBe(12)"
+        },
+        {
+          "id": "AC-001d",
+          "criterion": "Small UFO body geometry radius must be 8 units (reduced from 15)",
+          "test_assertion": "expect(bodyGeometry.parameters.radius).toBe(8)"
+        },
+        {
+          "id": "AC-004",
+          "criterion": "UFO visual size should be proportional to player ship (roughly 1:1 to 1.5:1 ratio)",
+          "test_assertion": "Visual inspection: UFO appears similar in size to player ship"
+        }
+      ],
+      "test_file": "tests/unit/MeshFactory.test.ts",
+      "status": "pending",
+      "depends_on": [],
+      "traces_to": {
+        "user_stories": ["US-001"],
+        "acceptance_criteria": ["AC-001", "AC-002", "AC-004"],
+        "adr_decisions": ["ADR-001"]
+      },
+      "technical_notes": "Reduce all geometry dimensions: Large UFO (body: 25->12, dome: 10->5, ring: 22->10), Small UFO (body: 15->8, dome: 6->3, ring: 13->7). See TECHNICAL_DESIGN.md for exact values.",
+      "model": "haiku"
+    },
+    {
+      "id": "003",
+      "title": "Remove scale multiplier from createUFO entity factory",
+      "objective": "Set scale to 1.0 for both large and small UFOs in src/entities/createUFO.ts, removing the 1.5x scale factor that was previously applied to large UFOs.",
+      "task_type": "add_config",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-003",
+          "criterion": "UFO Transform scale must be 1.0 for both large and small sizes",
+          "test_assertion": "expect(transform.scale).toEqual(new Vector3(1.0, 1.0, 1.0))"
+        }
+      ],
+      "test_file": "tests/unit/createUFO.test.ts",
+      "status": "pending",
+      "depends_on": ["001", "002"],
+      "traces_to": {
+        "user_stories": ["US-001"],
+        "acceptance_criteria": ["AC-003"],
+        "adr_decisions": ["ADR-001"]
+      },
+      "technical_notes": "Change line 107: const scale = size === 'large' ? 1.5 : 1.0 to const scale = 1.0. Mesh geometry now handles sizing directly.",
+      "model": "haiku"
+    },
+    {
+      "id": "004",
+      "title": "Add ufoLoop audio definition to audioConfig",
+      "objective": "Add ufoLoop sound definition to audioConfig.sfx in src/config/audioConfig.ts for continuous UFO warbling sound with preload enabled.",
+      "task_type": "add_config",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009a",
+          "criterion": "audioConfig.sfx.ufoLoop must exist with correct properties",
+          "test_assertion": "expect(audioConfig.sfx.ufoLoop).toEqual({id: 'ufoLoop', path: '/assets/audio/ufo_loop.mp3', volume: 0.4, preload: true})"
+        }
+      ],
+      "test_file": "tests/unit/audioConfig.test.ts",
+      "status": "pending",
+      "depends_on": [],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-009"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Add to sfx section: ufoLoop: {id: 'ufoLoop', path: '/assets/audio/ufo_loop.mp3', volume: 0.4, preload: true}. Volume 0.4 to avoid overpowering gameplay.",
+      "model": "haiku"
+    },
+    {
+      "id": "005",
+      "title": "Extend PlaySoundOptions with loop and rate parameters",
+      "objective": "Add optional loop and rate parameters to PlaySoundOptions interface in src/audio/AudioManager.ts to support looping sounds and pitch modulation.",
+      "task_type": "add_field",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009b",
+          "criterion": "PlaySoundOptions interface must include optional loop boolean",
+          "test_assertion": "expect(options.loop).toBeDefined()"
+        },
+        {
+          "id": "AC-010a",
+          "criterion": "PlaySoundOptions interface must include optional rate number",
+          "test_assertion": "expect(options.rate).toBeDefined()"
+        }
+      ],
+      "test_file": "tests/unit/AudioManager.test.ts",
+      "status": "pending",
+      "depends_on": [],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-009", "AC-010"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Add to PlaySoundOptions: loop?: boolean; rate?: number; This enables continuous looping and doppler pitch effects.",
+      "model": "haiku"
+    },
+    {
+      "id": "006",
+      "title": "Add playSound support for loop and rate options",
+      "objective": "Update AudioManager.playSound method to apply loop and rate options from PlaySoundOptions to the Howl instance before playing.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009c",
+          "criterion": "playSound must set loop(true) when options.loop is true",
+          "test_assertion": "expect(sound.loop()).toBe(true)"
+        },
+        {
+          "id": "AC-010b",
+          "criterion": "playSound must set rate when options.rate is provided",
+          "test_assertion": "expect(sound.rate()).toBe(1.2)"
+        }
+      ],
+      "test_file": "tests/unit/AudioManager.test.ts",
+      "status": "pending",
+      "depends_on": ["005"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-009", "AC-010"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "In playSound method, before sound.play(): if (options.loop) sound.loop(true); if (options.rate) sound.rate(options.rate);",
+      "model": "haiku"
+    },
+    {
+      "id": "007",
+      "title": "Add setSoundRate and setSoundVolume methods to AudioManager",
+      "objective": "Add public methods setSoundRate(soundId: number, rate: number) and setSoundVolume(soundId: number, volume: number) to AudioManager for dynamic audio control.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-010c",
+          "criterion": "setSoundRate must update playback rate of active sound instance",
+          "test_assertion": "audioManager.setSoundRate(soundId, 1.5); expect(howl.rate(soundId)).toBe(1.5)"
+        },
+        {
+          "id": "AC-011a",
+          "criterion": "setSoundVolume must update volume of active sound instance",
+          "test_assertion": "audioManager.setSoundVolume(soundId, 0.8); expect(howl.volume(soundId)).toBe(0.8)"
+        }
+      ],
+      "test_file": "tests/unit/AudioManager.test.ts",
+      "status": "pending",
+      "depends_on": ["006"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-010", "AC-011"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Methods need to track sound instances returned by playSound. Update playSound to return sound ID (number). Store active sound instances in a map for later control.",
+      "model": "sonnet"
+    },
+    {
+      "id": "008",
+      "title": "Add stopSound method to AudioManager",
+      "objective": "Add public method stopSound(soundId: number) to AudioManager to stop a specific looping sound instance by its ID.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-012a",
+          "criterion": "stopSound must stop the specified sound instance",
+          "test_assertion": "audioManager.stopSound(soundId); expect(howl.playing(soundId)).toBe(false)"
+        }
+      ],
+      "test_file": "tests/unit/AudioManager.test.ts",
+      "status": "pending",
+      "depends_on": ["007"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-012"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Method should call howl.stop(soundId) on the Howl instance. Clean up from active sounds map.",
+      "model": "haiku"
+    },
+    {
+      "id": "009",
+      "title": "Add AudioManager integration to UFOSystem",
+      "objective": "Add audioManager property and setAudioManager method to UFOSystem class to enable audio playback from the system.",
+      "task_type": "add_field",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009d",
+          "criterion": "UFOSystem must have audioManager property of type AudioManager | null",
+          "test_assertion": "expect(ufoSystem.audioManager).toBeDefined()"
+        },
+        {
+          "id": "AC-009e",
+          "criterion": "UFOSystem must have setAudioManager method",
+          "test_assertion": "expect(typeof ufoSystem.setAudioManager).toBe('function')"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["008"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-009"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Add private audioManager: AudioManager | null = null; Add constructor parameter and setAudioManager method as shown in TECHNICAL_DESIGN.md lines 226-242.",
+      "model": "haiku"
+    },
+    {
+      "id": "010",
+      "title": "Add UFO sound state tracking to UFOSystem",
+      "objective": "Add activeSoundId and activeUfoId properties to UFOSystem to track which UFO is currently playing audio.",
+      "task_type": "add_field",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009f",
+          "criterion": "UFOSystem must track activeSoundId for current UFO sound",
+          "test_assertion": "expect(ufoSystem.activeSoundId).toBe(null)"
+        },
+        {
+          "id": "AC-009g",
+          "criterion": "UFOSystem must track activeUfoId for current UFO entity",
+          "test_assertion": "expect(ufoSystem.activeUfoId).toBe(null)"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["009"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-009"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Add private activeSoundId: number | null = null; private activeUfoId: EntityId | null = null; These track the currently playing UFO sound.",
+      "model": "haiku"
+    },
+    {
+      "id": "011",
+      "title": "Implement UFO sound playback on spawn",
+      "objective": "Update UFOSystem.update to start ufoLoop sound when first UFO spawns, with different base pitch for small vs large UFOs.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009h",
+          "criterion": "Continuous warbling sound must play when UFO spawns",
+          "test_assertion": "expect(audioManager.playSound).toHaveBeenCalledWith('ufoLoop', {loop: true, volume: 0.4, rate: expect.any(Number)})"
+        },
+        {
+          "id": "AC-013",
+          "criterion": "Large and small UFOs must have different base pitches (1.0 vs 1.3)",
+          "test_assertion": "expect(playOptions.rate).toBe(1.3) // for small UFO"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["010"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-009", "AC-013"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "In UFOSystem.update, when initializing new UFO state and activeUfoId === null, start sound. See TECHNICAL_DESIGN.md lines 246-265 for implementation pattern.",
+      "model": "sonnet"
+    },
+    {
+      "id": "012",
+      "title": "Implement doppler pitch modulation in UFOSystem",
+      "objective": "Add doppler effect calculation to UFOSystem.update that modulates UFO sound pitch from 0.8x (left edge) to 1.2x (right edge) based on horizontal position.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-010",
+          "criterion": "Sound pitch must vary based on UFO horizontal position (0.8x to 1.2x range)",
+          "test_assertion": "expect(audioManager.setSoundRate).toHaveBeenCalledWith(soundId, expect.numberInRange(0.8, 1.2))"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["011"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-010"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Formula: normalizedX = (position.x + 960) / 1920; pitch = 0.8 + normalizedX * 0.4; Apply basePitch multiplier (1.3 for small). See TECHNICAL_DESIGN.md lines 267-289.",
+      "model": "sonnet"
+    },
+    {
+      "id": "013",
+      "title": "Implement distance-based volume modulation in UFOSystem",
+      "objective": "Add distance calculation to UFOSystem.update that adjusts UFO sound volume based on distance to player (louder when closer).",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-011",
+          "criterion": "Sound must be louder when UFO is closer to player",
+          "test_assertion": "expect(audioManager.setSoundVolume).toHaveBeenCalledWith(soundId, volumeBasedOnDistance)"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["012"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-011"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Formula: distance = position.distanceTo(playerPos); volume = max(0.2, 0.6 * (1 - distance / maxDistance)). See TECHNICAL_DESIGN.md lines 280-287.",
+      "model": "sonnet"
+    },
+    {
+      "id": "014",
+      "title": "Implement stopUfoSound helper method",
+      "objective": "Add private stopUfoSound(ufoId: EntityId) helper method to UFOSystem that stops the active UFO sound and resets tracking state.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-012b",
+          "criterion": "stopUfoSound must stop active sound when called",
+          "test_assertion": "expect(audioManager.stopSound).toHaveBeenCalledWith(activeSoundId)"
+        },
+        {
+          "id": "AC-012c",
+          "criterion": "stopUfoSound must reset activeSoundId and activeUfoId to null",
+          "test_assertion": "expect(ufoSystem.activeSoundId).toBe(null)"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["013"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-012"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Helper method implementation as shown in TECHNICAL_DESIGN.md lines 314-320. Checks if ufoId === activeUfoId before stopping.",
+      "model": "haiku"
+    },
+    {
+      "id": "015",
+      "title": "Call stopUfoSound when UFO destroyed or exits",
+      "objective": "Update UFOSystem.update to call stopUfoSound when UFO health reaches 0 or UFO exits screen bounds.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-012",
+          "criterion": "Sound must stop when UFO is destroyed or exits screen",
+          "test_assertion": "expect(audioManager.stopSound).toHaveBeenCalled()"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["014"],
+      "traces_to": {
+        "user_stories": ["US-003"],
+        "acceptance_criteria": ["AC-012"],
+        "adr_decisions": ["ADR-002"]
+      },
+      "technical_notes": "Add this.stopUfoSound(ufoId) calls at lines 295 and 308 in UFOSystem.update (before destroyEntity). See TECHNICAL_DESIGN.md lines 291-309.",
+      "model": "haiku"
+    },
+    {
+      "id": "016",
+      "title": "Add asteroid to UFO collision mask in createUFO",
+      "objective": "Update createUFO entity factory to include 'asteroid' in the UFO Collider mask array, enabling UFO-asteroid collision detection.",
+      "task_type": "add_config",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-014",
+          "criterion": "UFO collider must include 'asteroid' in collision mask",
+          "test_assertion": "expect(collider.mask).toContain('asteroid')"
+        }
+      ],
+      "test_file": "tests/unit/createUFO.test.ts",
+      "status": "pending",
+      "depends_on": ["003"],
+      "traces_to": {
+        "user_stories": ["US-004"],
+        "acceptance_criteria": ["AC-014"],
+        "adr_decisions": []
+      },
+      "technical_notes": "Change line 125: new Collider('sphere', config.colliderRadius, 'ufo', ['player', 'projectile', 'asteroid']). Add 'asteroid' to mask array.",
+      "model": "haiku"
+    },
+    {
+      "id": "017",
+      "title": "Add UFO-asteroid collision handling to DamageSystem",
+      "objective": "Add collision handler in DamageSystem.update to detect UFO-asteroid collisions and destroy the asteroid (setting health to 0) without damaging the UFO.",
+      "task_type": "add_method",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-015",
+          "criterion": "Asteroid must be destroyed on UFO contact",
+          "test_assertion": "expect(asteroidHealth.current).toBe(0)"
+        },
+        {
+          "id": "AC-016",
+          "criterion": "UFO must NOT be damaged by asteroid collision",
+          "test_assertion": "expect(ufoHealth.current).toBe(initialHealth)"
+        },
+        {
+          "id": "AC-017",
+          "criterion": "Collision must generate visual feedback (asteroid destruction triggers split)",
+          "test_assertion": "expect(world.isEntityAlive(asteroidId)).toBe(false)"
+        }
+      ],
+      "test_file": "tests/unit/DamageSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["016"],
+      "traces_to": {
+        "user_stories": ["US-004"],
+        "acceptance_criteria": ["AC-015", "AC-016", "AC-017"],
+        "adr_decisions": []
+      },
+      "technical_notes": "Add handler after line 134 in DamageSystem.update. Check for ufo/asteroid layer pairs, apply damage only to asteroid (999 damage for instant kill). See TECHNICAL_DESIGN.md lines 187-203.",
+      "model": "sonnet"
+    },
+    {
+      "id": "018",
+      "title": "Verify UFO movement AI is functioning correctly",
+      "objective": "Test UFOSystem.updateMovement to verify UFO velocity is applied correctly, vertical oscillation works, and screen bounds are respected.",
+      "task_type": "add_test",
+      "methodology": "tdd",
+      "acceptance_criteria": [
+        {
+          "id": "AC-005",
+          "criterion": "UFO must move horizontally at configured speed (80/120 units/s)",
+          "test_assertion": "expect(velocity.linear.length()).toBeCloseTo(UFO_CONFIG[size].speed)"
+        },
+        {
+          "id": "AC-006",
+          "criterion": "UFO must have vertical oscillation",
+          "test_assertion": "expect(velocity.linear.y).not.toBe(0)"
+        },
+        {
+          "id": "AC-007",
+          "criterion": "UFO must wrap/exit at screen edge correctly",
+          "test_assertion": "expect(world.isEntityAlive(ufoId)).toBe(false) // when out of bounds"
+        },
+        {
+          "id": "AC-008",
+          "criterion": "Movement must be smooth without stuttering",
+          "test_assertion": "expect(velocity.linear).toBeDefined()"
+        }
+      ],
+      "test_file": "tests/unit/UFOSystem.test.ts",
+      "status": "pending",
+      "depends_on": ["015"],
+      "traces_to": {
+        "user_stories": ["US-002"],
+        "acceptance_criteria": ["AC-005", "AC-006", "AC-007", "AC-008"],
+        "adr_decisions": []
+      },
+      "technical_notes": "Movement logic already exists in UFOSystem.updateMovement (lines 182-218). This task adds comprehensive tests to verify it works. No implementation changes needed unless bugs found.",
+      "model": "haiku"
+    }
+  ]
+}
