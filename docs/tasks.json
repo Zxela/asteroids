@@ -194,7 +194,7 @@
         }
       ],
       "test_file": "tests/unit/AudioManager.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["006"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -202,7 +202,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Methods need to track sound instances returned by playSound. Update playSound to return sound ID (number). Store active sound instances in a map for later control.",
-      "model": "sonnet"
+      "model": "sonnet",
+      "commit_hash": "5ec954f"
     },
     {
       "id": "008",
@@ -218,7 +219,7 @@
         }
       ],
       "test_file": "tests/unit/AudioManager.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["007"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -226,7 +227,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Method should call howl.stop(soundId) on the Howl instance. Clean up from active sounds map.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "479ba65"
     },
     {
       "id": "009",
@@ -247,7 +249,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["008"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -255,7 +257,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Add private audioManager: AudioManager | null = null; Add constructor parameter and setAudioManager method as shown in TECHNICAL_DESIGN.md lines 226-242.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "e80cb74"
     },
     {
       "id": "010",
@@ -276,7 +279,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["009"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -284,7 +287,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Add private activeSoundId: number | null = null; private activeUfoId: EntityId | null = null; These track the currently playing UFO sound.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "3b22db9"
     },
     {
       "id": "011",
@@ -305,7 +309,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["010"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -313,7 +317,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "In UFOSystem.update, when initializing new UFO state and activeUfoId === null, start sound. See TECHNICAL_DESIGN.md lines 246-265 for implementation pattern.",
-      "model": "sonnet"
+      "model": "sonnet",
+      "commit_hash": "d068d2e"
     },
     {
       "id": "012",
@@ -329,7 +334,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["011"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -337,7 +342,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Formula: normalizedX = (position.x + 960) / 1920; pitch = 0.8 + normalizedX * 0.4; Apply basePitch multiplier (1.3 for small). See TECHNICAL_DESIGN.md lines 267-289.",
-      "model": "sonnet"
+      "model": "sonnet",
+      "commit_hash": "5333cf4"
     },
     {
       "id": "013",
@@ -353,7 +359,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["012"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -361,7 +367,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Formula: distance = position.distanceTo(playerPos); volume = max(0.2, 0.6 * (1 - distance / maxDistance)). See TECHNICAL_DESIGN.md lines 280-287.",
-      "model": "sonnet"
+      "model": "sonnet",
+      "commit_hash": "333b9bd"
     },
     {
       "id": "014",
@@ -382,7 +389,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["013"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -390,7 +397,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Helper method implementation as shown in TECHNICAL_DESIGN.md lines 314-320. Checks if ufoId === activeUfoId before stopping.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "bb6352a"
     },
     {
       "id": "015",
@@ -406,7 +414,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["014"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -414,7 +422,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "Add this.stopUfoSound(ufoId) calls at lines 295 and 308 in UFOSystem.update (before destroyEntity). See TECHNICAL_DESIGN.md lines 291-309.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "6949628"
     },
     {
       "id": "016",
@@ -430,7 +439,7 @@
         }
       ],
       "test_file": "tests/unit/createUFO.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["003"],
       "traces_to": {
         "user_stories": ["US-004"],
@@ -438,7 +447,8 @@
         "adr_decisions": []
       },
       "technical_notes": "Change line 125: new Collider('sphere', config.colliderRadius, 'ufo', ['player', 'projectile', 'asteroid']). Add 'asteroid' to mask array.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "b5a50ff"
     },
     {
       "id": "017",
@@ -464,7 +474,7 @@
         }
       ],
       "test_file": "tests/unit/DamageSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["016"],
       "traces_to": {
         "user_stories": ["US-004"],
@@ -472,7 +482,8 @@
         "adr_decisions": []
       },
       "technical_notes": "Add handler after line 134 in DamageSystem.update. Check for ufo/asteroid layer pairs, apply damage only to asteroid (999 damage for instant kill). See TECHNICAL_DESIGN.md lines 187-203.",
-      "model": "sonnet"
+      "model": "sonnet",
+      "commit_hash": "8fe0620"
     },
     {
       "id": "018",
@@ -503,7 +514,7 @@
         }
       ],
       "test_file": "tests/unit/UFOSystem.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["015"],
       "traces_to": {
         "user_stories": ["US-002"],
@@ -511,7 +522,8 @@
         "adr_decisions": []
       },
       "technical_notes": "Movement logic already exists in UFOSystem.updateMovement (lines 182-218). This task adds comprehensive tests to verify it works. No implementation changes needed unless bugs found.",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "60ce8d8"
     }
   ]
 }
