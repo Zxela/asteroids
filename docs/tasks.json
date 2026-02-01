@@ -79,8 +79,9 @@
         }
       ],
       "test_file": "tests/unit/createUFO.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["001", "002"],
+      "commit_hash": "931674f",
       "traces_to": {
         "user_stories": ["US-001"],
         "acceptance_criteria": ["AC-003"],
@@ -163,7 +164,7 @@
         }
       ],
       "test_file": "tests/unit/AudioManager.test.ts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": ["005"],
       "traces_to": {
         "user_stories": ["US-003"],
@@ -171,7 +172,8 @@
         "adr_decisions": ["ADR-002"]
       },
       "technical_notes": "In playSound method, before sound.play(): if (options.loop) sound.loop(true); if (options.rate) sound.rate(options.rate);",
-      "model": "haiku"
+      "model": "haiku",
+      "commit_hash": "3e6c4c5"
     },
     {
       "id": "007",

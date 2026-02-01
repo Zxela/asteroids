@@ -97,6 +97,6 @@
     "retry_queue": [],
     "blocked_by_failure": false,
     "failure_severity": null,
-    "tasks_since_refresh": 4
+    "tasks_since_refresh": 6
   }
 }
