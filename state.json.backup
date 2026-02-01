@@ -29,16 +29,16 @@
       "feedback": [
         "Regression: AudioSystem only subscribes to globalEventEmitter which only has gameStateChanged. Gameplay audio events (weaponFired, asteroidDestroyed, etc.) are emitted to session eventEmitter and won't be received. Fix: AudioSystem needs dual subscription - global for music, session for SFX."
       ],
-      "started_at": "2026-01-31T05:00:00.000Z"
+      "started_at": "2026-01-31T04:32:07.076Z"
     },
     "004": {
       "status": "pending",
       "file": "docs/tasks/004-attract-mode-music.md"
     },
     "005": {
-      "status": "in_progress",
+      "status": "pending",
       "file": "docs/tasks/005-powerup-event-colors.md",
-      "started_at": "2026-01-31T05:00:00.000Z"
+      "started_at": "2026-01-31T04:30:13.852Z"
     },
     "006": {
       "status": "pending",
@@ -55,23 +55,11 @@
   },
   "current_task": null,
   "config": {
-    "auto_mode": true,
+    "auto_mode": false,
     "retries": {
       "same_agent": 2,
       "fresh_agent": 1
     }
-  },
-  "spec_paths": {
-    "technical_design": "docs/specs/TECHNICAL_DESIGN.md",
-    "prd": "docs/specs/PRD.md"
-  },
-  "parallel_state": {
-    "running_tasks": ["003", "005"],
-    "pending_review": [],
-    "retry_queue": [],
-    "blocked_by_failure": false,
-    "failure_severity": null,
-    "tasks_since_refresh": 0
   },
   "backlog": [
     {
@@ -80,5 +68,6 @@
       "priority": "later"
     }
   ],
-  "updated_at": "2026-01-31T05:00:00.000Z"
+  "updated_at": "2026-01-31T04:32:07.076Z",
+  "conductor_pid": 23759
 }

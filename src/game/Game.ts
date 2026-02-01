@@ -149,6 +149,7 @@ export class Game {
   // Audio
   private audioManager: AudioManager | null = null
   private audioSystem: AudioSystem | null = null
+  private globalEventEmitter: EventEmitter<GameEvents>
 
   // Game state
   private shipEntityId: number | null = null
@@ -158,6 +159,8 @@ export class Game {
     this.world = new World()
     this.sceneManager = new SceneManager()
     this.fsm = new GameStateMachine()
+    // Create global event emitter (persists across game sessions)
+    this.globalEventEmitter = new EventEmitter<GameEvents>()
   }
 
   /**
@@ -171,6 +174,11 @@ export class Game {
     // Initialize AudioManager
     this.audioManager = AudioManager.getInstance()
     await this.audioManager.init()
+
+    // Create AudioSystem immediately after AudioManager init
+    // This ensures AudioSystem is ready to receive gameStateChanged events
+    // AudioSystem subscribes to globalEventEmitter for music state changes
+    this.audioSystem = new AudioSystem(this.audioManager, this.globalEventEmitter)
 
     // Register game states
     this.fsm.registerState('loading', new LoadingState())
@@ -246,7 +254,7 @@ export class Game {
     const scene = this.sceneManager.getScene()
     const camera = this.sceneManager.getCamera()
 
-    // Create event emitter for inter-system communication
+    // Create event emitter for inter-system communication (session-scoped)
     this.eventEmitter = new EventEmitter<GameEvents>()
 
     // Create particle infrastructure
@@ -254,9 +262,11 @@ export class Game {
     this.particleEmitterSystem = new ParticleEmitterSystem(this.particleManager, this.eventEmitter)
     this.particleRenderSystem = new ParticleRenderSystem(this.particleManager, scene, camera)
 
-    // Create audio system (AudioManager is already initialized)
-    if (this.audioManager) {
-      this.audioSystem = new AudioSystem(this.audioManager, this.eventEmitter)
+    // Connect AudioSystem to session event emitter for gameplay SFX
+    // AudioSystem was already created in initialize() with globalEventEmitter for music
+    // Now we also connect it to session events for gameplay sounds
+    if (this.audioSystem && this.eventEmitter) {
+      this.audioSystem.setSessionEventBus(this.eventEmitter)
     }
 
     // Create and register systems
@@ -340,11 +350,9 @@ export class Game {
     this.particleEmitterSystem = null
     this.particleRenderSystem = null
 
-    // Clean up audio system
-    if (this.audioSystem) {
-      this.audioSystem.destroy()
-      this.audioSystem = null
-    }
+    // Clear session event emitter
+    // Note: AudioSystem is NOT destroyed - it persists across sessions
+    // We just disconnect it from the old session event bus
     this.eventEmitter = null
 
     // Reset game state
@@ -393,8 +401,9 @@ export class Game {
     this.gameOverScreen?.hide()
     this.hud?.hide()
 
-    // Emit game state change event for audio system
-    this.eventEmitter?.emit('gameStateChanged', { state: newState as GameFlowState })
+    // Emit game state change event to global event emitter for music
+    // This ensures AudioSystem receives state changes even before session starts
+    this.globalEventEmitter.emit('gameStateChanged', { state: newState as GameFlowState })
 
     // Show appropriate UI for new state
     switch (newState) {
@@ -404,8 +413,8 @@ export class Game {
       case 'playing':
         // Initialize or reset gameplay for new game
         this.initializeGameplay()
-        // Emit state change again after eventEmitter is created
-        this.eventEmitter?.emit('gameStateChanged', { state: 'playing' as GameFlowState })
+        // Emit state change again to global emitter after gameplay initialized
+        this.globalEventEmitter.emit('gameStateChanged', { state: 'playing' as GameFlowState })
         this.hud?.show()
         // Reset HUD to initial values
         this.hud?.updateScore(0)

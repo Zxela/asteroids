@@ -143,13 +143,15 @@ function createBossDefeatedEvent(): BossDefeatedEventData {
 
 describe('AudioSystem', () => {
   let audioManager: AudioManager
-  let eventBus: EventEmitter<AudioEventMap>
+  let globalEventBus: EventEmitter<AudioEventMap>
+  let sessionEventBus: EventEmitter<AudioEventMap>
   let AudioSystem: typeof import('../../src/systems/AudioSystem').AudioSystem
 
   beforeEach(async () => {
     vi.resetModules()
     audioManager = createMockAudioManager()
-    eventBus = new EventEmitter<AudioEventMap>()
+    globalEventBus = new EventEmitter<AudioEventMap>()
+    sessionEventBus = new EventEmitter<AudioEventMap>()
     const module = await import('../../src/systems/AudioSystem')
     AudioSystem = module.AudioSystem
   })
@@ -159,59 +161,97 @@ describe('AudioSystem', () => {
   })
 
   describe('Initialization', () => {
-    it('should initialize with AudioManager and EventBus', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+    it('should initialize with AudioManager and dual EventBus', () => {
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       expect(system).toBeDefined()
     })
 
-    it('should subscribe to game events on initialization', () => {
-      const onSpy = vi.spyOn(eventBus, 'on')
-      new AudioSystem(audioManager, eventBus)
+    it('should initialize with AudioManager and only global EventBus (session optional)', () => {
+      const system = new AudioSystem(audioManager, globalEventBus)
+      expect(system).toBeDefined()
+    })
 
-      expect(onSpy).toHaveBeenCalled()
+    it('should subscribe to global event bus on initialization', () => {
+      const onSpy = vi.spyOn(globalEventBus, 'on')
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      expect(onSpy).toHaveBeenCalledWith('gameStateChanged', expect.any(Function))
+    })
+
+    it('should subscribe to session event bus for gameplay events when provided', () => {
+      const onSpy = vi.spyOn(sessionEventBus, 'on')
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      expect(onSpy).toHaveBeenCalledWith('weaponFired', expect.any(Function))
+      expect(onSpy).toHaveBeenCalledWith('asteroidDestroyed', expect.any(Function))
+      expect(onSpy).toHaveBeenCalledWith('powerUpCollected', expect.any(Function))
+      expect(onSpy).toHaveBeenCalledWith('shipThrust', expect.any(Function))
+      expect(onSpy).toHaveBeenCalledWith('playerDied', expect.any(Function))
     })
 
     it('should have correct systemType', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       expect(system.systemType).toBe('audio')
+    })
+
+    it('should allow updating session event bus for new game sessions', () => {
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+      const newSessionEventBus = new EventEmitter<AudioEventMap>()
+      const onSpy = vi.spyOn(newSessionEventBus, 'on')
+
+      system.setSessionEventBus(newSessionEventBus)
+
+      expect(onSpy).toHaveBeenCalledWith('weaponFired', expect.any(Function))
+      expect(onSpy).toHaveBeenCalledWith('asteroidDestroyed', expect.any(Function))
+    })
+
+    it('should unsubscribe from old session event bus when setting new one', () => {
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+      const offSpy = vi.spyOn(sessionEventBus, 'off')
+      const newSessionEventBus = new EventEmitter<AudioEventMap>()
+
+      system.setSessionEventBus(newSessionEventBus)
+
+      expect(offSpy).toHaveBeenCalledWith('weaponFired', expect.any(Function))
+      expect(offSpy).toHaveBeenCalledWith('asteroidDestroyed', expect.any(Function))
     })
   })
 
   describe('Weapon Fired Event', () => {
-    it('should play shoot sound on weaponFired event', () => {
-      new AudioSystem(audioManager, eventBus)
+    it('should play shoot sound on weaponFired event from session bus', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createWeaponFiredEvent()
 
-      eventBus.emit('weaponFired', event)
+      sessionEventBus.emit('weaponFired', event)
 
       expect(audioManager.playSound).toHaveBeenCalledWith('shoot', expect.any(Object))
     })
 
     it('should vary volume slightly based on weapon type', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const spreadEvent = createWeaponFiredEvent('spread')
 
-      eventBus.emit('weaponFired', spreadEvent)
+      sessionEventBus.emit('weaponFired', spreadEvent)
 
       expect(audioManager.playSound).toHaveBeenCalledWith('shoot', expect.any(Object))
     })
   })
 
   describe('Asteroid Destroyed Event', () => {
-    it('should play explosion sound on asteroidDestroyed event', () => {
-      new AudioSystem(audioManager, eventBus)
+    it('should play explosion sound on asteroidDestroyed event from session bus', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createAsteroidDestroyedEvent()
 
-      eventBus.emit('asteroidDestroyed', event)
+      sessionEventBus.emit('asteroidDestroyed', event)
 
       expect(audioManager.playSound).toHaveBeenCalledWith('explosion', expect.any(Object))
     })
 
     it('should scale volume based on asteroid size (large = louder)', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const largeEvent = createAsteroidDestroyedEvent('large')
 
-      eventBus.emit('asteroidDestroyed', largeEvent)
+      sessionEventBus.emit('asteroidDestroyed', largeEvent)
 
       expect(audioManager.playSound).toHaveBeenCalledWith(
         'explosion',
@@ -220,10 +260,10 @@ describe('AudioSystem', () => {
     })
 
     it('should scale volume based on asteroid size (small = quieter)', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const smallEvent = createAsteroidDestroyedEvent('small')
 
-      eventBus.emit('asteroidDestroyed', smallEvent)
+      sessionEventBus.emit('asteroidDestroyed', smallEvent)
 
       expect(audioManager.playSound).toHaveBeenCalledWith(
         'explosion',
@@ -232,14 +272,14 @@ describe('AudioSystem', () => {
     })
 
     it('should use different volumes for different sizes', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('asteroidDestroyed', createAsteroidDestroyedEvent('large'))
+      sessionEventBus.emit('asteroidDestroyed', createAsteroidDestroyedEvent('large'))
       const largeCall = (audioManager.playSound as ReturnType<typeof vi.fn>).mock.calls[0]
 
       vi.clearAllMocks()
 
-      eventBus.emit('asteroidDestroyed', createAsteroidDestroyedEvent('small'))
+      sessionEventBus.emit('asteroidDestroyed', createAsteroidDestroyedEvent('small'))
       const smallCall = (audioManager.playSound as ReturnType<typeof vi.fn>).mock.calls[0]
 
       expect(largeCall[1].volume).toBeGreaterThan(smallCall[1].volume)
@@ -247,11 +287,11 @@ describe('AudioSystem', () => {
   })
 
   describe('PowerUp Collected Event', () => {
-    it('should play powerup sound on powerUpCollected event', () => {
-      new AudioSystem(audioManager, eventBus)
+    it('should play powerup sound on powerUpCollected event from session bus', () => {
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createPowerUpCollectedEvent()
 
-      eventBus.emit('powerUpCollected', event)
+      sessionEventBus.emit('powerUpCollected', event)
 
       expect(audioManager.playSound).toHaveBeenCalledWith('powerup', expect.any(Object))
     })
@@ -259,40 +299,40 @@ describe('AudioSystem', () => {
 
   describe('Ship Thrust Event', () => {
     it('should play thrust sound when thrust is active', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createShipThrustEvent(true)
 
-      eventBus.emit('shipThrust', event)
+      sessionEventBus.emit('shipThrust', event)
 
       expect(audioManager.playSound).toHaveBeenCalledWith('thrust', expect.any(Object))
     })
 
     it('should not play additional thrust sound when already thrusting', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('shipThrust', createShipThrustEvent(true))
-      eventBus.emit('shipThrust', createShipThrustEvent(true))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(true))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(true))
 
       // Should only be called once (thrust is looping)
       expect(audioManager.playSound).toHaveBeenCalledTimes(1)
     })
 
     it('should stop thrust sound when thrust becomes inactive', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('shipThrust', createShipThrustEvent(true))
-      eventBus.emit('shipThrust', createShipThrustEvent(false))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(true))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(false))
 
       // Access internal state to verify thrust stopped
       expect(system.isThrustSoundPlaying()).toBe(false)
     })
 
     it('should restart thrust sound after stopping', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('shipThrust', createShipThrustEvent(true))
-      eventBus.emit('shipThrust', createShipThrustEvent(false))
-      eventBus.emit('shipThrust', createShipThrustEvent(true))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(true))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(false))
+      sessionEventBus.emit('shipThrust', createShipThrustEvent(true))
 
       expect(audioManager.playSound).toHaveBeenCalledTimes(2)
     })
@@ -300,19 +340,19 @@ describe('AudioSystem', () => {
 
   describe('Player Died Event', () => {
     it('should play gameOver sound on playerDied event', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createPlayerDiedEvent()
 
-      eventBus.emit('playerDied', event)
+      sessionEventBus.emit('playerDied', event)
 
       expect(audioManager.playSound).toHaveBeenCalledWith('gameOver', expect.any(Object))
     })
 
     it('should stop background music on playerDied event', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createPlayerDiedEvent()
 
-      eventBus.emit('playerDied', event)
+      sessionEventBus.emit('playerDied', event)
 
       expect(audioManager.stopMusic).toHaveBeenCalled()
     })
@@ -320,19 +360,19 @@ describe('AudioSystem', () => {
 
   describe('Wave Started Event', () => {
     it('should handle waveStarted event without errors', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createWaveStartedEvent()
 
-      expect(() => eventBus.emit('waveStarted', event)).not.toThrow()
+      expect(() => sessionEventBus.emit('waveStarted', event)).not.toThrow()
     })
   })
 
   describe('Boss Spawned Event', () => {
     it('should play boss theme music on bossSpawned event', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createBossSpawnedEvent()
 
-      eventBus.emit('bossSpawned', event)
+      sessionEventBus.emit('bossSpawned', event)
 
       expect(audioManager.playMusic).toHaveBeenCalledWith('music_boss', expect.any(Object))
     })
@@ -340,10 +380,10 @@ describe('AudioSystem', () => {
 
   describe('Boss Defeated Event', () => {
     it('should return to background music on bossDefeated event', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       const event = createBossDefeatedEvent()
 
-      eventBus.emit('bossDefeated', event)
+      sessionEventBus.emit('bossDefeated', event)
 
       expect(audioManager.playMusic).toHaveBeenCalledWith('music_background', expect.any(Object))
     })
@@ -351,43 +391,43 @@ describe('AudioSystem', () => {
 
   describe('Game State Changed', () => {
     it('should play menu music on mainMenu state', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('gameStateChanged', { state: 'mainMenu' })
+      globalEventBus.emit('gameStateChanged', { state: 'mainMenu' })
 
       expect(audioManager.playMusic).toHaveBeenCalledWith('music_menu', expect.any(Object))
     })
 
     it('should play background music on playing state', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('gameStateChanged', { state: 'playing' })
+      globalEventBus.emit('gameStateChanged', { state: 'playing' })
 
       expect(audioManager.playMusic).toHaveBeenCalledWith('music_background', expect.any(Object))
     })
 
     it('should stop music on gameOver state', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('gameStateChanged', { state: 'gameOver' })
+      globalEventBus.emit('gameStateChanged', { state: 'gameOver' })
 
       expect(audioManager.stopMusic).toHaveBeenCalled()
     })
 
     it('should lower music volume on paused state', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('gameStateChanged', { state: 'paused' })
+      globalEventBus.emit('gameStateChanged', { state: 'paused' })
 
       expect(audioManager.setVolume).toHaveBeenCalledWith('music', expect.any(Number))
     })
 
     it('should restore music volume when resuming from paused', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('gameStateChanged', { state: 'playing' })
-      eventBus.emit('gameStateChanged', { state: 'paused' })
-      eventBus.emit('gameStateChanged', { state: 'playing' })
+      globalEventBus.emit('gameStateChanged', { state: 'playing' })
+      globalEventBus.emit('gameStateChanged', { state: 'paused' })
+      globalEventBus.emit('gameStateChanged', { state: 'playing' })
 
       // Should have called setVolume to restore
       expect(audioManager.setVolume).toHaveBeenCalled()
@@ -397,9 +437,9 @@ describe('AudioSystem', () => {
   describe('Volume Settings', () => {
     it('should respect muted state when playing sounds', () => {
       (audioManager.isMuted as ReturnType<typeof vi.fn>).mockReturnValue(true)
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
-      eventBus.emit('weaponFired', createWeaponFiredEvent())
+      sessionEventBus.emit('weaponFired', createWeaponFiredEvent())
 
       // AudioManager handles muting internally, but system still calls playSound
       expect(audioManager.playSound).toHaveBeenCalled()
@@ -407,9 +447,18 @@ describe('AudioSystem', () => {
   })
 
   describe('Destroy and Cleanup', () => {
-    it('should unsubscribe from all events on destroy', () => {
-      const offSpy = vi.spyOn(eventBus, 'off')
-      const system = new AudioSystem(audioManager, eventBus)
+    it('should unsubscribe from global events on destroy', () => {
+      const offSpy = vi.spyOn(globalEventBus, 'off')
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
+
+      system.destroy()
+
+      expect(offSpy).toHaveBeenCalled()
+    })
+
+    it('should unsubscribe from session events on destroy', () => {
+      const offSpy = vi.spyOn(sessionEventBus, 'off')
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       system.destroy()
 
@@ -417,7 +466,7 @@ describe('AudioSystem', () => {
     })
 
     it('should stop all sounds on destroy', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       system.destroy()
 
@@ -425,7 +474,7 @@ describe('AudioSystem', () => {
     })
 
     it('should stop music on destroy', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       system.destroy()
 
@@ -433,11 +482,11 @@ describe('AudioSystem', () => {
     })
 
     it('should not process events after destroy', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
       system.destroy()
 
       vi.clearAllMocks()
-      eventBus.emit('weaponFired', createWeaponFiredEvent())
+      sessionEventBus.emit('weaponFired', createWeaponFiredEvent())
 
       expect(audioManager.playSound).not.toHaveBeenCalled()
     })
@@ -445,7 +494,7 @@ describe('AudioSystem', () => {
 
   describe('Error Handling', () => {
     it('should handle null AudioManager gracefully', () => {
-      expect(() => new AudioSystem(null as unknown as AudioManager, eventBus)).not.toThrow()
+      expect(() => new AudioSystem(null as unknown as AudioManager, globalEventBus)).not.toThrow()
     })
 
     it('should handle undefined EventBus gracefully', () => {
@@ -455,23 +504,23 @@ describe('AudioSystem', () => {
     })
 
     it('should not throw when event has missing data', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       expect(() =>
-        eventBus.emit('weaponFired', { type: 'weaponFired', timestamp: Date.now() } as WeaponFiredEvent)
+        sessionEventBus.emit('weaponFired', { type: 'weaponFired', timestamp: Date.now() } as WeaponFiredEventData)
       ).not.toThrow()
     })
   })
 
   describe('Update Method', () => {
     it('should have update method for continuous sounds', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       expect(typeof system.update).toBe('function')
     })
 
     it('should not throw on update with deltaTime', () => {
-      const system = new AudioSystem(audioManager, eventBus)
+      const system = new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       expect(() => system.update(16)).not.toThrow()
     })
@@ -479,11 +528,11 @@ describe('AudioSystem', () => {
 
   describe('Sound Cooldowns', () => {
     it('should prevent sound spam for rapid weapon fire events', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       // Fire multiple times rapidly
       for (let i = 0; i < 5; i++) {
-        eventBus.emit('weaponFired', createWeaponFiredEvent())
+        sessionEventBus.emit('weaponFired', createWeaponFiredEvent())
       }
 
       // Should be called but system may limit rapid sounds
@@ -491,11 +540,11 @@ describe('AudioSystem', () => {
     })
 
     it('should prevent sound spam for rapid explosion events', () => {
-      new AudioSystem(audioManager, eventBus)
+      new AudioSystem(audioManager, globalEventBus, sessionEventBus)
 
       // Destroy multiple asteroids rapidly
       for (let i = 0; i < 10; i++) {
-        eventBus.emit('asteroidDestroyed', createAsteroidDestroyedEvent())
+        sessionEventBus.emit('asteroidDestroyed', createAsteroidDestroyedEvent())
       }
 
       // All should be played but volume may be adjusted
