@@ -18,16 +18,17 @@ import { Asteroid } from '../components/Asteroid'
 import { Health } from '../components/Health'
 import { Transform } from '../components/Transform'
 import { Velocity } from '../components/Velocity'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
-import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
+import { createAsteroid } from '../entities/createAsteroid'
 import { createPowerUp, getRandomPowerUpType, shouldSpawnPowerUp } from '../entities/createPowerUp'
-import type { AsteroidDestroyedEvent, EntityId as EventEntityId } from '../types'
+import type { AsteroidDestroyedEvent, AsteroidSize, EntityId as EventEntityId } from '../types'
 
 // Type assertions for component classes to work with ECS type system
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
+const TransformClass = componentClass(Transform)
+const HealthClass = componentClass(Health)
+const AsteroidClass = componentClass(Asteroid)
+const VelocityClass = componentClass(Velocity)
 
 // Re-export for consumers that import from this module
 export type { AsteroidDestroyedEvent } from '../types'

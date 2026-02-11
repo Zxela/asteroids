@@ -10,9 +10,9 @@
  * @module systems/ScoreSystem
  */
 
-import { Player } from '../components/Player'
+import type { Player } from '../components/Player'
 import { gameConfig } from '../config/gameConfig'
-import type { ComponentClass, System, World } from '../ecs/types'
+import type { System, World } from '../ecs/types'
 import type {
   AsteroidDestroyedEvent,
   AsteroidSize,
@@ -20,9 +20,7 @@ import type {
   LivesChangedEvent,
   ScoreChangedEvent
 } from '../types'
-
-// Type assertion for component class to work with ECS type system
-const PlayerClass = Player as unknown as ComponentClass<Player>
+import { getPlayerEntity } from '../utils/ecs-helpers'
 
 /**
  * System for tracking and updating player score.
@@ -117,32 +115,15 @@ export class ScoreSystem implements System {
     this.livesEvents = []
     this.bonusLifeEvents = []
 
-    // Query for player entity
-    const playerEntities = world.query(PlayerClass)
-
-    if (playerEntities.length === 0) {
+    // Find player entity
+    const result = getPlayerEntity(world)
+    if (!result) {
       // Clear processed events and return
       this.asteroidDestroyedEvents = []
       this.bossDefeatedEvents = []
       return
     }
-
-    // Get first player (single-player game)
-    const playerId = playerEntities[0]
-    if (playerId === undefined) {
-      // Clear processed events and return
-      this.asteroidDestroyedEvents = []
-      this.bossDefeatedEvents = []
-      return
-    }
-    const player = world.getComponent(playerId, PlayerClass)
-
-    if (!player) {
-      // Clear processed events and return
-      this.asteroidDestroyedEvents = []
-      this.bossDefeatedEvents = []
-      return
-    }
+    const { player } = result
 
     // Process each asteroid destruction event
     for (const event of this.asteroidDestroyedEvents) {
@@ -153,7 +134,7 @@ export class ScoreSystem implements System {
       player.addScore(pointsAwarded)
 
       // Check for bonus life threshold crossing
-      this.checkBonusLife(player, previousScore)
+      this.checkBonusLife(player)
 
       // Emit scoreChanged event
       const scoreEvent: ScoreChangedEvent = {
@@ -178,7 +159,7 @@ export class ScoreSystem implements System {
       player.addScore(bonusScore)
 
       // Check for bonus life threshold crossing
-      this.checkBonusLife(player, previousScore)
+      this.checkBonusLife(player)
 
       // Emit scoreChanged event with 'boss' reason
       const scoreEvent: ScoreChangedEvent = {
@@ -223,9 +204,8 @@ export class ScoreSystem implements System {
    * Awards a life and advances to next threshold if crossed.
    *
    * @param player - The player component
-   * @param previousScore - Score before this update
    */
-  private checkBonusLife(player: Player, _previousScore: number): void {
+  private checkBonusLife(player: Player): void {
     // Check if we crossed the threshold
     while (player.score >= this.nextBonusLifeThreshold) {
       const previousLives = player.lives
@@ -252,13 +232,8 @@ export class ScoreSystem implements System {
       }
       this.livesEvents.push(livesEvent)
 
-      // Calculate next threshold
-      // After first threshold, subsequent thresholds are spaced by subsequentInterval
-      if (this.nextBonusLifeThreshold === gameConfig.gameplay.bonusLife.firstThreshold) {
-        this.nextBonusLifeThreshold += gameConfig.gameplay.bonusLife.subsequentInterval
-      } else {
-        this.nextBonusLifeThreshold += gameConfig.gameplay.bonusLife.subsequentInterval
-      }
+      // Advance to next threshold
+      this.nextBonusLifeThreshold += gameConfig.gameplay.bonusLife.subsequentInterval
     }
   }
 

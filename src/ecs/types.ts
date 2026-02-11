@@ -38,6 +38,15 @@ export interface System {
 export type ComponentClass<T extends Component = Component> = new (...args: unknown[]) => T
 
 /**
+ * Cast a component constructor to ComponentClass<T>.
+ * Bridges the gap between concrete constructor signatures and the generic ComponentClass type.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: Required to bridge concrete constructor signatures to generic ComponentClass
+export function componentClass<T extends Component>(cls: abstract new (...args: any[]) => T): ComponentClass<T> {
+  return cls as unknown as ComponentClass<T>
+}
+
+/**
  * Interface for the ECS World.
  * Provides the public API for entity/component/system operations.
  */

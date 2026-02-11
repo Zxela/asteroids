@@ -22,19 +22,20 @@ import { PowerUpEffect } from '../components/PowerUpEffect'
 import { Transform } from '../components/Transform'
 import { Weapon } from '../components/Weapon'
 import { POWER_UP_CONFIGS } from '../config/powerUpConfig'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import type { PowerUpType } from '../types/components'
 import type { PowerUpCollectedEvent, PowerUpCollectedEventData } from '../types/events'
 import type { CollisionEvent } from './CollisionSystem'
 
 // Type assertions for component classes to work with ECS type system
-const PlayerClass = Player as unknown as ComponentClass<Player>
-const PowerUpClass = PowerUp as unknown as ComponentClass<PowerUp>
-const PowerUpEffectClass = PowerUpEffect as unknown as ComponentClass<PowerUpEffect>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const WeaponClass = Weapon as unknown as ComponentClass<Weapon>
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const LifetimeClass = Lifetime as unknown as ComponentClass<Lifetime>
+const PlayerClass = componentClass(Player)
+const PowerUpClass = componentClass(PowerUp)
+const PowerUpEffectClass = componentClass(PowerUpEffect)
+const HealthClass = componentClass(Health)
+const WeaponClass = componentClass(Weapon)
+const TransformClass = componentClass(Transform)
+const LifetimeClass = componentClass(Lifetime)
 
 /**
  * System for managing power-up collection and effect application.

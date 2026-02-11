@@ -21,6 +21,7 @@ export type {
   ComponentClass,
   World as IWorld
 } from './types'
+export { componentClass } from './types'
 
 // Internal classes (exported for testing and advanced use cases)
 export { EntityManager } from './EntityManager'

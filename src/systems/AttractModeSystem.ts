@@ -19,14 +19,14 @@
 
 import { Vector3 } from 'three'
 import { Asteroid } from '../components/Asteroid'
-import { Player } from '../components/Player'
 import { Transform } from '../components/Transform'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
+import { getPlayerEntity } from '../utils/ecs-helpers'
 
 // Type assertions for component classes
-const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
-const PlayerClass = Player as unknown as ComponentClass<Player>
-const TransformClass = Transform as unknown as ComponentClass<Transform>
+const AsteroidClass = componentClass(Asteroid)
+const TransformClass = componentClass(Transform)
 
 /** Idle time before attract mode activates (milliseconds) */
 const ATTRACT_IDLE_TIME = 30000 // 30 seconds
@@ -206,12 +206,10 @@ export class AttractModeSystem implements System {
     this.fireCooldown = Math.max(0, this.fireCooldown - deltaTime)
 
     // Find player ship
-    const players = world.query(PlayerClass)
-    if (players.length === 0 || players[0] === undefined) return input
+    const playerResult = getPlayerEntity(world)
+    if (!playerResult) return input
 
-    const shipId = players[0]
-    const shipTransform = world.getComponent(shipId, TransformClass)
-    if (!shipTransform) return input
+    const { transform: shipTransform } = playerResult
 
     // Find nearest asteroid
     const asteroids = world.query(AsteroidClass)

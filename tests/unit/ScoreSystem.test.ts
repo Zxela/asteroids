@@ -14,7 +14,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { Vector3 } from 'three'
 import { World } from '../../src/ecs/World'
 import { ScoreSystem } from '../../src/systems/ScoreSystem'
-import { Player } from '../../src/components'
+import { Player, Transform } from '../../src/components'
 import type { AsteroidDestroyedEvent, AsteroidSize } from '../../src/types'
 
 /**
@@ -48,9 +48,10 @@ describe('ScoreSystem', () => {
     world = new World()
     scoreSystem = new ScoreSystem()
 
-    // Create player entity
+    // Create player entity with Player and Transform (required by getPlayerEntity helper)
     playerId = world.createEntity() as unknown as number
     world.addComponent(playerId, new Player(3)) // 3 lives
+    world.addComponent(playerId, new Transform(new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1)))
   })
 
   describe('Score Increase', () => {

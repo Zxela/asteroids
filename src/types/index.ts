@@ -10,10 +10,10 @@
 // ============================================
 export type {
   EntityId,
-  ComponentType,
   Component,
   System,
-  World
+  World,
+  ComponentClass
 } from './ecs'
 
 // ============================================

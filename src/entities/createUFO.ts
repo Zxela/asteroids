@@ -21,6 +21,7 @@
 import { Vector3 } from 'three'
 import { Collider, Health, Physics, Renderable, Transform, Velocity } from '../components'
 import { UFO, type UFOSize, UFO_CONFIG } from '../components/UFO'
+import { gameConfig } from '../config'
 import type { EntityId, World } from '../ecs/types'
 import type { MeshType } from '../types/components'
 
@@ -30,9 +31,7 @@ const UFO_MASS = 1
 /** UFO damping (no friction - UFO maintains speed) */
 const UFO_DAMPING = 0
 
-/** Screen bounds for spawn calculation */
-const SCREEN_HALF_WIDTH = 960
-const SCREEN_HALF_HEIGHT = 540
+const { halfWidth: SCREEN_HALF_WIDTH, halfHeight: SCREEN_HALF_HEIGHT } = gameConfig.worldBounds
 
 /**
  * Options for UFO creation.

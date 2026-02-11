@@ -15,12 +15,8 @@ import { Collider, Health, Physics, Renderable, Transform, Velocity } from '../c
 import { Asteroid } from '../components/Asteroid'
 import { gameConfig } from '../config'
 import type { EntityId, World } from '../ecs/types'
+import type { AsteroidSize } from '../types/components'
 import { randomRange } from '../utils/random'
-
-/**
- * Asteroid size type for factory function.
- */
-export type AsteroidSize = 'large' | 'medium' | 'small'
 
 /**
  * Asteroid configuration by size.

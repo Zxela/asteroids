@@ -12,21 +12,18 @@
  */
 
 import { Physics, Transform, Velocity } from '../components'
-import type { ComponentClass, World as IWorld, System } from '../ecs/types'
+import { gameConfig } from '../config'
+import { componentClass } from '../ecs/types'
+import type { World as IWorld, System } from '../ecs/types'
 
-// Screen dimensions for wrapping calculations
-// These match the Design Doc specifications for game resolution
-const SCREEN_WIDTH = 1920
-const SCREEN_HEIGHT = 1080
-const SCREEN_HALF_WIDTH = SCREEN_WIDTH / 2
-const SCREEN_HALF_HEIGHT = SCREEN_HEIGHT / 2
+const { halfWidth: SCREEN_HALF_WIDTH, halfHeight: SCREEN_HALF_HEIGHT } = gameConfig.worldBounds
 const Z_DEPTH = 500 // Z-axis wrapping depth for 2.5D gameplay
 
 // Type assertions for component classes to work with ECS type system
 // Runtime behavior is correct; this bridges TypeScript's stricter type checking
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const PhysicsClass = Physics as unknown as ComponentClass<Physics>
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
+const PhysicsClass = componentClass(Physics)
 
 /**
  * PhysicsSystem class - processes physics simulation for all physics-enabled entities.

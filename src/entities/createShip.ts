@@ -28,6 +28,7 @@ import {
   Weapon
 } from '../components'
 import { gameConfig } from '../config'
+import { WEAPON_CONFIGS } from '../config/weaponConfig'
 import type { EntityId, World } from '../ecs/types'
 
 /** Screen center X coordinate in world space */
@@ -118,7 +119,7 @@ export function createShip(world: World): EntityId {
   world.addComponent(shipId, new Renderable('ship', 'standard', true))
 
   // Weapon: Single shot weapon with default cooldown
-  world.addComponent(shipId, new Weapon('single', gameConfig.weapons.single.cooldown))
+  world.addComponent(shipId, new Weapon('single', WEAPON_CONFIGS.single.cooldown))
 
   return shipId
 }

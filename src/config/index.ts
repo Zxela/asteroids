@@ -20,8 +20,15 @@ export type {
   RapidFirePowerUpConfig,
   MultiShotPowerUpConfig,
   VisualConfig,
-  PerformanceConfig
+  PerformanceConfig,
+  WorldBoundsConfig
 } from './gameConfig'
+
+// ============================================
+// Weapon Configuration Exports
+// ============================================
+export { WEAPON_CONFIGS, WEAPON_ORDER, getNextWeapon, getPreviousWeapon } from './weaponConfig'
+export type { WeaponTypeConfig } from './weaponConfig'
 
 // ============================================
 // Audio Configuration Exports

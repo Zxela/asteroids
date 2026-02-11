@@ -15,14 +15,15 @@ import type { Vector3 } from 'three'
 import { Collider } from '../components/Collider'
 import { Transform } from '../components/Transform'
 import { gameConfig } from '../config/gameConfig'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import type { CollisionLayer } from '../types/components'
 import { SpatialGrid } from '../utils/SpatialGrid'
 
 // Type assertions for component classes to work with ECS type system
 // Runtime behavior is correct; this bridges TypeScript's stricter type checking
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const ColliderClass = Collider as unknown as ComponentClass<Collider>
+const TransformClass = componentClass(Transform)
+const ColliderClass = componentClass(Collider)
 
 /**
  * Collision event data emitted when two entities collide.
@@ -85,8 +86,8 @@ export class CollisionSystem implements System {
   constructor() {
     this.spatialGrid = new SpatialGrid({
       cellSize: gameConfig.performance.collisionBroadPhaseGridSize,
-      width: 1920,
-      height: 1080
+      width: gameConfig.worldBounds.width,
+      height: gameConfig.worldBounds.height
     })
   }
 

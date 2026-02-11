@@ -11,9 +11,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { Vector3 } from 'three'
 import { JSDOM } from 'jsdom'
 import { World } from '../../src/ecs/World'
 import { Player } from '../../src/components/Player'
+import { Transform } from '../../src/components/Transform'
 import { Weapon } from '../../src/components/Weapon'
 import type { ScoreChangedEvent } from '../../src/types'
 
@@ -39,6 +41,15 @@ async function getModules() {
   return { HUD, UISystem }
 }
 
+/** Helper to add a Player entity with required Transform component */
+function addPlayerEntity(world: World, lives: number): { playerId: ReturnType<World['createEntity']>; player: Player } {
+  const playerId = world.createEntity()
+  const player = new Player(lives)
+  world.addComponent(playerId, player)
+  world.addComponent(playerId, new Transform(new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1, 1)))
+  return { playerId, player }
+}
+
 describe('UISystem', () => {
   describe('System Properties', () => {
     it('should have correct systemType', async () => {
@@ -57,9 +68,8 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      // Create player entity
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      // Create player entity with Transform (required by getPlayerEntity)
+      addPlayerEntity(world, 3)
 
       // Spy on HUD update methods
       const updateScoreSpy = vi.spyOn(hud, 'updateScore')
@@ -78,10 +88,8 @@ describe('UISystem', () => {
       const uiSystem = new UISystem(hud)
 
       // Create player with specific score
-      const playerId = world.createEntity()
-      const player = new Player(3)
+      const { player } = addPlayerEntity(world, 3)
       player.score = 500
-      world.addComponent(playerId, player)
 
       const updateScoreSpy = vi.spyOn(hud, 'updateScore')
 
@@ -97,9 +105,7 @@ describe('UISystem', () => {
       const uiSystem = new UISystem(hud)
 
       // Create player with specific lives
-      const playerId = world.createEntity()
-      const player = new Player(5)
-      world.addComponent(playerId, player)
+      addPlayerEntity(world, 5)
 
       const updateLivesSpy = vi.spyOn(hud, 'updateLives')
 
@@ -115,10 +121,8 @@ describe('UISystem', () => {
       const uiSystem = new UISystem(hud)
 
       // Create player
-      const playerId = world.createEntity()
-      const player = new Player(3)
+      const { player } = addPlayerEntity(world, 3)
       player.score = 100
-      world.addComponent(playerId, player)
 
       const updateScoreSpy = vi.spyOn(hud, 'updateScore')
 
@@ -133,9 +137,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      const player = new Player(3)
-      world.addComponent(playerId, player)
+      const { player } = addPlayerEntity(world, 3)
 
       const updateScoreSpy = vi.spyOn(hud, 'updateScore')
 
@@ -158,8 +160,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      const { playerId } = addPlayerEntity(world, 3)
       world.addComponent(playerId, new Weapon('spread'))
 
       const updateWeaponSpy = vi.spyOn(hud, 'updateWeapon')
@@ -176,8 +177,7 @@ describe('UISystem', () => {
       const uiSystem = new UISystem(hud)
 
       // Create player without weapon component
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      addPlayerEntity(world, 3)
 
       const updateWeaponSpy = vi.spyOn(hud, 'updateWeapon')
 
@@ -192,8 +192,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      const { playerId } = addPlayerEntity(world, 3)
       const weapon = new Weapon('single')
       world.addComponent(playerId, weapon)
 
@@ -246,8 +245,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      const { playerId } = addPlayerEntity(world, 3)
 
       // First update works
       uiSystem.update(world, 16)
@@ -269,8 +267,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      addPlayerEntity(world, 3)
 
       const updateWaveSpy = vi.spyOn(hud, 'updateWave')
 
@@ -287,8 +284,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      addPlayerEntity(world, 3)
 
       const updateWaveSpy = vi.spyOn(hud, 'updateWave')
 
@@ -326,8 +322,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      addPlayerEntity(world, 3)
 
       uiSystem.setScoreEvents([])
 
@@ -354,8 +349,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      addPlayerEntity(world, 3)
 
       // Should not throw on multiple rapid updates
       for (let i = 0; i < 10; i++) {
@@ -371,9 +365,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      const player = new Player(3)
-      world.addComponent(playerId, player)
+      const { player } = addPlayerEntity(world, 3)
 
       const updateScoreSpy = vi.spyOn(hud, 'updateScore')
 
@@ -401,8 +393,7 @@ describe('UISystem', () => {
       const hud = new HUD()
       const uiSystem = new UISystem(hud)
 
-      const playerId = world.createEntity()
-      world.addComponent(playerId, new Player(3))
+      addPlayerEntity(world, 3)
 
       expect(() => {
         uiSystem.update(world, 0)

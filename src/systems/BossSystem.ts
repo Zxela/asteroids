@@ -25,7 +25,7 @@
  */
 
 import { Vector3 } from 'three'
-import { Health, Player, Transform, Velocity } from '../components'
+import { Health, Transform, Velocity } from '../components'
 import { Boss } from '../components/Boss'
 import {
   BOSS_AI_CONFIG,
@@ -34,15 +34,16 @@ import {
   getNextPattern,
   getPhaseModifier
 } from '../config/bossConfig'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import type { AttackPattern, BossType } from '../types/components'
+import { getPlayerEntity } from '../utils/ecs-helpers'
 
 // Type assertions for component classes
-const BossClass = Boss as unknown as ComponentClass<Boss>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const PlayerClass = Player as unknown as ComponentClass<Player>
+const BossClass = componentClass(Boss)
+const HealthClass = componentClass(Health)
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
 
 /**
  * Boss pattern changed event.
@@ -155,17 +156,9 @@ export class BossSystem implements System {
     }
 
     // Find player entity and position
-    const players = world.query(PlayerClass, TransformClass)
-    let playerPos: Vector3 | null = null
-    let playerId: EntityId | null = null
-
-    if (players.length > 0 && players[0] !== undefined) {
-      playerId = players[0]
-      const playerTransform = world.getComponent<Transform>(playerId, TransformClass)
-      if (playerTransform) {
-        playerPos = playerTransform.position.clone()
-      }
-    }
+    const playerResult = getPlayerEntity(world)
+    const playerPos = playerResult ? playerResult.transform.position.clone() : null
+    const playerId = playerResult?.entityId ?? null
 
     // Process each boss
     for (const bossId of bosses) {

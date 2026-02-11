@@ -15,12 +15,13 @@
 
 import { Projectile, Transform, Velocity } from '../components'
 import { WEAPON_CONFIGS } from '../config/weaponConfig'
-import type { ComponentClass, EntityId, World as IWorld, System } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, World as IWorld, System } from '../ecs/types'
 
 // Type assertions for component classes to work with ECS type system
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const ProjectileClass = Projectile as unknown as ComponentClass<Projectile>
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
+const ProjectileClass = componentClass(Projectile)
 
 /**
  * ProjectileSystem - handles projectile updates and homing logic.

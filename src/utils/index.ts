@@ -39,3 +39,6 @@ export { SpatialGrid, type SpatialGridConfig } from './SpatialGrid'
 
 // Leaderboard persistence
 export { LeaderboardStorage, type RankedLeaderboardEntry } from './LeaderboardStorage'
+
+// ECS helper utilities
+export { getPlayerEntity, type PlayerEntityResult } from './ecs-helpers'

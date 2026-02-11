@@ -13,7 +13,7 @@ import { World } from '../../src/ecs/World'
 import { WeaponSystem, type WeaponFiredEvent } from '../../src/systems/WeaponSystem'
 import { InputSystem } from '../../src/systems/InputSystem'
 import { Transform, Weapon, Projectile, Asteroid } from '../../src/components'
-import { gameConfig } from '../../src/config'
+import { gameConfig, WEAPON_CONFIGS } from '../../src/config'
 
 /**
  * Mock event target for testing keyboard input without DOM.
@@ -328,7 +328,7 @@ describe('WeaponSystem', () => {
   describe('Weapon Configuration', () => {
     it('should use default single shot cooldown from config', () => {
       const weapon = world.getComponent(shipId as any, Weapon)
-      expect(weapon?.cooldown).toBe(gameConfig.weapons.single.cooldown)
+      expect(weapon?.cooldown).toBe(WEAPON_CONFIGS.single.cooldown)
     })
 
     it('should use default single shot type', () => {
@@ -343,7 +343,7 @@ describe('WeaponSystem', () => {
       const projectileId = findProjectileEntity(world, shipId)
       const projectile = world.getComponent(projectileId!, Projectile)
 
-      expect(projectile?.damage).toBe(gameConfig.weapons.single.damage)
+      expect(projectile?.damage).toBe(WEAPON_CONFIGS.single.damage)
     })
   })
 

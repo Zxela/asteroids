@@ -20,15 +20,16 @@ import { Boss } from '../components/Boss'
 import { Health } from '../components/Health'
 import { Transform } from '../components/Transform'
 import { gameConfig } from '../config'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import { createPowerUp, getRandomPowerUpType } from '../entities/createPowerUp'
 import type { BossType, PowerUpType } from '../types/components'
 import type { BossHealthBar } from '../ui/BossHealthBar'
 
 // Type assertions for component classes
-const BossClass = Boss as unknown as ComponentClass<Boss>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const TransformClass = Transform as unknown as ComponentClass<Transform>
+const BossClass = componentClass(Boss)
+const HealthClass = componentClass(Health)
+const TransformClass = componentClass(Transform)
 
 /** Extended power-up lifetime for boss rewards (30 seconds) */
 const BOSS_POWER_UP_LIFETIME = 30000

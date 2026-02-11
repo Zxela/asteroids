@@ -25,17 +25,18 @@ import { Vector3 } from 'three'
 import { Asteroid, Projectile, Transform, Weapon } from '../components'
 import { gameConfig } from '../config'
 import { WEAPON_CONFIGS, getNextWeapon, getPreviousWeapon } from '../config/weaponConfig'
-import type { ComponentClass, EntityId, World as IWorld, System } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, World as IWorld, System } from '../ecs/types'
 import { createProjectile } from '../entities/createProjectile'
 import type { WeaponType } from '../types/components'
 import type { InputSystem } from './InputSystem'
 import type { PowerUpSystem } from './PowerUpSystem'
 
 // Type assertions for component classes to work with ECS type system
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const WeaponClass = Weapon as unknown as ComponentClass<Weapon>
-const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
-const ProjectileClass = Projectile as unknown as ComponentClass<Projectile>
+const TransformClass = componentClass(Transform)
+const WeaponClass = componentClass(Weapon)
+const AsteroidClass = componentClass(Asteroid)
+const ProjectileClass = componentClass(Projectile)
 
 /**
  * Event emitted when a weapon fires.
@@ -403,7 +404,7 @@ export class WeaponSystem implements System {
     transform: Transform,
     weapon: Weapon
   ): void {
-    const weaponConfig = gameConfig.weapons[weapon.currentWeapon]
+    const weaponConfig = WEAPON_CONFIGS[weapon.currentWeapon]
     const direction = this.getShipForwardDirection(transform.rotation.z)
 
     // Calculate projectile spawn position (slightly ahead of ship)

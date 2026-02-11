@@ -94,16 +94,6 @@ export const WEAPON_CONFIGS: Record<WeaponType, WeaponTypeConfig> = {
 }
 
 /**
- * Get weapon configuration by type.
- *
- * @param weaponType - The weapon type to get configuration for
- * @returns The weapon configuration
- */
-export function getWeaponConfig(weaponType: WeaponType): WeaponTypeConfig {
-  return WEAPON_CONFIGS[weaponType]
-}
-
-/**
  * List of available weapon types in order (for cycling).
  */
 export const WEAPON_ORDER: WeaponType[] = ['single', 'spread', 'laser', 'homing']

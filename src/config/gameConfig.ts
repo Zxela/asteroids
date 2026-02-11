@@ -159,6 +159,20 @@ export interface VisualConfig {
 }
 
 /**
+ * World bounds configuration - screen dimensions for wrapping and spawning.
+ */
+export interface WorldBoundsConfig {
+  /** Full screen width in world units */
+  readonly width: number
+  /** Full screen height in world units */
+  readonly height: number
+  /** Half screen width (width / 2) */
+  readonly halfWidth: number
+  /** Half screen height (height / 2) */
+  readonly halfHeight: number
+}
+
+/**
  * Performance target configuration.
  */
 export interface PerformanceConfig {
@@ -225,34 +239,6 @@ export interface VisualThemeConfig {
 }
 
 /**
- * Weapon type configuration.
- */
-export interface WeaponTypeConfig {
-  /** Projectile speed in units/second */
-  readonly projectileSpeed: number
-  /** Damage per hit */
-  readonly damage: number
-  /** Cooldown between shots in milliseconds */
-  readonly cooldown: number
-}
-
-/**
- * Weapons configuration for all weapon types.
- */
-export interface WeaponsConfig {
-  /** Single shot weapon */
-  readonly single: WeaponTypeConfig
-  /** Spread shot weapon (fires multiple projectiles) */
-  readonly spread: WeaponTypeConfig
-  /** Laser weapon (continuous beam) */
-  readonly laser: WeaponTypeConfig
-  /** Homing missile weapon */
-  readonly homing: WeaponTypeConfig
-  /** Boss projectile weapon */
-  readonly boss: WeaponTypeConfig
-}
-
-/**
  * Main game configuration interface combining all sections.
  */
 export interface GameConfig {
@@ -268,8 +254,8 @@ export interface GameConfig {
   readonly visual: VisualConfig
   /** Performance targets */
   readonly performance: PerformanceConfig
-  /** Weapons configuration */
-  readonly weapons: WeaponsConfig
+  /** World bounds (screen dimensions) */
+  readonly worldBounds: WorldBoundsConfig
   /** Visual theme configuration (colors, emissive, animations) */
   readonly visualTheme: VisualThemeConfig
 }
@@ -372,32 +358,11 @@ export const gameConfig: GameConfig = {
     targetDrawCalls: 100,
     collisionBroadPhaseGridSize: 100
   },
-  weapons: {
-    single: {
-      projectileSpeed: 400,
-      damage: 10,
-      cooldown: 250
-    },
-    spread: {
-      projectileSpeed: 350,
-      damage: 5,
-      cooldown: 400
-    },
-    laser: {
-      projectileSpeed: 600,
-      damage: 2,
-      cooldown: 50
-    },
-    homing: {
-      projectileSpeed: 300,
-      damage: 20,
-      cooldown: 300
-    },
-    boss: {
-      projectileSpeed: 350,
-      damage: 15,
-      cooldown: 500
-    }
+  worldBounds: {
+    width: 1920,
+    height: 1080,
+    halfWidth: 960,
+    halfHeight: 540
   },
   visualTheme: {
     palette: {

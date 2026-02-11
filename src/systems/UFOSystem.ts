@@ -20,17 +20,18 @@
  */
 
 import { Vector3 } from 'three'
-import { Health, Player, Transform, Velocity } from '../components'
+import { Health, Transform, Velocity } from '../components'
 import { UFO, type UFOSize, UFO_CONFIG } from '../components/UFO'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import type { AudioManager } from '../audio/AudioManager'
+import { getPlayerEntity } from '../utils/ecs-helpers'
 
 // Type assertions for component classes
-const UFOClass = UFO as unknown as ComponentClass<UFO>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const PlayerClass = Player as unknown as ComponentClass<Player>
+const UFOClass = componentClass(UFO)
+const HealthClass = componentClass(Health)
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
 
 /**
  * UFO projectile fired event.
@@ -75,9 +76,9 @@ interface UFOState {
   verticalDirection: number
 }
 
-/** Screen bounds for movement */
-const SCREEN_HALF_WIDTH = 960
-const SCREEN_HALF_HEIGHT = 540
+import { gameConfig } from '../config'
+
+const { halfWidth: SCREEN_HALF_WIDTH, halfHeight: SCREEN_HALF_HEIGHT } = gameConfig.worldBounds
 
 /** Direction change interval range (milliseconds) */
 const MIN_DIRECTION_CHANGE = 1000
@@ -148,16 +149,8 @@ export class UFOSystem implements System {
     }
 
     // Find player entity and position
-    const players = world.query(PlayerClass, TransformClass)
-    let playerPos: Vector3 | null = null
-
-    if (players.length > 0 && players[0] !== undefined) {
-      const playerId = players[0]
-      const playerTransform = world.getComponent<Transform>(playerId, TransformClass)
-      if (playerTransform) {
-        playerPos = playerTransform.position.clone()
-      }
-    }
+    const playerResult = getPlayerEntity(world)
+    const playerPos = playerResult ? playerResult.transform.position.clone() : null
 
     // Process each UFO
     for (const ufoId of ufos) {

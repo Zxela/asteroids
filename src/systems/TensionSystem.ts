@@ -16,10 +16,11 @@
 
 import { Asteroid } from '../components/Asteroid'
 import type { AudioManager } from '../audio/AudioManager'
-import type { ComponentClass, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { System, World } from '../ecs/types'
 
 // Type assertion for component class to work with ECS type system
-const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
+const AsteroidClass = componentClass(Asteroid)
 
 /** Minimum beat interval in milliseconds (fastest tempo) */
 const MIN_BEAT_INTERVAL = 200

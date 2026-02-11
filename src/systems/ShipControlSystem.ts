@@ -20,7 +20,8 @@
 import { Vector3 } from 'three'
 import { Physics, Player, Transform, Velocity } from '../components'
 import { gameConfig } from '../config'
-import type { ComponentClass, World as IWorld, System } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { World as IWorld, System } from '../ecs/types'
 import type { ShipThrustEventData } from '../types/events'
 import type { EventEmitter } from '../utils/EventEmitter'
 import type { InputSystem } from './InputSystem'
@@ -33,10 +34,10 @@ interface ShipControlEvents extends Record<string, unknown> {
 }
 
 // Type assertions for component classes to work with ECS type system
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const PhysicsClass = Physics as unknown as ComponentClass<Physics>
-const PlayerClass = Player as unknown as ComponentClass<Player>
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
+const PhysicsClass = componentClass(Physics)
+const PlayerClass = componentClass(Player)
 
 /**
  * ShipControlSystem - processes player input and applies to ship physics.

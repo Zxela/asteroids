@@ -11,15 +11,15 @@
  * @module systems/UISystem
  */
 
-import { Player } from '../components/Player'
 import { Weapon } from '../components/Weapon'
-import type { ComponentClass, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { System, World } from '../ecs/types'
 import type { ScoreChangedEvent } from '../types'
 import type { HUD } from '../ui/HUD'
+import { getPlayerEntity } from '../utils/ecs-helpers'
 
 // Type assertion for component class to work with ECS type system
-const PlayerClass = Player as unknown as ComponentClass<Player>
-const WeaponClass = Weapon as unknown as ComponentClass<Weapon>
+const WeaponClass = componentClass(Weapon)
 
 /**
  * System for updating HUD display from ECS game state.
@@ -87,25 +87,10 @@ export class UISystem implements System {
    * @param _deltaTime - Time since last frame in milliseconds (unused)
    */
   update(world: World, _deltaTime: number): void {
-    // Query for player entity
-    const playerEntities = world.query(PlayerClass)
-
-    if (playerEntities.length === 0) {
-      // No player entity, skip updates
-      return
-    }
-
-    // Get first player (single-player game)
-    const playerId = playerEntities[0]
-    if (playerId === undefined) {
-      return
-    }
-
-    const player = world.getComponent(playerId, PlayerClass)
-
-    if (!player) {
-      return
-    }
+    // Find player entity
+    const result = getPlayerEntity(world)
+    if (!result) return
+    const { entityId: playerId, player } = result
 
     // Update score and lives from Player component
     this.hud.updateScore(player.score)

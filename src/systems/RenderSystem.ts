@@ -17,16 +17,17 @@
 import * as THREE from 'three'
 import { Boss, Health, PowerUp, Renderable, Transform } from '../components'
 import { gameConfig } from '../config/gameConfig'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import { MeshFactory } from '../rendering/MeshFactory'
 
 // Type assertions for component classes to work with ECS type system
 // Runtime behavior is correct; this bridges TypeScript's stricter type checking
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const RenderableClass = Renderable as unknown as ComponentClass<Renderable>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const BossClass = Boss as unknown as ComponentClass<Boss>
-const PowerUpClass = PowerUp as unknown as ComponentClass<PowerUp>
+const TransformClass = componentClass(Transform)
+const RenderableClass = componentClass(Renderable)
+const HealthClass = componentClass(Health)
+const BossClass = componentClass(Boss)
+const PowerUpClass = componentClass(PowerUp)
 
 /**
  * RenderSystem syncs ECS entities with Three.js scene objects.

@@ -15,12 +15,13 @@
 
 import { Health } from '../components/Health'
 import { Projectile } from '../components/Projectile'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 import type { CollisionSystem } from './CollisionSystem'
 
 // Type assertions for component classes to work with ECS type system
-const HealthClass = Health as unknown as ComponentClass<Health>
-const ProjectileClass = Projectile as unknown as ComponentClass<Projectile>
+const HealthClass = componentClass(Health)
+const ProjectileClass = componentClass(Projectile)
 
 /**
  * System for processing collision events and applying damage.

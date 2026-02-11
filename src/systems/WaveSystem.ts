@@ -12,20 +12,17 @@
 import { Vector3 } from 'three'
 import { Asteroid } from '../components/Asteroid'
 import { gameConfig } from '../config'
-import type { ComponentClass, System, World } from '../ecs/types'
-import { type AsteroidSize, createAsteroid } from '../entities/createAsteroid'
-import type { BossDefeatedEvent, WaveProgressedEvent } from '../types'
+import { componentClass } from '../ecs/types'
+import type { System, World } from '../ecs/types'
+import { createAsteroid } from '../entities/createAsteroid'
+import type { AsteroidSize, BossDefeatedEvent, WaveProgressedEvent } from '../types'
 import { randomInt, randomRange } from '../utils/random'
 
 // Type assertion for component class to work with ECS type system
 // Runtime behavior is correct; this bridges TypeScript's stricter type checking
-const AsteroidClass = Asteroid as unknown as ComponentClass<Asteroid>
+const AsteroidClass = componentClass(Asteroid)
 
-/** Screen dimensions (placeholder - will use actual canvas dimensions at runtime) */
-const SCREEN_WIDTH = 1920
-const SCREEN_HEIGHT = 1080
-const SCREEN_HALF_WIDTH = SCREEN_WIDTH / 2
-const SCREEN_HALF_HEIGHT = SCREEN_HEIGHT / 2
+const { halfWidth: SCREEN_HALF_WIDTH, halfHeight: SCREEN_HALF_HEIGHT } = gameConfig.worldBounds
 
 /** Distance beyond screen edge where asteroids spawn */
 const SPAWN_OFFSET = 50

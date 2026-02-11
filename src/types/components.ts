@@ -250,14 +250,14 @@ export interface BossComponent extends Component {
 /**
  * UFO size type identifiers.
  */
-export type UFOSizeType = 'large' | 'small'
+export type UFOSize = 'large' | 'small'
 
 /**
  * UFO component - UFO-specific properties and AI state.
  */
 export interface UFOComponent extends Component {
   readonly type: 'ufo'
-  ufoSize: UFOSizeType
+  ufoSize: UFOSize
   shootTimer: number // Time until next shot
   points: number // Score awarded on destruction
 }

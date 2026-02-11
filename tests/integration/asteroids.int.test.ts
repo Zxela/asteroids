@@ -13,14 +13,14 @@ import { InputSystem } from '../../src/systems/InputSystem'
 import { createShip } from '../../src/entities/createShip'
 import { createAsteroid } from '../../src/entities/createAsteroid'
 import { Transform, Velocity, Collider, Renderable, Physics } from '../../src/components'
-import type { ComponentClass } from '../../src/ecs/types'
+import { componentClass } from '../../src/ecs/types'
 
 // Type assertions for component classes to work with ECS type system
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const ColliderClass = Collider as unknown as ComponentClass<Collider>
-const RenderableClass = Renderable as unknown as ComponentClass<Renderable>
-const PhysicsClass = Physics as unknown as ComponentClass<Physics>
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
+const ColliderClass = componentClass(Collider)
+const RenderableClass = componentClass(Renderable)
+const PhysicsClass = componentClass(Physics)
 
 describe('3D Asteroids Game - Integration Test Suite', () => {
   let world: World

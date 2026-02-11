@@ -18,14 +18,11 @@
 import { Vector3 } from 'three'
 import { Collider, Physics, Renderable, Transform, Velocity } from '../components'
 import { Projectile } from '../components/Projectile'
-import { gameConfig } from '../config'
+import { WEAPON_CONFIGS } from '../config/weaponConfig'
 import type { EntityId, World } from '../ecs/types'
 import type { CollisionLayer, MeshType, WeaponType } from '../types/components'
 
-/**
- * Projectile type for factory (same as weapon types).
- */
-export type ProjectileType = WeaponType
+type ProjectileType = WeaponType
 
 /**
  * Configuration options for creating a projectile.
@@ -91,7 +88,7 @@ export function createProjectile(world: World, config: ProjectileConfig): Entity
   const projectileId = world.createEntity()
 
   // Get weapon configuration for this type
-  const weaponConfig = gameConfig.weapons[config.type]
+  const weaponConfig = WEAPON_CONFIGS[config.type]
   const speed = config.speed ?? weaponConfig.projectileSpeed
   const damage = config.damage ?? weaponConfig.damage
   const lifetime = config.lifetime ?? DEFAULT_LIFETIME

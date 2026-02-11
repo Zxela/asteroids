@@ -10,13 +10,11 @@ export { createShip } from './createShip'
 export {
   createAsteroid,
   getAsteroidRadius,
-  getAsteroidPoints,
-  type AsteroidSize
+  getAsteroidPoints
 } from './createAsteroid'
 export {
   createProjectile,
-  type ProjectileConfig,
-  type ProjectileType
+  type ProjectileConfig
 } from './createProjectile'
 export {
   createPowerUp,

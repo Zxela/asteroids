@@ -19,13 +19,14 @@ import { Transform } from '../components/Transform'
 import { Velocity } from '../components/Velocity'
 import { gameConfig } from '../config/gameConfig'
 import { createShipDebris } from '../entities/createShipDebris'
-import type { ComponentClass, EntityId, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { EntityId, System, World } from '../ecs/types'
 
 // Type assertions for component classes to work with ECS type system
-const TransformClass = Transform as unknown as ComponentClass<Transform>
-const VelocityClass = Velocity as unknown as ComponentClass<Velocity>
-const HealthClass = Health as unknown as ComponentClass<Health>
-const PlayerClass = Player as unknown as ComponentClass<Player>
+const TransformClass = componentClass(Transform)
+const VelocityClass = componentClass(Velocity)
+const HealthClass = componentClass(Health)
+const PlayerClass = componentClass(Player)
 
 /**
  * Event emitted when player dies (loses all lives).

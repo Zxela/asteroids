@@ -16,15 +16,15 @@
  * - Only one UFO active at a time
  */
 
-import { Player } from '../components'
 import { UFO } from '../components/UFO'
 import type { AudioManager } from '../audio/AudioManager'
-import type { ComponentClass, System, World } from '../ecs/types'
+import { componentClass } from '../ecs/types'
+import type { System, World } from '../ecs/types'
 import { createUFO, getUFOSizeForScore } from '../entities/createUFO'
+import { getPlayerEntity } from '../utils/ecs-helpers'
 
 // Type assertions for component classes
-const UFOClass = UFO as unknown as ComponentClass<UFO>
-const PlayerClass = Player as unknown as ComponentClass<Player>
+const UFOClass = componentClass(UFO)
 
 /** Minimum time between UFO spawns (milliseconds) */
 const MIN_SPAWN_INTERVAL = 20000 // 20 seconds
@@ -186,13 +186,8 @@ export class UFOSpawnSystem implements System {
    * Gets the player's current score.
    */
   private getPlayerScore(world: World): number {
-    const players = world.query(PlayerClass)
-    if (players.length === 0 || players[0] === undefined) {
-      return 0
-    }
-
-    const player = world.getComponent<Player>(players[0], PlayerClass)
-    return player?.score ?? 0
+    const result = getPlayerEntity(world)
+    return result?.player.score ?? 0
   }
 
   /**
