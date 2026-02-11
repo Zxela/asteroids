@@ -65,8 +65,8 @@ describe('createProjectile', () => {
       })
 
       const projectile = world.getComponent(projectileId, Projectile)
-      // Single shot default damage is 1 (from WEAPON_CONFIGS)
-      expect(projectile?.damage).toBe(1)
+      // Single shot default damage is 10 (from WEAPON_CONFIGS)
+      expect(projectile?.damage).toBe(10)
     })
 
     it('should have projectile lifetime of 3000ms', () => {
@@ -129,8 +129,8 @@ describe('createProjectile', () => {
       })
 
       const projectile = world.getComponent(projectileId, Projectile)
-      // Spread shot damage is 1 (from WEAPON_CONFIGS)
-      expect(projectile?.damage).toBe(1)
+      // Spread shot damage is 5 (from WEAPON_CONFIGS)
+      expect(projectile?.damage).toBe(5)
     })
   })
 
@@ -169,8 +169,8 @@ describe('createProjectile', () => {
       })
 
       const velocity = world.getComponent(projectileId, Velocity)
-      // Laser projectileSpeed is 0 (continuous weapon, from WEAPON_CONFIGS)
-      expect(velocity?.linear.length()).toBeCloseTo(0, 0)
+      // Laser speed is 600 (from WEAPON_CONFIGS)
+      expect(velocity?.linear.length()).toBeCloseTo(600, 0)
     })
   })
 
@@ -199,8 +199,8 @@ describe('createProjectile', () => {
       })
 
       const projectile = world.getComponent(projectileId, Projectile)
-      // Homing missile damage is 2 (from WEAPON_CONFIGS)
-      expect(projectile?.damage).toBe(2)
+      // Homing missile damage is 20 (from WEAPON_CONFIGS)
+      expect(projectile?.damage).toBe(20)
     })
 
     it('should have slower speed for homing missiles', () => {
@@ -294,7 +294,7 @@ describe('createProjectile', () => {
   })
 
   describe('Velocity Configuration', () => {
-    it('should set velocity based on weapon speed (single shot = 500)', () => {
+    it('should set velocity based on weapon speed (single shot = 400)', () => {
       const direction = new Vector3(1, 0, 0)
       const projectileId = createProjectile(world, {
         position: new Vector3(0, 0, 0),
@@ -304,7 +304,7 @@ describe('createProjectile', () => {
       })
 
       const velocity = world.getComponent(projectileId, Velocity)
-      expect(velocity?.linear.length()).toBeCloseTo(500, 0)
+      expect(velocity?.linear.length()).toBeCloseTo(400, 0)
     })
 
     it('should respect custom speed', () => {
@@ -343,8 +343,8 @@ describe('createProjectile', () => {
       })
 
       const velocity = world.getComponent(projectileId, Velocity)
-      // Should maintain overall speed of 500 (from WEAPON_CONFIGS)
-      expect(velocity?.linear.length()).toBeCloseTo(500, 0)
+      // Should maintain overall speed of 400 (from WEAPON_CONFIGS)
+      expect(velocity?.linear.length()).toBeCloseTo(400, 0)
       // Both x and y should be positive and roughly equal
       expect(velocity?.linear.x).toBeGreaterThan(0)
       expect(velocity?.linear.y).toBeGreaterThan(0)

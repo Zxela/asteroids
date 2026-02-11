@@ -42,33 +42,33 @@ export interface WeaponTypeConfig {
 /**
  * Weapon configurations for all weapon types.
  *
- * Values from Design Doc:
- * - single: 250ms cooldown, 500 speed, 1 damage, infinite ammo
- * - spread: 400ms cooldown, 450 speed, 1 damage, 15-degree spread, 3 projectiles
- * - laser: continuous fire, 2 damage/frame, 10 energy/frame, 5 regen/frame, 100 max energy
- * - homing: 300ms cooldown, 300 speed, 2 damage, 10 ammo
+ * Damage values are balanced against asteroid health (large=30, medium=20, small=10).
+ * - single: 10 damage = 1-shot small, 2-shot medium, 3-shot large
+ * - spread: 5 damage per projectile, 3 projectiles = 15 damage volley
+ * - laser: 2 damage/frame, continuous fire
+ * - homing: 20 damage = 1-shot medium, high value per limited ammo
  */
 export const WEAPON_CONFIGS: Record<WeaponType, WeaponTypeConfig> = {
   single: {
     type: 'single',
     cooldown: 250,
-    projectileSpeed: 500,
-    damage: 1,
+    projectileSpeed: 400,
+    damage: 10,
     ammo: 'infinite'
   },
   spread: {
     type: 'spread',
     cooldown: 400,
-    projectileSpeed: 450,
-    damage: 1,
+    projectileSpeed: 350,
+    damage: 5,
     ammo: 'infinite',
     spreadAngle: 15,
     projectileCount: 3
   },
   laser: {
     type: 'laser',
-    cooldown: 0,
-    projectileSpeed: 0,
+    cooldown: 50,
+    projectileSpeed: 600,
     damage: 2,
     ammo: 'infinite',
     energyCost: 10,
@@ -79,7 +79,7 @@ export const WEAPON_CONFIGS: Record<WeaponType, WeaponTypeConfig> = {
     type: 'homing',
     cooldown: 300,
     projectileSpeed: 300,
-    damage: 2,
+    damage: 20,
     ammo: 10,
     homingAcceleration: 200,
     homingRange: 500
